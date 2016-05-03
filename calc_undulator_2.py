@@ -52,8 +52,6 @@ def trajectory_undulator_reference(K=1.87 , gamma=2544.03131115, lambda_u=0.020,
     # Ax et Az en fct de t
     trajectory[9] = ((2.0*omega_u*K/gamma)**2) * (1.0/(8.0*ku*c))*np.sin(2.0*omega_u * trajectory[0])
     trajectory[7] = -(K/(gamma*ku*c))*(omega_u**2)* np.sin(omega_u * trajectory[0])
-    #
-    trajectory=np.transpose(trajectory)
     return trajectory
 
 
@@ -77,11 +75,8 @@ def trajectory_undulator( By=np.zeros(101) ,t=np.zeros(101) ,gamma=2544.03131115
     trajectory[0] = t
     # Ax(t)
     Xm= e*Beta_et/(gamma*me)
-    #trajectory[7] = -Xm*np.sin(omega_u*trajectory[0])
     trajectory[7] = -Xm * By
     # Vx et Vz
-    #Vo=(Xm/omega_u)*np.cos((-1.0)*Nb_period*np.pi)
-    #Zo = (-lambda_u*Nb_period)/(2.0*c)
     for i in range(N):
         trajectory[4][i] = np.trapz(trajectory[7][0:(i + 1)], trajectory[0][0:(i + 1)]) + Vo
         # trajectory[4][i] = integrate.simps(trajectory[7][0:(i + 1)], trajectory[0][0:(i + 1)])
@@ -110,6 +105,7 @@ def electric_field_undulator(omega1=2.53465927101*10**17, trajectory=np.zeros((1
     n_chap = np.array([x, y, D]) / R
     #in radian :
     #n_chap = np.array([x,y,1.0-0.5*(x**2 + y**2)])
+    trajectory = np.transpose(trajectory)
     integrand = np.full((N, 3), 0. + 1j * 0., dtype=np.complex)
     E = np.full((3,), 0. + 1j * 0., dtype=np.complex)
     for i in range(N):
@@ -181,17 +177,15 @@ Xo=0.0
 
 
 
-Traj = trajectory_undulator_reference(K=K,gamma=gamma, lambda_u=lambda_u, Nb_period=Nb_period, Nb_point=Nb_pts, Beta_et=Beta_et)
-Traj2 = trajectory_undulator(By=By,t=t,gamma=gamma, Beta=Beta, Beta_et=Beta_et,Vo=Vo , Xo=Xo,Zo=Zo)
-print("number of points : %d" % (Traj.shape[0]))
-print("number of points : %d" % (Traj2.shape[0]))
+T = trajectory_undulator_reference(K=K,gamma=gamma, lambda_u=lambda_u, Nb_period=Nb_period, Nb_point=Nb_pts, Beta_et=Beta_et)
+T2 = trajectory_undulator(By=By,t=t,gamma=gamma, Beta=Beta, Beta_et=Beta_et,Vo=Vo , Xo=Xo,Zo=Zo)
+print("number of points : %d" % (T.shape[0]))
+print("number of points : %d" % (T2.shape[0]))
 
-#E=champ_electric_undulator(omega1=omega1, trajectory=T, x=0.01 , y=0.01 , D=30.0)
 # # #
 # # # #
 
-T = np.transpose(Traj)
-T2 = np.transpose(Traj2)
+
 # plt.plot(T[0],T[1])
 # #plt.plot(T[0],T2[1])
 # plt.title(" X = f(t) ")
@@ -246,7 +240,7 @@ fig = figure()
 ax = Axes3D(fig)
 X=np.arange(0.0, 0.0301, 0.0003)
 Y=np.arange(0.0, 0.0301, 0.0003)
-Z2 = Radiation(K=K,E=E,trajectory=Traj,X=X,Y=Y)
+Z2 = Radiation(K=K,E=E,trajectory=T,X=X,Y=Y)
 X,Y = np.meshgrid(X,Y)
 print('debut du plot')
 ax.plot_surface(X,Y, Z2, rstride=1, cstride=1, cmap='hot')
