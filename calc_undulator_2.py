@@ -73,30 +73,27 @@ def trajectory_undulator( By=np.zeros(101) ,t=np.zeros(101) ,gamma=2544.03131115
     #trajectory=np.transpose(trajectory)
     return trajectory
 
-def energy_radiated(omega1=2.53465927101*10**17,trajectory=np.zeros((11,10)) , x=0.00 , y= 0.00 ,D=30.0 ) :
+
+def energy_radiated(omega1=2.53465927101*10**17,trajectory=np.zeros((11,10)) , x=0.00 , y=0.0):
     N = trajectory.shape[1]
     # in meters :
     # R = np.sqrt(x ** 2 + y ** 2 + D ** 2)
     # n_chap = np.array([x, y, D]) / R
     # in radian :
     n_chap = np.array([x, y, 1.0 - 0.5 * (x ** 2 + y ** 2)])
-    trajectory = np.transpose(trajectory)
-    integrand = np.full((N, 3), 0. + 1j * 0., dtype=np.complex)
     E = np.full((3,), 0. + 1j * 0., dtype=np.complex)
-    for i in range(N):
-        integrand[i] += (np.cross(n_chap, np.cross(n_chap - (trajectory[i][4:7]), (trajectory[i][7:10]))) )
-        integrand[i] *= (1.0 / (1.0 - np.dot(n_chap, trajectory[i][4:7]))) ** 2
-        integrand[i] *= np.exp(0. + 1j * omega1 * (trajectory[i][0] - np.dot(n_chap, trajectory[i][1:4])))
-
-    integrand = np.transpose(integrand)
-    trajectory = np.transpose(trajectory)
+    integrand = np.full((3,N), 0. + 1j * 0., dtype=np.complex)
+    Alpha=trajectory[7]*(n_chap[2]-trajectory[6])-(n_chap[0]-trajectory[4])*trajectory[9]
+    Alpha2=np.exp(0. + 1j * omega1 * (trajectory[0] - n_chap[0]*trajectory[1]-n_chap[2]*trajectory[3]))
+    integrand[0] += ((-n_chap[1]**2)*trajectory[7]-n_chap[2]*Alpha)*Alpha2
+    integrand[1] += n_chap[1]*(n_chap[0]*trajectory[7]+n_chap[2]*trajectory[9])*Alpha2
+    integrand[2] += (-n_chap[1]**2*trajectory[9]+n_chap[0]*Alpha)*Alpha2
+    integrand *= (1.0 / (1.0 - n_chap[0]*trajectory[4]-n_chap[2]*trajectory[6])) ** 2
     for k in range(3):
         E[k] = np.trapz(integrand[k], trajectory[0])
         # E[k] = integrate.simps(integrand[k], trajectory[0])
     # np.linalg.norm
     return (np.abs(E[0]) ** 2 + np.abs(E[1])** 2 + np.abs(E[2])** 2)
-
-
 
 
 
@@ -112,6 +109,6 @@ def radiation(K=1.87, E=1.3 * 10 ** 9, lambda_u=0.035, trajectory=np.zeros((11, 
     c6= codata.e*1e-10/(8.0*np.pi**2*codata.epsilon_0*codata.c*codata.h)
     for i in range(len(X)):
         for k in range(len(Y)):
-            res[i][k] = c6*energy_radiated(omega1=omega1,trajectory=trajectory , x=X[i] , y=Y[k] ,D=D )
+            res[i][k] = c6*energy_radiated(omega1=omega1,trajectory=trajectory , x=X[i] , y=Y[k] )
     print(res.max())
     return res
