@@ -238,17 +238,21 @@ def trajectory_undulator4 (By ,Beta_et,Beta,lambda_u,Nb_period,Bo,gamma,E) :
 #################################################
 
 
-def energy_radiated(omega1=2.53465927101*10**17,trajectory=np.zeros((11,10)) , x=0.00 , y=0.0,D=30.0):
+def energy_radiated(omega=2.53465927101*10**17,trajectory=np.zeros((11,10)) , x=0.00 , y=0.0, D=None):
     N = trajectory.shape[1]
-    # in meters :
-    # R = np.sqrt(x ** 2 + y ** 2 + D ** 2)
-    # n_chap = np.array([x, y, D]) / R
-    # in radian :
-    n_chap = np.array([x, y, 1.0 - 0.5 * (x ** 2 + y ** 2)])
+
+    if D == None:
+        # in radian :
+        n_chap = np.array([x, y, 1.0 - 0.5 * (x ** 2 + y ** 2)])
+    else:
+        # in meters :
+        R = np.sqrt(x ** 2 + y ** 2 + D ** 2)
+        n_chap = np.array([x, y, D]) / R
+
     E = np.full((3,), 0. + 1j * 0., dtype=np.complex)
     integrand = np.full((3,N), 0. + 1j * 0., dtype=np.complex)
     Alpha=trajectory[7]*(n_chap[2]-trajectory[6]) - (n_chap[0]-trajectory[4])*trajectory[9]
-    Alpha2=np.exp(0. + 1j * omega1 * (trajectory[0] - n_chap[0]*trajectory[1]-n_chap[2]*trajectory[3]))
+    Alpha2=np.exp(0. + 1j * omega * (trajectory[0] - n_chap[0]*trajectory[1]-n_chap[2]*trajectory[3]))
     integrand[0] += (-(n_chap[1]**2)*trajectory[7]-n_chap[2]*Alpha)*Alpha2
     integrand[1] += n_chap[1]*(n_chap[0]*trajectory[7]+n_chap[2]*trajectory[9])*Alpha2
     integrand[2] += (-(n_chap[1]**2)*trajectory[9]+n_chap[0]*Alpha)*Alpha2
@@ -266,19 +270,46 @@ def energy_radiated(omega1=2.53465927101*10**17,trajectory=np.zeros((11,10)) , x
 
 
 
-def radiation(K=1.87, E=1.3 * 10 ** 9, lambda_u=0.035, trajectory=np.zeros((11, 10)), D=30.0, X=np.arange(-0.0011, 0.0011, 0.00002), Y=np.arange(-0.0011, 0.0011, 0.00002)):
-    res = np.zeros((len(X), len(Y)))
+def radiation(K=1.87, E=1.3 * 10 ** 9, lambda_u=0.035, trajectory=np.zeros((11, 10)), D=None, omega=None,
+              X=np.arange(-0.0011, 0.0011, 0.00002), Y=np.arange(-0.0011, 0.0011, 0.00002)):
+
     gamma = E / 0.511e6
-    omega1 = ((2.0 * gamma ** 2) / (1.0 + (K ** 2) / 2.0)) * ((2.0 * np.pi * codata.c) / lambda_u)
+
+    if omega == None:  # use the first harmonic at the resonance
+        omega = ((2.0 * gamma ** 2) / (1.0 + (K ** 2) / 2.0)) * ((2.0 * np.pi * codata.c) / lambda_u)
+
+
     # c1 = codata.e ** 2 * omega1 ** 2 / (16 * np.pi ** 3 * codata.epsilon_0 * codata.c )
     # c2 = 1.0 / codata.e  # multiply by number of electrons in 1 A
     # c3 = 2.0*np.pi / (codata.h * omega1)  # divide by e energy (to get number of photons)
     # c4 = 1e-2 / omega1  # to get 1% energy bandwidth  #!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     # c5 = 0.1e-3 * 0.1e-3  # from rad to .1mrad angle bandwidth
     c6= codata.e*1e-10/(8.0*np.pi**2*codata.epsilon_0*codata.c*codata.h)
+
+    # res = np.zeros((len(X), len(Y)))
+    # for i in range(len(X)):
+    #     #print(i)
+    #     for k in range(len(Y)):
+    #         res[i][k] = c6*energy_radiated(omega=omega,trajectory=trajectory , x=X[i] , y=Y[k], D=D )
+
+    if X.size != Y.size:
+        raise Exception("X and Y dimensions must be equal.")
+
+    res = np.zeros_like(X)
+    shape1 = res.shape
+
+    X = X.flatten()
+    Y = Y.flatten()
+    res = res.flatten()
+
+    shape2 = res.shape
+
     for i in range(len(X)):
-        #print(i)
-        for k in range(len(Y)):
-            res[i][k] = c6*energy_radiated(omega1=omega1,trajectory=trajectory , x=X[i] , y=Y[k] )
+        res[i] = c6*energy_radiated(omega=omega,trajectory=trajectory , x=X[i] , y=Y[i], D=D )
+
+    X = X.reshape(shape1)
+    Y = Y.reshape(shape1)
+    res = res.reshape(shape1)
+
     print(res.max())
     return res

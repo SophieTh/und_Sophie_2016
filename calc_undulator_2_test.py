@@ -22,6 +22,7 @@ class ClacUndulator2Test(unittest.TestCase):
 
         X = np.arange(0.0, 0.00101, 0.00001)
         Y = np.arange(0.0, 0.00101, 0.00001)
-        Z2 = radiation(K=K, E=E, trajectory=T, X=X, Y=Y)
+        XY = np.meshgrid(X,Y)
+        Z2 = radiation(K=K, E=E, trajectory=T, X=XY[0], Y=XY[1])
 
         self.assertAlmostEqual(Z2.max()/1e14, 9.1716, 3)
