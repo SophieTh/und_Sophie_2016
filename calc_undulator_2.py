@@ -9,9 +9,12 @@ from scipy.integrate import odeint
 from scipy.interpolate import interp1d
 
 
-def trajectory_undulator_reference(K=1.87 , gamma=2544.03131115, lambda_u=0.020, Nb_period=10, Nb_point=10, Beta_et=0.99993):
+def analytical_trajectory_undulator(K=1.87 ,E=1.3e9,lambda_u=0.020, Nb_period=10, Nb_point=10):
     N = Nb_period * Nb_point + 1
     ku= 2.0*np.pi/lambda_u
+    gamma = E / 0.511e6
+    Beta = np.sqrt(1.0 - (1.0 / gamma ** 2))
+    Beta_et = Beta * (1.0 - (K / (2.0 * gamma)) ** 2)
     omega_u = Beta_et*codata.c *ku
     # trajectory =
     #   [t........]
@@ -39,50 +42,32 @@ def trajectory_undulator_reference(K=1.87 , gamma=2544.03131115, lambda_u=0.020,
     trajectory[7] = -(K/(gamma*ku*codata.c))*(omega_u**2)* np.sin(omega_u * trajectory[0])
     # trajectory *= codata.c
     # trajectory[0] *= (1.0/codata.c)
+    Bo = K / (93.4 * lambda_u)
+    By = -Bo * np.sin((2.0 * np.pi / lambda_u) *codata.c*trajectory[0])
+    plt.plot(codata.c*trajectory[0], By)
+    plt.show()
     return trajectory
 
 
-
-# hypothesis : B=(0,By,0) and norm(v)=constant
-def trajectory_undulator( By=np.zeros(101) ,gamma=2544.03131115, Beta=0.99996, Beta_et=0.99993,Vo=0.0 , Xo=0.0):
-    N= len(By)
-    # trajectory =
-    #   [t........]
-    # 	[ X/c......]
-    # 	[ Y/c ......]
-    #	[ Z/c ......]
-    # 	[ Vx/c .....]
-    # 	[ Vy/c .....]
-    # 	[ Vz/c .....]
-    # 	[ Ax/c .....]
-    # 	[ Ay/c .....]
-    # 	[ Az/c .....]
-    trajectory = np.zeros((10,N))
-    # t
-    to=(lambda_u / (codata.c * Beta_et)) * (Nb_period / 2)
-    trajectory[0] =np.linspace(-to, to, N)
-
-    # Ax(t)
-    Xm= codata.e*Beta_et/(gamma*codata.m_e)
-    trajectory[7] = -Xm * By
-    # Vx et Vz
-    for i in range(N):
-        trajectory[4][i] = np.trapz(trajectory[7][0:(i + 1)], trajectory[0][0:(i + 1)]) + Vo
-        # trajectory[4][i] = integrate.simps(trajectory[7][0:(i + 1)], trajectory[0][0:(i + 1)])
-    trajectory[6] = np.sqrt((Beta)**2 - trajectory[4]**2)
-    # X et Z
-    for i in range(N):
-        trajectory[1][i] = np.trapz(trajectory[4][0:(i + 1)], trajectory[0][0:(i + 1)])+Xo
-        # trajectory[4][i] = integrate.simps(trajectory[7][0:(i + 1)], trajectory[0][0:(i + 1)])
-        trajectory[3][i] = np.trapz(trajectory[6][0:(i + 1)], trajectory[0][0:(i + 1)]) -lambda_u * (Nb_period / 2)
-        # trajectory[4][i] = integrate.simps(trajectory[7][0:(i + 1)], trajectory[0][0:(i + 1)])
-     #Az
-    trajectory[9]=-(trajectory[7]*trajectory[4])/trajectory[6]
-
-    return trajectory
+def creation_magnetic_field(K,lambda_u,Nb_period,z) :
+    Bo = K / (93.4 * lambda_u)
+    By = -Bo * np.sin((2.0 * np.pi / lambda_u) * z)
+    # Hamming windowing
+    windpar=1.0/(2.0*Nb_period)
+    zmin = z.min()
+    apo1 = zmin + windpar
+    apo2 = z.max() - windpar
+    wind = np.ones(len(z))
+    for i in range(len(z)):
+        if z[i] <= apo1:
+            wind[i] *= 1.08 - (.54+0.46*np.cos(np.pi*(z[i]-zmin)/windpar))
+        if z[i] >= apo2:
+            wind[i] *=   1.08 - (.54-0.46*np.cos(np.pi*(z[i]-apo2)/windpar))
+    By *= wind
+    return By
 
 
-def f3(y,t,cst,B) :
+def fct_ODE(y,t,cst,B) :
     return [ -cst*B( y[5]) * y[2],
             0.0,
              cst * B(y[5]) * y[0],
@@ -102,52 +87,11 @@ def enlargement_vector_for_interpolation(Z,By,nb_elarg) :
     return Z,By
 
 
-
-
-def trajectory_undulator2 (By,Z ,nb_enlarg,Beta,gamma) :
-    N=len(Z)
-    #   trajectory =
-    #   [t........]
-    # 	[ X/c......]
-    # 	[ Y/c ......]
-    #	[ Z/c ......]
-    # 	[ Vx/c .....]
-    # 	[ Vy/c .....]
-    # 	[ Vz/c .....]
-    # 	[ Ax/c .....]
-    # 	[ Ay/c .....]
-    # 	[ Az/c .....]
-    trajectory = np.zeros((10,N))
-    trajectory[0] = Z/codata.c
-    Z_centred=Z_centre= Z-(Z[len(Z)-1]/2.0)
-    Vo = [0.0, 0.0, Beta * codata.c, 0.0, 0.0, Z_centred[0]]
-    Z_centred,By=enlargement_vector_for_interpolation(Z_centred, By, nb_enlarg)
-    B = interp1d(Z_centred, By)
-    cst=-codata.e/(codata.m_e*gamma)
-    res = odeint(f3,Vo,trajectory[0],args=(cst,B))
-    print('dim de res')
-    print(res.shape)
-    res = np.transpose(res)
-    trajectory[4] = res[0]
-    trajectory[5] = res[1]
-    trajectory[6] = res[2]
-    trajectory[1] = res[3]
-    trajectory[2] = res[4]
-    trajectory[3] = res[5]
-    trajectory[7] = -cst*B(trajectory[3])*trajectory[6]
-    trajectory[9] = cst* B(trajectory[3])*trajectory[4]
-    k=1
-    while k<10 :
-        trajectory[k] *= 1.0/codata.c
-        k+=1
-    return trajectory
-
-
-########################### essai
-#
-# # hypothesis : B=(0,By,0) and norm(v)=constant
-def trajectory_undulator3( By=np.zeros(101) ,z=np.zeros(101) ,Nb_period=10,lambda_u=0.035,gamma=2544.03131115, Beta=0.99996, Beta_et=0.99993,Vo=0.0 , Xo=0.0,E=1.3e9):
-    N= len(By)
+# hypothesis : B=(0,By,0) and norm(v)=constant
+def trajectory_undulator_from_magnetic_field1( By=np.zeros(101),Z= np.zeros(101),K=1.87,E=1.3e9,N=101,Vo=0.0,Xo=0.0,Zo=-0.175):
+    gamma = E / 0.511e6
+    Beta = np.sqrt(1.0 - (1.0 / gamma ** 2))
+    Beta_et = Beta * (1.0 - (K / (2.0 * gamma)) ** 2)
     # trajectory =
     #   [t........]
     # 	[ X/c......]
@@ -160,34 +104,143 @@ def trajectory_undulator3( By=np.zeros(101) ,z=np.zeros(101) ,Nb_period=10,lambd
     # 	[ Ay/c .....]
     # 	[ Az/c .....]
     trajectory = np.zeros((10,N))
-    # Z
-    trajectory[3] = z
+    # t
+    trajectory[0] = np.linspace(Z[0] / (codata.c * Beta_et),Z[len(Z)-1]/ (codata.c * Beta_et),N)
+    #trajectory[0] = Z/(codata.c ) ???
 
-    # # ax
-    # #trajectory[7] = codata.e/(gamma*codata.m_e)*By
-    # trajectory[7] = 0.3*codata.c /(E) * By
-    # to=-(lambda_u / (codata.c * Beta_et)) * (Nb_period / 2)
-    #
-    # # dX/dz
-    # for i in range(N):
-    #     trajectory[4][i] = np.trapz(trajectory[7][0:(i + 1)], trajectory[3][0:(i + 1)])+Vo
-    #     # trajectory[3][i] = integrate.simps(trajectory[5][0:(i + 1)], trajectory[1][0:(i + 1)])
-    # #trajectory[4]*= (1.0/(Beta_et*codata.c))**2
-    # Vx_2=np.sqrt(1.0*trajectory[4]**2)
-    # L = np.zeros(N)
-    # for i in range(N):
-    #     L[i] = np.trapz(Vx_2[0:(i + 1)], trajectory[3][0:(i + 1)])
-    # trajectory[0] = to + L / (codata.c * Beta)
-    #
-    # # dZ/dt
-    # trajectory[6][0]=Beta_et*codata.c
-    # trajectory[6][N-1]=Beta_et*codata.c
-    # k=0
-    # while k < N-1:
-    #     trajectory[6][k] = (trajectory[3][k+1]-trajectory[3][k])/(trajectory[0][k+1]-trajectory[0][k])
-    #     k +=1
+    # Ax(t)
+    Xm= codata.e*Beta_et/(gamma*codata.m_e)
+    trajectory[7] = Xm * By
+    # Vx et Vz
+    for i in range(N):
+        trajectory[4][i] = np.trapz(trajectory[7][0:(i + 1)], trajectory[0][0:(i + 1)]) + Vo/codata.c
+    trajectory[6] = np.sqrt((Beta)**2 - trajectory[4]**2)
+    # X et Z
+    for i in range(N):
+        trajectory[1][i] = np.trapz(trajectory[4][0:(i + 1)], trajectory[0][0:(i + 1)]) + Xo/codata.c
+        trajectory[3][i] = np.trapz(trajectory[6][0:(i + 1)], trajectory[0][0:(i + 1)]) + Zo/codata.c
+     #Az
+    trajectory[9]=-(trajectory[7]*trajectory[4])/trajectory[6]
 
     return trajectory
+
+
+
+def trajectory_undulator_from_magnetic_field2(By,Z,E,N,nb_enlarg) :
+    gamma = E / 0.511e6
+    Beta = np.sqrt(1.0 - (1.0 / gamma ** 2))
+    #   trajectory =
+    #   [t........]
+    # 	[ X/c......]
+    # 	[ Y/c ......]
+    #	[ Z/c ......]
+    # 	[ Vx/c .....]
+    # 	[ Vy/c .....]
+    # 	[ Vz/c .....]
+    # 	[ Ax/c .....]
+    # 	[ Ay/c .....]
+    # 	[ Az/c .....]
+    trajectory = np.zeros((10,N))
+    trajectory[0] = np.linspace(Z[0]/codata.c,Z[len(Z)-1]/codata.c, N)
+    print(trajectory[0])
+    Vo = [0.0, 0.0, Beta * codata.c, 0.0, 0.0, Z[0]]
+    Z,By=enlargement_vector_for_interpolation(Z, By, nb_enlarg)
+    B = interp1d(Z, By)
+    cst=-codata.e/(codata.m_e*gamma)
+    res = odeint(fct_ODE,Vo,trajectory[0],args=(cst,B))
+    res = np.transpose(res)
+    trajectory[4] = res[0]
+    trajectory[5] = res[1]
+    trajectory[6] = res[2]
+    trajectory[1] = res[3]
+    trajectory[2] = res[4]
+    trajectory[3] = res[5]
+    print(Z.max())
+    print(trajectory[3].max())
+    trajectory[7] = -cst * B(trajectory[3]) * trajectory[6]
+    trajectory[9] = cst* B(trajectory[3]) * trajectory[4]
+    k=1
+    while k<10 :
+        trajectory[k] *= 1.0/codata.c
+        k+=1
+    return trajectory
+
+
+def undulator_trajectory(K,E,lambda_u,Nb_period,Nb_point,Z_By=None,type_trajectory=1) :
+    N = Nb_period * Nb_point + 1
+    if (type_trajectory == 1 or type_trajectory == 2) :
+
+        if Z_By == None :
+            Z = np.linspace(-lambda_u * (Nb_period / 2),lambda_u * (Nb_period / 2), N)
+            By= creation_magnetic_field(K,lambda_u,Nb_period,Z)
+        else :
+            Z= Z_By[0]
+            By=Z_By[1]
+        plt.plot(Z, By)
+        plt.show()
+
+        if (type_trajectory == 1) :
+            N=len(By)
+            trajectory = trajectory_undulator_from_magnetic_field1(By=By, Z=Z,K=K,E=E,N=N,Vo=0.0,Xo=0.0,Zo=Z[0])
+        else :
+            trajectory = trajectory_undulator_from_magnetic_field2(By=By, Z=Z,E=E,N=N,nb_enlarg=np.floor(len(Z)/10))
+
+    else :
+        trajectory = analytical_trajectory_undulator(K=K, lambda_u=lambda_u, Nb_period=Nb_period, Nb_point=Nb_point)
+    return trajectory
+
+
+
+def draw_trajectory( trajectory = np.zeros((10,101))) :
+    plt.plot(trajectory[0],trajectory[1])
+    plt.title(" X = f(t) ")
+    plt.xlabel('t')
+    plt.ylabel('x')
+    plt.show()
+
+    plt.plot(trajectory[0],trajectory[3])
+    plt.title(" Z  = f(t) ")
+    plt.xlabel('t')
+    plt.ylabel('Z')
+    plt.show()
+
+    print('average of Vz  =')
+    ## vrai valeur de Beta_et
+    Beta_et= np.sum(trajectory[6])/len(trajectory[6])
+    print(Beta_et)
+
+    Z = Beta_et*trajectory[0]
+    plt.plot(trajectory[0],trajectory[3]-Z)
+    plt.title(" Z - Beta* t = f(t) ")
+    plt.xlabel('t')
+    plt.ylabel('Z - Beta* t')
+    plt.show()
+
+    plt.plot(trajectory[0], trajectory[4])
+    plt.title(" Vx = f(t) ")
+    plt.xlabel('t')
+    plt.ylabel('Vx')
+    plt.show()
+
+    plt.plot(trajectory[0], trajectory[6])
+    plt.title(" Vz = f(t) ")
+    plt.xlabel('t')
+    plt.ylabel('Vz')
+    plt.show()
+
+    plt.plot(trajectory[0], trajectory[7])
+    plt.title(" Ax = f(t) ")
+    plt.xlabel('t')
+    plt.ylabel('Ax')
+    plt.show()
+
+    plt.plot(trajectory[0], trajectory[9])
+    plt.title(" Az = f(t) ")
+    plt.xlabel('t')
+    plt.ylabel('Az')
+    plt.show()
+
+########################### essai
 
 
 def trajectory_undulator4 (By ,Beta_et,Beta,lambda_u,Nb_period,Bo,gamma,E) :
@@ -235,6 +288,9 @@ def trajectory_undulator4 (By ,Beta_et,Beta,lambda_u,Nb_period,Bo,gamma,E) :
         k+=1
     return trajectory
 
+
+
+
 #################################################
 
 
@@ -259,12 +315,7 @@ def energy_radiated(omega=2.53465927101*10**17,trajectory=np.zeros((11,10)) , x=
     integrand *= (1.0 / (1.0 - n_chap[0]*trajectory[4]-n_chap[2]*trajectory[6])) ** 2
     for k in range(3):
         E[k] = np.trapz(integrand[k], trajectory[0])
-        #E[k] = integrate.simps(integrand[k], trajectory[0])
-    # np.linalg.norm
     return (np.abs(E[0]) ** 2 + np.abs(E[1])** 2 + np.abs(E[2])** 2)
-
-
-
 
 
 
@@ -310,6 +361,6 @@ def radiation(K=1.87, E=1.3 * 10 ** 9, lambda_u=0.035, trajectory=np.zeros((11, 
     X = X.reshape(shape1)
     Y = Y.reshape(shape1)
     res = res.reshape(shape1)
-
+    print("radiation max ")
     print(res.max())
     return res
