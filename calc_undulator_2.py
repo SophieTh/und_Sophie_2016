@@ -49,6 +49,7 @@ def analytical_trajectory_undulator(K=1.87 ,E=1.3e9,lambda_u=0.020, Nb_period=10
     return trajectory
 
 
+
 def creation_magnetic_field(K,lambda_u,Nb_period,z) :
     Bo = K / (93.4 * lambda_u)
     By = -Bo * np.sin((2.0 * np.pi / lambda_u) * z)
@@ -74,6 +75,7 @@ def fct_ODE(y,t,cst,B) :
             y[0],
             0.0,
             y[2]]
+
 
 def enlargement_vector_for_interpolation(Z,By,nb_elarg) :
     dz = Z[1] - Z[0]
@@ -166,18 +168,65 @@ def trajectory_undulator_from_magnetic_field2(By,Z,E,N,nb_enlarg) :
     return trajectory
 
 
-def undulator_trajectory(K,E,lambda_u,Nb_period,Nb_point,Z_By=None,type_trajectory=1) :
-    N = Nb_period * Nb_point + 1
-    if (type_trajectory == 1 or type_trajectory == 2) :
+r"""
+    undulator_trajectory(K,E,lambda_u,Nb_period,Nb_point,Z_By=None,type_trajectory=1)
 
+  PURPOSE:
+ 	This procedure calculates the electron trajectory in a undulator
+
+  INPUTS:
+    Undulator's parameters :
+        K
+        E : energy (eV)
+        lambda_u : period of the undulator (m)
+    Trajectory's parameters :
+        Nb_points : number of points for one period
+        Z_By : numpy.array(2,npoints)   (CASE A)
+                Z_By[0] = the coordinate along the undulator's length
+                Z_By[1] = a numpy.array which is the magnatic field mesured in fonction of Z
+               None                     (CASE B)
+                The fonction create a theoritical magnatic fields
+    type_trajectory : int
+        1 : calculate by integration
+        2 : calculte with an ODE
+        other : a theorytical trajectory is return
+
+  OUTPUT:
+ 	trajectory = numpy.array(10,npoints) the trajectory in fonction of the observator's time and divide by c ,
+ 	                (the light speed).
+ 	    trajectory[0]= times ( NOT DIVIDE BY C )
+ 	    trajectory[1] = X/c
+ 	    trajectory[2] = Y/c
+ 	    trajectory[3] = Z/c
+ 	    trajectory[4] = Vx/c
+ 	    trajectory[5] = Vy/c
+ 	    trajectory[6] = Vz/c
+ 	    trajectory[7] = Ax/c
+ 	    trajectory[8] = Ay/c
+ 	    trajectory[9] = Az/c
+
+    REMARQUE : With the case A and the trajectory_type 1 the number of points put in argument is not considerate
+                the number npoints is the length of the magnetic field given
+
+;-
+"""
+def undulator_trajectory(K,E,lambda_u,Nb_period,Nb_point=None,Z_By=None,type_trajectory=1) :
+    if Nb_point != None :
+        N = Nb_period * Nb_point + 1
+    else :
+        N=1001
+
+    if (type_trajectory == 1 or type_trajectory == 2) :
+        # CASE B
         if Z_By == None :
             Z = np.linspace(-lambda_u * (Nb_period / 2),lambda_u * (Nb_period / 2), N)
             By= creation_magnetic_field(K,lambda_u,Nb_period,Z)
+        # CASE A
         else :
             Z= Z_By[0]
             By=Z_By[1]
-        plt.plot(Z, By)
-        plt.show()
+        # plt.plot(Z, By)
+        # plt.show()
 
         if (type_trajectory == 1) :
             N=len(By)
@@ -187,6 +236,7 @@ def undulator_trajectory(K,E,lambda_u,Nb_period,Nb_point,Z_By=None,type_trajecto
 
     else :
         trajectory = analytical_trajectory_undulator(K=K, lambda_u=lambda_u, Nb_period=Nb_period, Nb_point=Nb_point)
+
     return trajectory
 
 
