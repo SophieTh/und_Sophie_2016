@@ -7,8 +7,8 @@ import scipy.integrate as integrate
 from scipy.interpolate import interp1d
 
 
-from calc_undulator_2 import radiation, draw_trajectory,undulator_trajectory
-from fct_manuel import window_ftr
+from calc_undulator_2 import radiation_single_electron, draw_trajectory,undulator_trajectory,radiation_single_electron2
+
 
 
 print("c: %g m/s**2"%codata.c)
@@ -52,15 +52,12 @@ print(omega1)
 
 
 
-
-
 # recuperation des donnees de B en array en fonction de z
 reference=np.load("x_ray_booklet_field.npz")
 reference.keys()
 Z=reference['ct']
 Z -= (Z[len(Z)-1])/2.0
 By2=reference['B_y']
-nb_enlarg=100
 
 Z_By=np.zeros((2,len(Z)))
 Z_By[0]=Z
@@ -71,7 +68,7 @@ T=undulator_trajectory(K,E,lambda_u,Nb_period,Nb_pts,Z_By,type_trajectory=2)
 #
 print('ok')
 
-draw_trajectory(T)
+#draw_trajectory(T)
 # #
 ####3D plot
 fig = figure()
@@ -79,7 +76,8 @@ ax = Axes3D(fig)
 X=np.arange(0.0, 0.00101, 0.00001)
 Y=np.arange(0.0, 0.00101, 0.00001)
 X,Y = np.meshgrid(X,Y)
-Z2 = radiation(K=K,E=E,trajectory=T,X=X,Y=Y)
+Z2 = radiation_single_electron(K=K,E=E,trajectory=T,X=X,Y=Y)
+print('plot')
 ax.plot_surface(X,Y, Z2, rstride=1, cstride=1)
 ax.set_xlabel("X")
 ax.set_ylabel('Y')

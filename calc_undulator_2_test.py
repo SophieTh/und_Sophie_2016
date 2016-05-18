@@ -3,10 +3,10 @@ import numpy as np
 import scipy.constants as codata
 import scipy.integrate as integrate
 
-from calc_undulator_2 import radiation, undulator_trajectory
+from calc_undulator_2 import radiation_single_electron, undulator_trajectory
 
 class ClacUndulator2Test(unittest.TestCase):
-    
+
     def test_radiation(self):
         K = 1.87
         E = 1.3e9
@@ -19,9 +19,11 @@ class ClacUndulator2Test(unittest.TestCase):
         X = np.arange(0.0, 0.00101, 0.00001)
         Y = np.arange(0.0, 0.00101, 0.00001)
         XY = np.meshgrid(X, Y)
-        Z2 = radiation(K=K, E=E, trajectory=T, X=XY[0], Y=XY[1])
+        Z2 = radiation_single_electron(K=K, E=E, trajectory=T, X=XY[0], Y=XY[1])
 
         self.assertAlmostEqual(Z2.max() / 1e15, 1.314, 3)
+
+
 
     def test_trajectory(self):
         K = 1.87
@@ -42,6 +44,6 @@ class ClacUndulator2Test(unittest.TestCase):
         X = np.arange(0.0, 0.00101, 0.00001)
         Y = np.arange(0.0, 0.00101, 0.00001)
         XY = np.meshgrid(X,Y)
-        Z2 = radiation(K=K, E=E, trajectory=T, X=XY[0], Y=XY[1])
+        Z2 = radiation_single_electron(K=K, E=E, trajectory=T, X=XY[0], Y=XY[1])
 
         self.assertAlmostEqual(Z2.max()/1e15, 1.22700, 3)
