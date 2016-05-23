@@ -63,22 +63,32 @@ Z_By=np.zeros((2,len(Z)))
 Z_By[0]=Z
 Z_By[1]=By2
 
+
+
 T=undulator_trajectory(K,E,lambda_u,Nb_period,Nb_pts,Z_By,type_trajectory=2)
 #
 #
 print('ok')
+print(T[6]-Beta_et)
 
-#draw_trajectory(T)
-# #
-####3D plot
+#
+# plt.plot(Z/codata.c,By2)
+# plt.show()
+#
+# plt.plot(T[0],T[4]**2+T[6]**2)
+# print(T[4]**2+T[6]**2)
+# plt.show()
+# draw_trajectory(T)
+# # #
+# ###3D plot
 fig = figure()
 ax = Axes3D(fig)
-X=np.arange(0.0, 0.00101, 0.00001)
-Y=np.arange(0.0, 0.00101, 0.00001)
+X=np.arange(0.0, 0.0301, 0.0003)
+Y=np.arange(0.0, 0.0301, 0.0003)
 X,Y = np.meshgrid(X,Y)
-Z2 = radiation_single_electron(K=K,E=E,trajectory=T,X=X,Y=Y)
+Z = radiation_single_electron(K=K,E=E,trajectory=T,X=X,Y=Y,D=30.0)
 print('plot')
-ax.plot_surface(X,Y, Z2, rstride=1, cstride=1)
+ax.plot_surface(X,Y, Z, rstride=1, cstride=1)
 ax.set_xlabel("X")
 ax.set_ylabel('Y')
 ax.set_zlabel("flux")
