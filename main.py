@@ -25,7 +25,7 @@ K = 1.87
 E = 1.3e9
 lambda_u = 0.035
 Nb_period = 12
-Nb_pts = 100
+Nb_pts = 20
 
 
 gamma = E /0.511e6
@@ -49,12 +49,12 @@ print(omega1)
 
 ##
 
-
+print(lambda_u/(Beta_et*codata.c))
 
 
 # recuperation des donnees de B en array en fonction de z
 reference=np.load("x_ray_booklet_field.npz")
-reference.keys()
+print(reference.keys())
 Z=reference['ct']
 Z -= (Z[len(Z)-1])/2.0
 By2=reference['B_y']
@@ -64,32 +64,27 @@ Z_By[0]=Z
 Z_By[1]=By2
 
 
+#attention changer les entree
+T=undulator_trajectory(K,E,lambda_u,Nb_period,Nb_pts,Z_By,type_trajectory=2,Vx=0.0,Xo=0.0,Vz=Beta*codata.c)
+#
 
-T=undulator_trajectory(K,E,lambda_u,Nb_period,Nb_pts,Z_By,type_trajectory=2)
-#
-#
 print('ok')
-print(T[6]-Beta_et)
+#print(T[6]-Beta_et)
 
-#
-# plt.plot(Z/codata.c,By2)
-# plt.show()
-#
-# plt.plot(T[0],T[4]**2+T[6]**2)
-# print(T[4]**2+T[6]**2)
-# plt.show()
-# draw_trajectory(T)
-# # #
-# ###3D plot
+
 fig = figure()
 ax = Axes3D(fig)
 X=np.arange(0.0, 0.0301, 0.0003)
 Y=np.arange(0.0, 0.0301, 0.0003)
 X,Y = np.meshgrid(X,Y)
-Z = radiation_single_electron(K=K,E=E,trajectory=T,X=X,Y=Y,D=30.0)
+Z = radiation_single_electron2(K=K,E=E,trajectory=T,X=X,Y=Y,D=30.0)
 print('plot')
 ax.plot_surface(X,Y, Z, rstride=1, cstride=1)
 ax.set_xlabel("X")
 ax.set_ylabel('Y')
 ax.set_zlabel("flux")
 show()
+
+
+
+

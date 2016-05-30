@@ -7,7 +7,7 @@ import scipy.integrate as integrate
 from scipy.interpolate import interp1d
 
 
-from calc_undulator_2 import draw_trajectory,undulator_trajectory, draw_2_trajectory
+from calc_undulator_2 import draw_trajectory,undulator_trajectory, draw_2_trajectory,radiation_single_electron_2D
 
 
 def erreur_trajectory( ref=np.zeros((10,101)),test=np.zeros((10,101))) :
@@ -62,6 +62,25 @@ def erreur_trajectory( ref=np.zeros((10,101)),test=np.zeros((10,101))) :
 
     return erreur01
 
+def erreur_of_radiation_for_trajectory(X=np.arange(0.0, 0.0301, 0.0003),Y=np.zeros(101),
+                                       ref=np.zeros((10,101)),test=np.zeros((10,101))) :
+    Z0, maxref = radiation_single_electron_2D(K=K, E=E, trajectory=ref, X=X, Y=Y, D=30.0)
+    Z1, maxtest = radiation_single_electron_2D(K=K, E=E, trajectory=test, X=X, Y=Y, D=30.0)
+
+    u=np.linspace(0.0,len(X),len(X))/len(X)
+    print(u)
+    plt.plot(u, Z0)
+    plt.plot(u, Z1)
+    plt.title(" ref and test = f(u) ")
+    plt.show()
+
+    plt.plot(u, (abs(Z1 - Z0) / maxref))
+    plt.title(" relativ error of Z1 for Z0 ")
+    plt.ylabel('|Z1-Z0|/max0')
+    plt.xlabel('u')
+    plt.show()
+
+    return abs(Z1-Z0)
 
 
 
@@ -121,3 +140,8 @@ erreur02 =erreur_trajectory(ref=T0,test=T2)
 erreur12 =erreur_trajectory(ref=T1,test=T2)
 #draw_trajectory(erreur02)
 
+
+X=np.arange(0.0, 0.0301, 0.0003)
+Y=np.zeros_like(X)
+
+erreur_rad_01=erreur_of_radiation_for_trajectory(X=X,Y=Y,ref=T0,test=T1)
