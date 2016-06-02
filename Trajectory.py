@@ -1,10 +1,10 @@
-from pylab import *
+import numpy as np
 import matplotlib.pyplot as plt
-import scipy.constants as codata
+
 
 
 class Trajectory(object):
-    def __init__(self, t, x, y, z, v_x, v_y, v_z, a_x, a_y, a_z,parameters):
+    def __init__(self, t, x, y, z, v_x, v_y, v_z, a_x, a_y, a_z):
         self.t = t.copy()
         self.x = x.copy()
         self.y = y.copy()
@@ -15,7 +15,29 @@ class Trajectory(object):
         self.a_x = a_x.copy()
         self.a_y = a_y.copy()
         self.a_z = a_z.copy()
-        self.parameters=parameters
+
+    def nb_points(self):
+        N=len(self.t)
+        if (len(self.x)==N and len(self.y)==N
+            and len(self.z)==N and len(self.v_x)==N
+            and len(self.v_y) == N  and len(self.v_z)==N
+            and len(self.a_x)==N and len(self.a_y)==N
+            and len(self.a_z)==N ) :
+            N = len(self.t)
+        else :
+            N=0
+        return N
+
+    # def error(self,trajec_test):
+    #     if self.t != trajec_test.t :
+    #         raise Exception("Problem : the two trajectory have not the same vector t.")
+    #     error=np.zeros((10,self.nb_points()))
+    #     error[0]=
+
+    def copy(self):
+        return Trajectory(t=self.t.copy(), x=self.x.copy(), y=self.y.copy(), z=self.z.copy(), v_x=self.v_x.copy(),
+                          v_y=self.v_y.copy(), v_z=self.v_z.copy(), a_x=self.a_x.copy(),
+                          a_y=self.a_y.copy(), a_z=self.a_z.copy())
 
     # draw all coordinate of the trajectory in function of the time
     def draw(self):

@@ -1,82 +1,60 @@
 import numpy as np
-import matplotlib.pyplot as plt
-from pylab import *
-from mpl_toolkits.mplot3d import Axes3D
 import scipy.constants as codata
-import Trajectory
-import Radiation
-from TrajectoryFactory import TrajectoryFactory
-from RadiationFactory import UndulatorRadiationFactory
+from Trajectory import Trajectory
+from Radiation import Radiation
+from MagneticField import MagneticField
+from UndulatorParameter import UndulatorParameters as Undulator
+from UndulatorSimulation import UndulatorSimulation
+from TrajectoryFactory import TrajectoryFactory, TRAJECTORY_METHOD_ANALYTIC,TRAJECTORY_METHOD_ODE,\
+                                        TRAJECTORY_METHOD_INTEGRATION
+from RadiationFactory import RadiationFactory ,RADIATION_METHOD_NEAR_FIELD, \
+                                RADIATION_METHOD_FARFIELD, RADIATION_METHOD_APPROX_FARFIELD
 
-from calc_undulator_2 import radiation_single_electron, draw_trajectory,undulator_trajectory
 
+eV_to_J=1.602176487e-19
 ######################################################
 
 
-K = 1.87
-E = 1.3e9
-lambda_u = 0.035
-Nb_period = 12
-Nb_pts = 20*12+1
 
-gamma = E /0.511e6
-print(gamma**2)
-Beta = np.sqrt(1.0 - (1.0 / gamma ** 2))
-print(1e0-Beta)
-ku = 2.0 * np.pi / lambda_u
-gamma = E / 0.511e6
-Beta = np.sqrt(1.0 - (1.0 / gamma ** 2))
-Beta_et = 1.0 - (1.0 / (2.0 * gamma ** 2)) * (1.0 + (K ** 2) / 2.0)
-omega1 = ((2.0 * gamma ** 2) / (1.0 + (K ** 2) / 2.0)) * ((2.0 * np.pi * codata.c) / lambda_u)
-L=Nb_period*lambda_u
+E_1=7876.0
+
+omega=E_1*eV_to_J/codata.hbar
+print("omega")
+print(omega)
+
 
 # recuperation des donnees de B en array en fonction de z
 reference=np.load("x_ray_booklet_field.npz")
-print(reference.keys())
 Z=reference['ct']
 Z -= (Z[len(Z)-1])/2.0
-By2=reference['B_y']
+By=reference['B_y']
+SRW_magentic_field=MagneticField(x=0,y=0,z=Z,Bx=0,By=By,Bz=0)
 
-Z_By=np.zeros((2,len(Z)))
-Z_By[0]=Z
-Z_By[1]=By2
-
-cst=codata.e * 1e-10 / (8.0 * np.pi ** 2 * codata.epsilon_0 * codata.c * codata.h)
-print("cst")
-print(cst)
-# print(Beta_et*codata.c*ku*K/gamma)
-# print(codata.c/gamma**2)
-# print(lambda_u*codata.e*1e-10*L/(2.0*np.pi**2*codata.epsilon_0*codata.h*4.0*codata.c**2*(1.0-Beta)**2 *gamma))
-# print (codata.epsilon_0)
-# print (codata.h)
-# print (codata.c**2)
-# print (codata.e)
 #
-cst2=(2*ku*K*codata.c/(gamma**3*(1.0-Beta)**4))
-print("cst2")
-print(cst2)
 
-cst3=cst2*cst*(2.0*30.0-L)**2/30.0
-print("cst3")
-print(cst3)
-T=TrajectoryFactory(K,E,lambda_u,Nb_period,Nb_pts,0).create_for_plane_undulator()
-print(type(T))
-#T.draw()
 
-Rad= UndulatorRadiationFactory(T,1).create_for_single_electron(distance=30.0)
-print(type(Rad))
-#Rad.draw()
 
-Rad2= UndulatorRadiationFactory(T,3).create_for_single_electron(distance=30.0)
-print(type(Rad2))
-#Rad2.draw()
 
-D=np.linspace(L*0.5+0.1,20.0,40)
-error=Rad.compare_with_ditance(Rad2,D)
-print(type(error))
-print(error.shape)
-print(error)
-plt.plot(D,error)
-plt.show()
+# minimum  :
+und_test=Undulator(K = 1.87,E = 1.3e9,lambda_u = 0.035,L=0.035*12,I=1.0)
+traj_test=TrajectoryFactory(Nb_pts=201,method=TRAJECTORY_METHOD_ANALYTIC)
 
+sim_test=UndulatorSimulation(undulator=und_test,trajectory_fact=traj_test)
+
+# sim_test.trajectory.draw()
+# sim_test.radiation.draw()
+
+# complete :
+ESRF18=Undulator(K = 1.68, E = 6.0e9,lambda_u = 0.018, L=2.0, I=0.2)
+# [Vx,Vy,Vz,x,y,z]
+initial_condition=np.array([0.0,0.0,0.9999999997*codata.c,0.0,0.0,-1.0])
+traj=TrajectoryFactory(Nb_pts=1001,method=TRAJECTORY_METHOD_ODE, initial_condition=initial_condition)
+rad=RadiationFactory(method=RADIATION_METHOD_APPROX_FARFIELD,omega=omega)
+X=np.linspace(0.0,0.005,101)
+Y=np.linspace(0.0,0.005,101)
+
+sim_ESRF=UndulatorSimulation(undulator=ESRF18,trajectory_fact=traj,radiation_fact=rad,distance=30.0,X=X,Y=Y)
+
+#sim_ESRF.trajectory.draw()
+sim_ESRF.radiation.draw()
 
