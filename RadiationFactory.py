@@ -2,6 +2,8 @@ import numpy as np
 import scipy.constants as codata
 import scipy.integrate as integrate
 from Radiation import Radiation
+from TrajectoryFactory import TrajectoryFactory, TRAJECTORY_METHOD_ANALYTIC
+from UndulatorParameter import UndulatorParameters as Undulator
 
 RADIATION_METHOD_AUTOMATIC=0
 RADIATION_METHOD_NEAR_FIELD=1
@@ -66,7 +68,7 @@ class RadiationFactory(object):
         return res
 
     # Photon's flow all over a screen situate at distance D of an undulator
-    def create_for_single_electron(self, trajectory,undulator,distance,X=None,Y=None):
+    def create_for_single_electron(self, trajectory,undulator,distance=None,X=None,Y=None):
         map=self.calculate_radiation_intensity(trajectory=trajectory,undulator=undulator,
                                                distance=distance,X_arrays=X,Y_arrays=Y)
         radiation= Radiation(map=map,X=X,Y=Y,distance=distance)
@@ -173,5 +175,11 @@ class RadiationFactory(object):
         return (np.abs(E[0]) ** 2 + np.abs(E[1]) ** 2 + np.abs(E[2]) ** 2)
 
 
-
+if __name__ == "__main__" :
+    und_test = Undulator(K=1.87, E=1.3e9, lambda_u=0.035, L=0.035 * 12, I=1.0)
+    traj_test=TrajectoryFactory(Nb_pts=201,method=TRAJECTORY_METHOD_ANALYTIC).create_for_plane_undulator_ideal(
+                                                                                                undulator=und_test)
+    rad=RadiationFactory(omega=und_test.omega1(),method=RADIATION_METHOD_APPROX_FARFIELD).create_for_single_electron(
+                        trajectory=traj_test, undulator=und_test)
+    rad.draw()
 

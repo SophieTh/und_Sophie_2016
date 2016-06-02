@@ -178,3 +178,16 @@ class Trajectory(object):
         plt.ylabel('Az')
         plt.show()
 
+if __name__ == "__main__" :
+    t=np.linspace(0.0,20.0,1001)
+    x = np.sin(t)
+    y= 0.0*t
+    z=np.cos(t)
+    v_x=np.cos(t)
+    v_y=0.0*t
+    v_z=-np.sin(t)
+    a_x=-np.sin(t)
+    a_y=0.0*t
+    a_z=-np.cos(t)
+    Traj=Trajectory(t,x,y,z,v_x,v_y,v_z,a_x,a_y,a_z)
+    Traj.draw()

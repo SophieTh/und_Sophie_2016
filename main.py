@@ -44,17 +44,30 @@ sim_test=UndulatorSimulation(undulator=und_test,trajectory_fact=traj_test)
 # sim_test.trajectory.draw()
 # sim_test.radiation.draw()
 
+# with a given magnetic field
+sim_SRW=UndulatorSimulation(undulator=und_test,trajectory_fact=traj_test,magnetic_field=SRW_magentic_field)
+sim_SRW.change_trajectory_method(TRAJECTORY_METHOD_ODE)
+
+# sim_SRW.trajectory.draw()
+sim_SRW.radiation.draw()
+
+
 # complete :
 ESRF18=Undulator(K = 1.68, E = 6.0e9,lambda_u = 0.018, L=2.0, I=0.2)
 # [Vx,Vy,Vz,x,y,z]
 initial_condition=np.array([0.0,0.0,0.9999999997*codata.c,0.0,0.0,-1.0])
-traj=TrajectoryFactory(Nb_pts=1001,method=TRAJECTORY_METHOD_ODE, initial_condition=initial_condition)
+traj=TrajectoryFactory(Nb_pts=1001,method=TRAJECTORY_METHOD_ANALYTIC, initial_condition=initial_condition)
 rad=RadiationFactory(method=RADIATION_METHOD_APPROX_FARFIELD,omega=omega)
 X=np.linspace(0.0,0.005,101)
 Y=np.linspace(0.0,0.005,101)
 
-sim_ESRF=UndulatorSimulation(undulator=ESRF18,trajectory_fact=traj,radiation_fact=rad,distance=30.0,X=X,Y=Y)
+sim_ESRF=UndulatorSimulation(undulator=ESRF18,trajectory_fact=traj,radiation_fact=rad,
+                             distance=30.0,X=X,Y=Y)
 
 #sim_ESRF.trajectory.draw()
 sim_ESRF.radiation.draw()
+
+
+
+# c'est decale ????
 

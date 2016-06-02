@@ -14,6 +14,10 @@ class MagneticField(object):
         self.By = By
         self.Bz = Bz
 
+    def copy(self):
+        return MagneticField(x=self.x.copy(), y=self.y.copy(), z=self.z.copy(),
+                             Bx=self.Bx.copy(), By=self.By.copy(), Bz=self.Bz.copy())
+
     #faire une fct aui fait l'interpolation  et elargissement
     #
 

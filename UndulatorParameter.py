@@ -35,6 +35,14 @@ class UndulatorParameters(object):
 
     def omega1(self) :
         gamma=self.E/0.511e6
-        return ((2.0 * gamma ** 2) / (1.0 + (self.K ** 2) / 2.0)) * ((2.0 * np.pi * codata.c) / self.lambda_u)
+        first_harm=((2.0 * gamma ** 2) / (1.0 + (self.K ** 2) / 2.0)) * ((2.0 * np.pi * codata.c) / self.lambda_u)
+        return first_harm
 
-
+if __name__ == "__main__" :
+    K = 1.87
+    E = 1.3e9
+    lambda_u = 0.035
+    L = 0.035 * 12
+    I = 1.0
+    undulator=UndulatorParameters(K=K,E=E,lambda_u=lambda_u,L=L,I=I)
+    print("The frequency for first harmotic is %f"%undulator.omega1())

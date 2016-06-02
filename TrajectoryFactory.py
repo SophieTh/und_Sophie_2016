@@ -4,6 +4,7 @@ import scipy.integrate as integrate
 from scipy.integrate import odeint
 from scipy.interpolate import interp1d
 from Trajectory import Trajectory
+from UndulatorParameter import UndulatorParameters as Undulator
 
 
 TRAJECTORY_METHOD_ANALYTIC=0
@@ -78,7 +79,7 @@ class TrajectoryFactory(object):
         gamma = undulator.E / 0.511e6
         Beta = np.sqrt(1.0 - (1.0 / gamma ** 2))
         Beta_et = 1.0 - (1.0 / (2.0 * gamma ** 2)) * (1.0 + (undulator.K ** 2) / 2.0)
-        N=undulator.Nb_pts
+        N=self.Nb_pts
         Z=mag_field.z
         # trajectory =
         #   [t........]
@@ -162,10 +163,27 @@ class TrajectoryFactory(object):
         return trajectory
 
 
+    def calculate_trajectory(self,undulator,B):
+        if (self.method == 1 or self.method == 2):
+            if self.method == 1:
+                T = self.trajectory_undulator_from_magnetic_field_method1(undulator=undulator, mag_field=B,
+                                                                          nb_enlarg=np.floor(
+                                                                              len(B.z) / (0.1 * len(B.By))))
+
+            else:
+                T = self.trajectory_undulator_from_magnetic_field_method2(undulator=undulator, mag_field=B,
+                                                                          nb_enlarg=np.floor(
+                                                                              len(Z) / (0.1 * self.Nb_pts)))
+
+        else:
+            T = self.analytical_trajectory_plane_undulator(undulator=undulator)
+        return T
+
+
     def create_for_plane_undulator(self,undulator,Z_By=None):
         if (self.method == 1 or self.method == 2):
             if Z_By == None:
-                Z = np.linspace(-self.L/2.0,self.L / 2.0, self.Nb_pts)
+                Z = np.linspace(-undulator.L/2.0,undulator.L / 2.0, self.Nb_pts)
                 B = undulator.creation_magnetic_field_plane_undulator(Z)
             else:
                 B = Z_By
@@ -173,23 +191,25 @@ class TrajectoryFactory(object):
             if (self.initial_condition==None) :
                 self.initial_condition=np.array([0.0,0.0,np.sqrt(1.0 - (1.0 / ( undulator.E /0.511e6)** 2))*codata.c,
                                                  0.0,0.0,B.z[0]])
-            if self.method == 1:
-                T= self.trajectory_undulator_from_magnetic_field_method1(undulator=undulator, mag_field=B,
-                                                                    nb_enlarg=np.floor(len(B.z) / (0.1 * len(B.by))))
 
-            else:
-                T= self.trajectory_undulator_from_magnetic_field_method2(undulator=undulator,mag_field=B,
-                                                                    nb_enlarg=np.floor(len(Z) / (0.1 * self.Nb_pts)))
+            T=self.calculate_trajectory(undulator=undulator,B=B)
 
         else:
-            T = self.analytical_trajectory_plane_undulator()
+            T = self.analytical_trajectory_plane_undulator(undulator=undulator)
 
-        trajectory = Trajectory(T[0],T[1],T[2],T[3],T[4],T[5],T[6],T[7],T[8],T[9],self)
+        trajectory = Trajectory(T[0],T[1],T[2],T[3],T[4],T[5],T[6],T[7],T[8],T[9])
 
         return trajectory
+
 
     def create_for_plane_undulator_ideal(self,undulator):
         T = self.analytical_trajectory_plane_undulator(undulator)
         trajectory = Trajectory(T[0], T[1], T[2], T[3], T[4], T[5], T[6], T[7], T[8], T[9])
         return trajectory
 
+
+if __name__ == "__main__" :
+    und_test = Undulator(K=1.87, E=1.3e9, lambda_u=0.035, L=0.035 * 12, I=1.0)
+    traj_test=TrajectoryFactory(Nb_pts=201,method=TRAJECTORY_METHOD_ANALYTIC).create_for_plane_undulator_ideal(
+                                                                                                undulator=und_test)
+    traj_test.draw()

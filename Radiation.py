@@ -2,6 +2,8 @@ import numpy as np
 from pylab import *
 from mpl_toolkits.mplot3d import Axes3D
 
+from TrajectoryFactory import TrajectoryFactory, TRAJECTORY_METHOD_ANALYTIC
+from UndulatorParameter import UndulatorParameters as Undulator
 
 class Radiation(object):
     def __init__(self, map,X,Y,distance):
@@ -53,6 +55,5 @@ class Radiation(object):
            raise Exception("Problem : radiation max is null")
         res=self.error_max(radiation2)/self.max()
         return res
-
 
 
