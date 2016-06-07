@@ -51,7 +51,11 @@ class RadiationFactory(object):
 
         if self.method == RADIATION_METHOD_APPROX_FARFIELD:
             for i in range(len(X)):
-                res[i] = c6 * self.energy_radiated_approximation_and_farfield(trajectory=trajectory,distance=distance, x=X[i], y=Y[i])
+                # res[i] = c6 * self.energy_radiated_approximation_and_farfield(trajectory=trajectory,
+                #                                                                distance=distance, x=X[i], y=Y[i])
+                res[i] = c6 * self.energy_radiated_approximation_and_farfield2(trajectory=trajectory,
+                                                                              undulator=undulator,
+                                                                      distance=distance, x=X[i], y=Y[i])
         else:
             if self.method == RADIATION_METHOD_FARFIELD:
                 for i in range(len(X)):
@@ -65,11 +69,13 @@ class RadiationFactory(object):
                 else:
                     print('coucou')
         res = res.reshape(shape1)
-        return res
+        return res ,X_arrays , Y_arrays
+
+
 
     # Photon's flow all over a screen situate at distance D of an undulator
     def create_for_single_electron(self, trajectory,undulator,distance=None,X=None,Y=None):
-        map=self.calculate_radiation_intensity(trajectory=trajectory,undulator=undulator,
+        map,X,Y=self.calculate_radiation_intensity(trajectory=trajectory,undulator=undulator,
                                                distance=distance,X_arrays=X,Y_arrays=Y)
         radiation= Radiation(map=map,X=X,Y=Y,distance=distance)
         return radiation
@@ -98,14 +104,58 @@ class RadiationFactory(object):
         Alpha1 = (1.0 / (1.0 - n_chap[0] * trajectory.v_x
                          -n_chap[1] * trajectory.v_y- n_chap[2] * trajectory.v_z)) ** 2
 
-        integrand[0] += (A1*(n_chap[0]-trajectory.v_x)-A2*trajectory.a_x) * Alpha2 * Alpha1
-        integrand[1] += (A1 * (n_chap[1] - trajectory.v_y) - A2 * trajectory.a_y) * Alpha2 * Alpha1
-        integrand[2] += (A1*(n_chap[2]-trajectory.v_z)-A2*trajectory.a_z) * Alpha2 * Alpha1
+        integrand[0] += (A1*(n_chap[0]-trajectory.v_x)-A2*trajectory.a_x) * Alpha2*Alpha1
+        integrand[1] += (A1 * (n_chap[1] - trajectory.v_y) - A2 * trajectory.a_y) * Alpha2*Alpha1
+        integrand[2] += (A1*(n_chap[2]-trajectory.v_z)-A2*trajectory.a_z) * Alpha2*Alpha1
 
         for k in range(3):
             # E[k] = np.trapz(integrand[k], self.trajectory.t)
             E[k] = integrate.simps(integrand[k], trajectory.t)
         return (np.abs(E[0]) ** 2 + np.abs(E[1]) ** 2 + np.abs(E[2]) ** 2)
+
+
+
+    def energy_radiated_approximation_and_farfield2(self, trajectory,undulator, x, y, distance):
+        # N = trajectory.shape[1]
+        N = trajectory.nb_points()
+        if distance == None:
+            # in radian :
+            n_chap = np.array([x, y, 1.0 - 0.5 * (x ** 2 + y ** 2)])
+        # in meters :
+        else:
+            R = np.sqrt(x ** 2 + y ** 2 + distance ** 2)
+            n_chap = np.array([x, y, distance]) / R
+
+        E = np.full((3,), 0. + 1j * 0., dtype=np.complex)
+        integrand = np.full((3, N), 0. + 1j * 0., dtype=np.complex)
+        A1 = (n_chap[1] * trajectory.v_z - n_chap[2] * trajectory.v_y)
+        A2 = (-n_chap[0] * trajectory.v_z + n_chap[2] * trajectory.v_x)
+        A3 = (n_chap[0] * trajectory.v_y - n_chap[1] * trajectory.v_x)
+        Alpha2 = np.exp(
+            0. + 1j * self.omega * (trajectory.t - n_chap[0] * trajectory.x
+                                    - n_chap[1] * trajectory.y - n_chap[2] * trajectory.z))
+
+
+        integrand[0] += (n_chap[1]*A3-n_chap[2]*A2) * Alpha2
+        integrand[1] += (-n_chap[0]*A3 + n_chap[2]*A1) * Alpha2
+        integrand[2] += (n_chap[0]*A2-n_chap[1]*A1) * Alpha2
+        for k in range(3):
+            # E[k] = np.trapz(integrand[k], self.trajectory.t)
+            E[k] = integrate.simps(integrand[k], trajectory.t)
+        E *= self.omega * 1j
+
+        #renplacer T[0]
+        # Beta par v_z[0]
+        Alpha3 = -undulator.L/(2.0*codata.c) + n_chap[2] * undulator.L/2.0
+        terme_bord = np.full((3,), 0. + 1j * 0., dtype=np.complex)
+        terme_bord[0] = n_chap[2] * n_chap[0] * undulator.Beta()  + 0.0 * 1j
+        terme_bord[1] = n_chap[2] * n_chap[1] * undulator.Beta()  + 0.0 * 1j
+        terme_bord[2] = undulator.Beta() * (n_chap[2]**2-1.0) + 0.0 * 1j
+        terme_bord *= -2j * np.sin(self.omega * Alpha3) / (1.0 - n_chap[2] * undulator.Beta())
+        E += terme_bord
+
+        return (np.abs(E[0]) ** 2 + np.abs(E[1]) ** 2 + np.abs(E[2]) ** 2)
+
 
     # exact equation for the energy radiated
     # warning !!!!!!! far field approximation
@@ -177,9 +227,11 @@ class RadiationFactory(object):
 
 if __name__ == "__main__" :
     und_test = Undulator(K=1.87, E=1.3e9, lambda_u=0.035, L=0.035 * 12, I=1.0)
-    traj_test=TrajectoryFactory(Nb_pts=201,method=TRAJECTORY_METHOD_ANALYTIC).create_for_plane_undulator_ideal(
+    traj_test=TrajectoryFactory(Nb_pts=2001,method=TRAJECTORY_METHOD_ANALYTIC).create_for_plane_undulator_ideal(
                                                                                                 undulator=und_test)
     rad=RadiationFactory(omega=und_test.omega1(),method=RADIATION_METHOD_APPROX_FARFIELD).create_for_single_electron(
                         trajectory=traj_test, undulator=und_test)
+    print(rad.max())
+    print(rad.X)
     rad.draw()
 

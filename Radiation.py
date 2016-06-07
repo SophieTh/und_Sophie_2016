@@ -1,4 +1,6 @@
 import numpy as np
+import scipy.integrate as integrate
+import matplotlib.pyplot as plt
 from pylab import *
 from mpl_toolkits.mplot3d import Axes3D
 
@@ -6,7 +8,7 @@ from TrajectoryFactory import TrajectoryFactory, TRAJECTORY_METHOD_ANALYTIC
 from UndulatorParameter import UndulatorParameters as Undulator
 
 class Radiation(object):
-    def __init__(self, map,X,Y,distance):
+    def __init__(self, map,X,Y,distance=None):
         self.intensity=map
         self.X=X
         self.Y=Y
@@ -30,13 +32,13 @@ class Radiation(object):
         else :
             X_grid=self.X.copy()
             Y_grid=self.Y.copy()
-        fig = figure()
+        fig = plt.figure()
         ax = Axes3D(fig)
         ax.plot_surface(X_grid, Y_grid, self.intensity, rstride=1, cstride=1)
         ax.set_xlabel("X")
         ax.set_ylabel('Y')
         ax.set_zlabel("flux")
-        show()
+        plt.show()
 
     def difference_with(self,radiation2):
       error=np.abs(self.map - radiation2.map)
@@ -56,4 +58,23 @@ class Radiation(object):
         res=self.error_max(radiation2)/self.max()
         return res
 
+    def integration(self):
+        if (self.X == None or self.Y == None ) :
+            print("pb ds Radtion . integration")
+            res = 0
+        else :
+            res=integrate.simps(integrate.simps(self.intensity,self.X),self.Y)
+        return res
+
+
+if __name__ == "__main__" :
+
+    X=np.linspace(0.0,0.005,101)
+    Y=np.linspace(0.0,0.005,101)
+    X_grid,Y_grid=np.meshgrid(X,Y)
+    map = X_grid ** 2 * Y_grid ** 2
+    rad=Radiation(map=map,X=X,Y=Y)
+    print(rad.intensity.shape)
+    print(rad.integration())
+    rad.draw()
 
