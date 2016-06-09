@@ -1,6 +1,8 @@
 import numpy as np
 import matplotlib.pyplot as plt
+from mpl_toolkits.mplot3d import Axes3D
 import scipy.constants as codata
+import time
 from Trajectory import Trajectory
 from Radiation import Radiation
 from MagneticField import MagneticField
@@ -11,29 +13,28 @@ from RadiationFactory import RadiationFactory ,RADIATION_METHOD_NEAR_FIELD, \
                                 RADIATION_METHOD_FARFIELD, RADIATION_METHOD_APPROX_FARFIELD
 
 
+
 class UndulatorSimulation(object):
-    def __init__(self,undulator,trajectory_fact,radiation_fact=None,magnetic_field=None,
-                 X=None, Y=None, distance=None):
+
+    def __init__(self,undulator,trajectory_fact,magnetic_field,radiation_fact,trajectory,radiation):
         self.undulator=undulator
         self.magnetic_filed=magnetic_field
         self.trajectory_fact=trajectory_fact
-        self.trajectory=self.trajectory_fact.create_for_plane_undulator(undulator=self.undulator,
-                                                                              Z_By=self.magnetic_filed)
-        if (radiation_fact == None):
-            self.radiation_fact=RadiationFactory( method=RADIATION_METHOD_APPROX_FARFIELD,
-                                                          omega=self.undulator.omega1())
-        else:
-            self.radiation_fact=radiation_fact
+        self.radiation_fact=radiation_fact
+        self.trajectory=trajectory
+        self.radiation=radiation
 
-        self.radiation=self.radiation_fact.create_for_single_electron(trajectory=self.trajectory,
-                                                                          undulator=self.undulator,
-                                                                          distance=distance,
-                                                                          X=X,Y=Y)
+# faire un autre constructeur pour la copie
 
 
     def copy(self):
+        if self.magnetic_filed==None :
+            mag_f=None
+        else :
+            mag_f =self.magnetic_filed.copy()
         return UndulatorSimulation(undulator=self.undulator.copy(),trajectory_fact=self.trajectory_fact.copy(),
-                                   magnetic_field=self.magnetic_filed.copy(),radiation_fact=self.radiation_fact.copy())
+                                   magnetic_field=mag_f,radiation_fact=self.radiation_fact.copy(),
+                                   trajectory=self.trajectory.copy(),radiation=self.radiation.copy())
 
     def change_distance(self,D):
         self.radiation.distance=D
@@ -46,7 +47,7 @@ class UndulatorSimulation(object):
     def change_radiation_method(self,method):
         self.radiation_fact.method=method
         #update intensity
-        self.radiation.intensity = self.radiation_fact.calculate_radiation_intensity(trajectory=self.trajectory,
+        self.radiation.intensity= self.radiation_fact.calculate_radiation_intensity(trajectory=self.trajectory,
                                                                                      undulator=self.undulator,
                                                                                     distance=self.radiation.distance,
                                                                                     X_arrays=self.radiation.X,
@@ -66,16 +67,16 @@ class UndulatorSimulation(object):
     def change_omega(self, omega) :
         self.radiation_fact.omega=omega
         self.radiation.intensity = self.radiation_fact.calculate_radiation_intensity(trajectory=self.trajectory,
-                                                                                     undulator=self.undulator,
-                                                                                 distance=self.radiation.distance,
-                                                                                 X_arrays=self.radiation.X,
-                                                                                 Y_arrays=self.radiation.Y)
+                                                    undulator=self.undulator, distance=self.radiation.distance,
+                                                    X_arrays=self.radiation.X,Y_arrays=self.radiation.Y)
 
     def error_radiation_method(self,method,D):
         sim2=self.copy()
         sim2.change_radiation_method(method)
-        error=np.array(len(D))
+        error=np.zeros_like(D)
+        print(len(D))
         for i in range(len(D)) :
+            print(i)
             self.change_distance(D[i])
             sim2.change_distance(D[i])
             error[i]=self.radiation.error_max(sim2.radiation)
@@ -97,14 +98,38 @@ class UndulatorSimulation(object):
             omega_array=np.arange(omega1*0.9,5.0*omega1*1.1,omega1*0.01)
         spectre=np.zeros_like(omega_array)
         print(len(spectre))
+        # print('self.radiation.X.shape')
+        # print(self.radiation.X.shape)
+        # print('self.radiation.Y.shape')
+        # print(self.radiation.Y.shape)
         for i in range(len(spectre)) :
             print(i)
             self.change_omega(omega_array[i])
             spectre[i]=self.radiation.integration()
         return spectre , omega_array
 
+    def spectre2(self,omega_array=None) :
+        if omega_array == None :
+            omega1=self.undulator.omega1()
+            omega_array=np.arange(omega1*0.9,5.0*omega1*1.1,omega1*0.01)
+        spectre=np.zeros_like(omega_array)
+        print(len(spectre))
+        # print('self.radiation.X.shape')
+        # print(self.radiation.X.shape)
+        # print('self.radiation.Y.shape')
+        # print(self.radiation.Y.shape)
+        for i in range(len(spectre)) :
+            print(i)
+            self.change_omega(omega_array[i])
+            spectre[i]=self.radiation.max()
+        return spectre , omega_array
+
     def spectre_max(self, omega_array=None):
-        spectre,omega_array = self.spectre(omega_array=omega_array)
+        start_time = time.time()
+        spectre,omega_array = self.spectre2(omega_array=omega_array)
+        interval = time.time() - start_time
+        print("interval temps :")
+        print(interval)
         omega1=self.undulator.omega1()
         omega1_min=np.ceil(omega_array[0]/omega1)
         print("harmonic min =")
@@ -126,24 +151,107 @@ class UndulatorSimulation(object):
         plt.show()
         return spectre , omega_array , omega_max
 
-    def D_max_for_n_cst(self,alpha):
-        lim=self.undulator.Beta()*codata.c*np.abs(self.trajectory.t[-1])+(self.undulator.K*self.undulator.K*self.undulator.lambda_u)/(8.0*self.undulator.gamma()*self.undulator.gamma()*2.0*np.pi)
-        return lim *10**alpha
+    # only the trajectory change, not the radiation
+    # must be use with special case like method "time_radiation"
+    def change_Nb_pts_trajectory_only(self,Nb_pts) :
+        self.trajectory_fact.Nb_pts = Nb_pts
+        self.trajectory=self.trajectory_fact.create_for_plane_undulator(undulator=self.undulator,
+                                                                         Z_By=self.magnetic_filed)
+
+    def change_Nb_pts_radiation(self,Nb_pts) :
+        self.radiation.X=np.linspace(self.radiation.X[0],self.radiation.X[-1]*1.00001,Nb_pts)
+        self.radiation.Y = np.linspace(self.radiation.Y[0], self.radiation.Y[-1] * 1.00001, Nb_pts)
+        self.radiation.intensity = self.radiation_fact.calculate_radiation_intensity(trajectory=self.trajectory,
+                                                                                     undulator=self.undulator,
+                                                                                     distance=self.radiation.distance,
+                                                                                     X_arrays=self.radiation.X,
+                                                                                     Y_arrays=self.radiation.Y)
+
+    def time_radiation(self,Nb_pts_trajectory,Nb_pts_radiation):
+        N=len(Nb_pts_trajectory)
+        M=len(Nb_pts_radiation)
+        calc_time=np.zeros((N,M))
+        for i in range(N) :
+            print(i)
+            self.change_Nb_pts_trajectory_only(Nb_pts_trajectory[i])
+            for j in range(M) :
+                start_time=time.time()
+                self.change_Nb_pts_radiation(Nb_pts_radiation[j])
+                calc_time[i,j]=time.time()-start_time
+        return  calc_time
+
+
+
+
+
+
+
+def create_simulation(undulator, trajectory_fact, radiation_fact=None, magnetic_field=None, X=None, Y=None,
+                      distance=None):
+
+    if (radiation_fact == None):
+        print("rad fact ok")
+        radiation_fact = RadiationFactory(method=RADIATION_METHOD_APPROX_FARFIELD,
+                                          omega=undulator.omega1())
+    else:
+        radiation_fact = radiation_fact
+
+    if magnetic_field == None:
+        Z = np.linspace(-(undulator.L / 2.0 + 5.0 * undulator.lambda_u),
+                        undulator.L / 2.0 + 5.0 * undulator.lambda_u, trajectory_fact.Nb_pts)
+        magnetic_field = undulator.create_magnetic_field_plane_undulator(Z=Z,
+                                            harmonic_number=np.floor(radiation_fact.omega/undulator.omega1()))
+    else:
+        print("pb a regler dans create sim")
+        # magnetic_field.enlargement_vector_for_interpolation(nb_enlarg=np.floor(len(B.z) * 0.1))
+        # magnetic_field = interp1d(B.z, B.By)
+
+    trajectory = trajectory_fact.create_for_plane_undulator(undulator=undulator, B=magnetic_field)
+
+    radiation = radiation_fact.create_for_single_electron(trajectory=trajectory,
+                                                          undulator=undulator,
+                                                          distance=distance,
+                                                          X=X, Y=Y)
+
+    return UndulatorSimulation(undulator=undulator, trajectory_fact=trajectory_fact, magnetic_field=magnetic_field,
+                               radiation_fact=radiation_fact, trajectory=trajectory, radiation=radiation)
+
 
 
 if __name__ == "__main__" :
     und_test = Undulator(K=1.87, E=1.3e9, lambda_u=0.035, L=0.035 * 12, I=1.0)
-    traj_test = TrajectoryFactory(Nb_pts=201, method=TRAJECTORY_METHOD_ANALYTIC)
+    traj_test = TrajectoryFactory(Nb_pts=101, method=TRAJECTORY_METHOD_ODE)
+    rad_test=RadiationFactory(method=RADIATION_METHOD_FARFIELD,omega=und_test.omega1())
+    distance=100
+    X = np.linspace(0.0, distance*1.01e-3, 101)
+    Y = np.linspace(0.0,distance*1.01e-3, 101)
+    sim_test = create_simulation(undulator=und_test, trajectory_fact=traj_test, distance=distance, X=X, Y=Y)
 
-    sim_test = UndulatorSimulation(undulator=und_test, trajectory_fact=traj_test)
-
-
-    # sim_test.trajectory.draw()
-    #sim_test.radiation.draw()
-    D_limite=sim_test.D_max_for_n_cst(alpha=2)
+    print('ok fin construction simulation')
+    sim_test.trajectory.draw()
+    sim_test.radiation.draw()
+    D_limite=und_test.D_max_plane_undulator(alpha=2)
     print(D_limite)
+
+
     # print("calcul du spectre")
     # omega1=sim_test.undulator.omega1()
-    # omega_array=np.arange(omega1*(1.0-1e-3),omega1*(1.0+1e-5),omega1*0.1e-4)
+    # omega_array = np.arange(omega1 * 0.9, 5.0 * omega1 * 1.01, omega1*0.01)
     # sim_test.spectre_max(omega_array=omega_array)
+
+    # print("calcul du temps")
+    # Nb_period=und_test.L/und_test.lambda_u
+    # Nb_pts_trajectory=np.linspace(Nb_period*2+1 ,Nb_period*101,100)
+    # Nb_pts_radiation = np.linspace(10, 101,100)
+    # calc_time=sim_test.time_radiation(Nb_pts_trajectory, Nb_pts_radiation)
+    # X, Y = np.meshgrid(Nb_pts_trajectory,Nb_pts_radiation)
+    # fig = plt.figure()
+    # ax = Axes3D(fig)
+    # ax.plot_surface(X, Y,calc_time, rstride=1, cstride=1)
+    # ax.set_xlabel("trajectory pts")
+    # ax.set_ylabel('radiation pts')
+    # ax.set_zlabel("time")
+    # plt.show()
+
+
 

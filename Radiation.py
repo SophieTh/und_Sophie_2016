@@ -15,7 +15,7 @@ class Radiation(object):
         self.distance=distance
 
     def copy(self):
-        return Radiation( map=self.intensity.copy(),X=self.X.copy(),Y=self.Y.cpy(),distance=self.distance)
+        return Radiation( map=self.intensity.copy(),X=self.X.copy(),Y=self.Y.copy(),distance=self.distance)
 
     # draw all coordinate of the trajectory in function of the time
     def draw(self):
@@ -47,10 +47,13 @@ class Radiation(object):
 
 
     def max(self):
-        return self.intensity.max()
+        res=(self.intensity).max()
+        return res
+
 
     def error_max(self,radiation2):
         return (np.abs(self.intensity - radiation2.intensity)).max()
+
 
     def relativ_error(self,radiation2):
         if (self.max() ==0.0) :
@@ -58,13 +61,24 @@ class Radiation(object):
         res=self.error_max(radiation2)/self.max()
         return res
 
+
     def integration(self):
+
         if (self.X == None or self.Y == None ) :
-            print("pb ds Radtion . integration")
+            print("pb ds Radiation . integration")
             res = 0
         else :
+            # print('(self.X).shape')
+            # print((self.X).shape)
+            # print('(self.Y).shape')
+            # print((self.Y).shape)
+            # print('(self.intensity).shape')
+            # print((self.intensity).shape)
+            # print('integrate.simps(self.intensity,self.X).shape')
+            # print((integrate.simps(self.intensity,self.X)).shape)
             res=integrate.simps(integrate.simps(self.intensity,self.X),self.Y)
         return res
+
 
 
 if __name__ == "__main__" :
