@@ -168,9 +168,9 @@ class TrajectoryFactory(object):
         trajectory[7] = -cst * B.By(trajectory[3],trajectory[2]) * trajectory[6]
         trajectory[9] = cst * B.By(trajectory[3],trajectory[2]) * trajectory[4]
         k = 1
-        # while k < 10:
-        #     trajectory[k] *= 1.0 / codata.c
-        #     k += 1
+        while k < 10:
+            trajectory[k] *= 1.0 / codata.c
+            k += 1
         return trajectory
 
 
