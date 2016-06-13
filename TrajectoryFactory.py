@@ -2,7 +2,6 @@ import numpy as np
 import scipy.constants as codata
 import scipy.integrate as integrate
 from scipy.integrate import odeint
-from scipy.interpolate import interp1d
 from Trajectory import Trajectory
 from UndulatorParameter import UndulatorParameters as Undulator
 
@@ -13,17 +12,18 @@ TRAJECTORY_METHOD_INTEGRATION=2
 
 
 def fct_ODE_plane_undulator(y, t, cst, B):
-    return [-cst * B(y[5]) * y[2],
+    return [-cst * B(y[5],y[4]) * y[2],
             0.0,
-            cst * B(y[5]) * y[0],
+            cst * B(y[5],y[4]) * y[0],
             y[0],
             0.0,
             y[2]]
 
 def fct_ODE_undulator(y, t, cst, Bx,By,Bz):
-    return [cst * (Bz(y[5]) * y[1] - By(y[5]) * y[2]),
-            cst * (Bx(y[5]) * y[2] - Bz(y[5]) * y[0]),
-            cst * (By(y[5]) * y[0] - Bx(y[5]) * y[1]),
+
+    return [cst * (Bz(y[5],y[4]) * y[1] - By(y[5],y[4]) * y[2]),
+            cst * (Bx(y[5],y[4]) * y[2] - Bz(y[5],y[4]) * y[0]),
+            cst * (By(y[5],y[4]) * y[0] - Bx(y[5],y[4]) * y[1]),
             y[0],
             y[1],
             y[2]]
@@ -152,8 +152,8 @@ class TrajectoryFactory(object):
         cst = -codata.e / (codata.m_e * gamma)
         # res = odeint(fct_ODE_undulator, self.initial_condition, trajectory[0],
         #              args=(cst, B.Bx,B.By,B.Bz), full_output=True)
-        res = odeint(fct_ODE_plane_undulator,self.initial_condition, trajectory[0],
-                     args=(cst,B.By), full_output=True)
+        res = odeint(fct_ODE_undulator,self.initial_condition, trajectory[0],
+                     args=(cst,B.Bx,B.By,B.Bz), full_output=True)
         traj = res[0]
         info = res[1]
         # print("1 : nonstiff problems, Adams . 2: stiff problem, BDF")
@@ -165,12 +165,12 @@ class TrajectoryFactory(object):
         trajectory[1] = traj[3]
         trajectory[2] = traj[4]
         trajectory[3] = traj[5]
-        trajectory[7] = -cst * B.By(trajectory[3]) * trajectory[6]
-        trajectory[9] = cst * B.By(trajectory[3]) * trajectory[4]
+        trajectory[7] = -cst * B.By(trajectory[3],trajectory[2]) * trajectory[6]
+        trajectory[9] = cst * B.By(trajectory[3],trajectory[2]) * trajectory[4]
         k = 1
-        while k < 10:
-            trajectory[k] *= 1.0 / codata.c
-            k += 1
+        # while k < 10:
+        #     trajectory[k] *= 1.0 / codata.c
+        #     k += 1
         return trajectory
 
 

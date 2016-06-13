@@ -3,6 +3,7 @@ import scipy.constants as codata
 from MagneticField import MagneticField
 
 
+
 class UndulatorParameters(object):
     def __init__(self, K, E, lambda_u, L, I):
         self.K = K
@@ -17,19 +18,29 @@ class UndulatorParameters(object):
     ## transcription SRW's code
     # we considere tht in the middle of the undulator z =0
     #and y=0 !!!!!!!!
-    def SRW_fct_magnetic_field_plane_undulator(self,z,harmonic_nb) :
-        Bo = self.K / (93.4 * self.lambda_u)
-
-        lambda_h=self.lambda_u/harmonic_nb
+    def SRW_fct_magnetic_field_plane_undulator(self, z, y, harmonic_number, coordonnee='y') :
+        lambda_h= self.lambda_u / harmonic_number
         ku=2.0*np.pi/self.lambda_u
+
+        if coordonnee=='y' :
+            #print('coordonnee y')
+            Bo = self.K / (93.4 * self.lambda_u)*np.cosh(ku*y)
+            #print(Bo)
+            f_base=np.cos
+        else : # coordonne = z
+            Bo=-self.K / (93.4 * self.lambda_u)*np.sinh(ku*y)
+            f_base=np.sin
 
         #we enelarge the real effect of the magnetic field by 4 lambda_u
         # on each extremity of the undulator
         L_magn_field=self.L/2.0+4.0*self.lambda_u
 
         # we know considere that if -(L/2 + lambda_u/4) < Z < (L/2 + lambda_u/4)
-        # the magnetic field if a classic cosinus
-        L_cosinus_part=self.L/2.0 + self.lambda_u/4.0
+        # the magnetic field if a classic cosinus (or sinus)
+        if coordonnee == 'y':
+            L_cosinus_part=self.L/2.0 + self.lambda_u/4.0
+        else :
+            L_cosinus_part = self.L / 2.0
 
         #for i_z, z in enumerate(Z) :
         if ((z < -L_magn_field) or (z > L_magn_field)) :
@@ -37,6 +48,7 @@ class UndulatorParameters(object):
 
         else :
             if (z < -L_cosinus_part or z> L_cosinus_part) :
+                #print('hors cos part')
             # in this case, we work with a gaussian,
             # so we shift the coordinate frame for use a central gaussian
                 if z < -L_cosinus_part :
@@ -48,55 +60,73 @@ class UndulatorParameters(object):
 
                 p=2.0*np.pi**2/(3.0*lambda_h**2)
                 dB=((2.0*np.pi*Bo/lambda_h)*shift_z)*(1.0-4.0*np.pi**2*shift_z**2/(9.0*lambda_h**2))*np.exp(-p*shift_z**2)
-
+                #print(dB)
                 # test du signe
                 z_test=sign*(-L_cosinus_part + lambda_h/4.0)
-                test_trig = np.cos(ku*z_test)
+                test_trig = f_base(ku*z_test)
                 if (sign * test_trig < 0) :
                     dB = -dB
-
+                #print(dB)
             else :
-                #print('ok')
+                # print(' ')
+                # print('ok')
+                # print(' ')
                 # in this case we work in the cosinus part
-                dB=Bo*np.cos(ku*z)
+                dB=Bo*f_base(ku*z)
+                # print(ku*z)
+                # print(f_base(ku * z))
+                # print(Bo)
+                # print(dB)
+
 
         return dB
 
 
-    def SRW_magnetic_field(self,Z,harmonic_number) :
+    def SRW_magnetic_field(self,Z,Y,harmonic_number,coordonnee) :
         if (type(Z)==np.ndarray) :
-            By=np.zeros_like(Z)
-            for i, Zi in enumerate (Z)  :
-                By[i]=self.SRW_fct_magnetic_field_plane_undulator(Zi,harmonic_number)
+            B=np.zeros_like(Z)
         else :
-            By=self.SRW_fct_magnetic_field_plane_undulator(Z,harmonic_number)
-        return By
+            if (type(Y) == np.ndarray ):
+                B=np.zeros_like(Y)
+            else :
+                B = self.SRW_fct_magnetic_field_plane_undulator(Z, Y,
+                                            harmonic_number = harmonic_number, coordonnee = coordonnee)
 
-    def create_magnetic_field_plane_undulator(self,Z,harmonic_number):
-        By = (lambda z: self.SRW_magnetic_field(Z=z, harmonic_number=harmonic_number))
-        fct_null= (lambda x : 0.0)
-        B = MagneticField(0.0, 0.0, Z, fct_null, By, fct_null)
+        if (type(Z)==np.ndarray) :
+            #print('entree ici')
+            #B=np.zeros_like(Z)
+            if (type(Y)==np.ndarray) :
+                for i, Zi in enumerate(Z):
+                            B[i] = self.SRW_fct_magnetic_field_plane_undulator(Zi,Y[i],
+                                            harmonic_number=harmonic_number,coordonnee=coordonnee)
+            else :
+                for i, Zi in enumerate (Z)  :
+                    B[i]=self.SRW_fct_magnetic_field_plane_undulator(Zi,Y,
+                                                        harmonic_number=harmonic_number,coordonnee=coordonnee)
+        else :
+            # if (type(Y) != np.ndarray) :
+            #         B=self.SRW_fct_magnetic_field_plane_undulator(Z,Y,
+            #                                             harmonic_number=harmonic_number, coordonnee=coordonnee)
+            if (type(Y) == np.ndarray ) :
+                #print('Y vector')
+                for i, Yi in enumerate (Y)  :
+                    #B = np.zeros_like(Y)
+                    B[i]=self.SRW_fct_magnetic_field_plane_undulator(Z,Yi,
+                                                        harmonic_number=harmonic_number,coordonnee=coordonnee)
+                   # print(B[i])
+        #print('B dans srw')
+        #print(B)
         return B
 
-    # old
-    def creation_magnetic_field_plane_undulator(self, z):
-        Bo = self.K / (93.4 * self.lambda_u)
-        By=np.cos((2.0*np.pi/self.lambda_u)*z)
-
-        # Hamming windowing
-        windpar = 1.0 / (2.0 * np.floor(self.L / self.lambda_u))
-        zmin = z.min()
-        apo1 = zmin + windpar
-        apo2 = z.max() - windpar
-        wind = np.ones(len(z))
-        for i in range(len(z)):
-            if z[i] <= apo1:
-                wind[i] *= 1.08 - (.54 + 0.46 * np.cos(np.pi * (z[i] - zmin) / windpar))
-            if z[i] >= apo2:
-                wind[i] *= 1.08 - (.54 - 0.46 * np.cos(np.pi * (z[i] - apo2) / windpar))
-        By *= wind
-
+    def create_magnetic_field_plane_undulator(self,Z,Y,harmonic_number):
+        By = (lambda z,y: self.SRW_magnetic_field(Z=z,Y=y,harmonic_number=harmonic_number,coordonnee='y'))
+        Bz = (lambda z, y: self.SRW_magnetic_field(Z=z, Y=y, harmonic_number=harmonic_number, coordonnee='z'))
+        fct_null= (lambda z,y : 0.0)
+        #B = MagneticField(0.0, Y, Z, fct_null, By, fct_null)
+        B = MagneticField(0.0, Y, Z, fct_null, By, Bz)
         return B
+
+
 
     def gamma(self) :
         return self.E/0.511e6

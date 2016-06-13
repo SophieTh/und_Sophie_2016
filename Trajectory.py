@@ -40,6 +40,17 @@ class Trajectory(object):
                           a_y=self.a_y.copy(), a_z=self.a_z.copy())
 
     # draw all coordinate of the trajectory in function of the time
+    def plot_3D(self):
+        fig = plt.figure()
+        ax = fig.gca(projection='3d')
+        ax.plot(self.z, self.x, self.y, label='trajectory')
+        ax.legend()
+        ax.set_xlabel("Z")
+        ax.set_ylabel('X')
+        ax.set_zlabel("Y")
+        plt.show()
+
+
     def draw(self):
         plt.plot(self.t, self.x)
         plt.title(" X = f(t) ")

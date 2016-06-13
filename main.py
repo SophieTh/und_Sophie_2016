@@ -1,6 +1,7 @@
 import numpy as np
 import scipy.constants as codata
 import matplotlib.pyplot as plt
+from mpl_toolkits.mplot3d import Axes3D
 import time
 from Trajectory import Trajectory
 from Radiation import Radiation
@@ -42,7 +43,8 @@ cst_magentic_field=MagneticField(x=0,y=0,z=Z,Bx=0,By=Bo,Bz=0)
 # # minimum  :
 
 und_test=Undulator(K = 1.87,E = 1.3e9,lambda_u = 0.035,L=0.035*12,I=1.0)
-traj_test=TrajectoryFactory(Nb_pts=501,method=TRAJECTORY_METHOD_ODE)
+initial_cond=np.array([1e3,-1e5,np.sqrt((und_test.Beta()*codata.c)**2-(1e3)**2 -(-1e4)**2),1e-1,1e-3,-und_test.L/2.0-5.0*und_test.lambda_u])
+traj_test=TrajectoryFactory(Nb_pts=1001,method=TRAJECTORY_METHOD_ODE,initial_condition=initial_cond)
 rad_test=RadiationFactory(method=RADIATION_METHOD_FARFIELD,omega=und_test.omega1())
 
 sim_test=create_simulation(undulator=und_test,trajectory_fact=traj_test,radiation_fact=rad_test)
@@ -50,6 +52,7 @@ sim_test=create_simulation(undulator=und_test,trajectory_fact=traj_test,radiatio
 # #
 #
 #
+#sim_test.trajectory.draw()
 
 mag=sim_test.magnetic_filed
 print(len(mag.z))
@@ -59,16 +62,78 @@ print(L_magn_field)
 L_cosinus_part = und_test.L / 2.0 + und_test.lambda_u / 4.0
 print('L_cosinus_part')
 print(L_cosinus_part)
-Z=mag.z
-print(type(mag.By))
-By_array=mag.By(Z)
-#print(By_array)
-plt.plot(Z,By_array)
+
+#Z=mag.z
+#Y=np.linspace(-2.0*1e-7,2.0*1e-7,len(Z))
+
+Z=sim_test.trajectory.z
+Y=sim_test.trajectory.y
+#print(sim_test.trajectory.y*codata.c)
+X=sim_test.trajectory.x
+
+print(Z)
+By=mag.By(Z,1e-3)
+plt.plot(Z,By)
 plt.show()
 
-sim_test.trajectory.draw()
+
+
+fig = plt.figure()
+Bz=mag.Bz(Z,1e-3)
+# Bo=-und_test.K / (93.4 *und_test.lambda_u)*np.sinh((2.0*np.pi/und_test.lambda_u)*1e-3)
+# Bz2=Bo*np.sin((2.0*np.pi/und_test.lambda_u)*Z)
+# plt.plot(Z,Bz2)
+plt.plot(Z,Bz)
+plt.show()
+#
+#
+print('fini pour z')
+
+
+fig = plt.figure()
+By=mag.By(0.1,Y)
+plt.plot(Y,By)
+plt.show()
+
+fig = plt.figure()
+Bz=mag.Bz(0.1,Y)
+plt.plot(Y,Bz)
+plt.show()
+
+
+
+sim_test.trajectory.plot_3D()
+
+# print(Y)
+# print(type(Z))
+# print(type(Y))
+# print(type(mag.By))
+# print("ok")
+
+# print("ok")
+# Z,Y = np.meshgrid(Z,Y)
+# fig = plt.figure()
+# ax = Axes3D(fig)
+# ax.plot_surface (Z,Y, By_array, rstride=1, cstride=1)
+# ax.set_xlabel("Z")
+# ax.set_ylabel('Y')
+# ax.set_zlabel("By")
+# plt.show()
+
+
+
+
+#print(By_array)
+# fig = plt.figure()
+# ax = fig.gca(projection='3d')
+# ax.plot(Y, Z,By, label='parametric curve')
+# ax.legend()
+
+plt.show()
+
+#sim_test.trajectory.draw()
 # print(sim_test.radiation.max())
-sim_test.radiation.draw()
+#sim_test.radiation.draw()
 
 # with a given magnetic field
 
@@ -87,9 +152,9 @@ sim_test.radiation.draw()
 
 # print("calcul du spectre")
 # omega1 = sim_test.undulator.omega1()
-# omega_array = np.arange(omega1 * (1.0 - 1e-2), omega1 * (5.0 + 1e-5), omega1*1e-2)
+# omega_array = np.arange(omega1 * (1.0- 1e-2), omega1 * (1.0 + 1e-2), omega1*1e-4)
 # sim_test.spectre_max(omega_array=omega_array)
-# c'est decale ????
+#c'est decale ????
 
 
 ## complete :
