@@ -107,8 +107,8 @@ class RadiationFactory(object):
             R = np.sqrt(x ** 2 + y ** 2 + distance ** 2)
             n_chap = np.array([x, y, distance]) / R
 
-        E = np.full((3,), 0. + 1j * 0., dtype=np.complex)
-        integrand = np.full((3, N), 0. + 1j * 0., dtype=np.complex)
+        E = np.zeros((3,), dtype=np.complex)
+        integrand = np.zeros((3, N), dtype=np.complex)
         A1 =(n_chap[0]*trajectory.a_x +n_chap[1]*trajectory.a_y +n_chap[2]*trajectory.a_z )
         A2=(n_chap[0]*(n_chap[0]-trajectory.v_x)+n_chap[1]*(n_chap[1]-trajectory.v_y)
             +n_chap[2]*(n_chap[2]-trajectory.v_z))
@@ -138,8 +138,8 @@ class RadiationFactory(object):
             R = np.sqrt(x ** 2 + y ** 2 + distance ** 2)
             n_chap = np.array([x, y, distance]) / R
 
-        E = np.full((3,), 0. + 1j * 0., dtype=np.complex)
-        integrand = np.full((3, N), 0. + 1j * 0., dtype=np.complex)
+        E = np.zeros((3,), dtype=np.complex)
+        integrand = np.zeros((3, N), dtype=np.complex)
         A1 = (n_chap[1] * trajectory.v_z - n_chap[2] * trajectory.v_y)
         A2 = (-n_chap[0] * trajectory.v_z + n_chap[2] * trajectory.v_x)
         A3 = (n_chap[0] * trajectory.v_y - n_chap[1] * trajectory.v_x)
@@ -178,8 +178,8 @@ class RadiationFactory(object):
         R = np.sqrt(x ** 2 + y ** 2 + distance ** 2)
         n_chap /= R
 
-        E = np.full((3,), 0. + 1j * 0., dtype=np.complex)
-        integrand = np.full((3, N), 0. + 1j * 0., dtype=np.complex)
+        E = np.zeros((3,), dtype=np.complex)
+        integrand = np.zeros((3, N), dtype=np.complex)
         A1 = (n_chap[0] * trajectory.a_x + n_chap[1] * trajectory.a_y + n_chap[2] * trajectory.a_z)
         A2 = (n_chap[0] * (n_chap[0] - trajectory.v_x) + n_chap[1] * (n_chap[1] - trajectory.v_y)
               + n_chap[2] * (n_chap[2] - trajectory.v_z))
@@ -213,8 +213,8 @@ class RadiationFactory(object):
             R = np.sqrt(x ** 2 + y ** 2 + distance ** 2)
             n_chap = np.array([x, y, distance]) / R
 
-        E = np.full((3,), 0. + 1j * 0., dtype=np.complex)
-        integrand = np.full((3, N), 0. + 1j * 0., dtype=np.complex)
+        E = np.zeros((3,), dtype=np.complex)
+        integrand = np.zeros((3, N), dtype=np.complex)
 
         A1 = (n_chap[1] * trajectory.v_z - n_chap[2] * trajectory.v_y)
         A2 = (-n_chap[0] * trajectory.v_z + n_chap[2] * trajectory.v_x)
@@ -260,8 +260,8 @@ class RadiationFactory(object):
             R[i] = np.linalg.norm(n_chap[:, i])
             n_chap[:, i] /= R[i]
 
-        E = np.full((3,), 0. + 1j * 0., dtype=np.complex)
-        integrand = np.full((3, N), 0. + 1j * 0., dtype=np.complex)
+        E = np.zeros((3,), dtype=np.complex)
+        integrand = np.zeros((3, N), dtype=np.complex)
         A1 = (n_chap[0] * trajectory.a_x + n_chap[1] * trajectory.a_y + n_chap[2] * trajectory.a_z)
         A2 = (n_chap[0] * (n_chap[0] - trajectory.v_x) + n_chap[1] * (n_chap[1] - trajectory.v_y)
               + n_chap[2] * (n_chap[2] - trajectory.v_z))
@@ -296,8 +296,8 @@ class RadiationFactory(object):
             R[i] = np.linalg.norm(n_chap[:, i])
             n_chap[:, i] /= R[i]
 
-        E = np.full((3,), 0. + 1j * 0., dtype=np.complex)
-        integrand = np.full((3, N), 0. + 1j * 0., dtype=np.complex)
+        E = np.zeros((3,), dtype=np.complex)
+        integrand = np.zeros((3, N), dtype=np.complex)
 
         A1 = (n_chap[1] * trajectory.v_z - n_chap[2] * trajectory.v_y)
         A2 = (-n_chap[0] * trajectory.v_z + n_chap[2] * trajectory.v_x)
