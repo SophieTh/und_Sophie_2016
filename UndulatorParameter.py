@@ -39,6 +39,7 @@ class UndulatorParameters(object):
         # the magnetic field if a classic cosinus (or sinus)
         if coordonnee == 'y':
             L_cosinus_part=self.L/2.0 + self.lambda_u/4.0
+
         else :
             L_cosinus_part = self.L / 2.0
 
@@ -78,6 +79,67 @@ class UndulatorParameters(object):
                 # print(Bo)
                 # print(dB)
 
+
+        return dB
+
+#### essai
+    def SRW_fct_magnetic_field_plane_undulator2(self, z, y, harmonic_number, coordonnee='y'):
+        lambda_h = self.lambda_u / harmonic_number
+        ku = 2.0 * np.pi / self.lambda_u
+
+        if coordonnee == 'y':
+            # print('coordonnee y')
+            Bo = self.K / (93.4 * self.lambda_u) * np.cosh(ku * y)
+            # print(Bo)
+            f_base = np.cos
+        else:  # coordonne = z
+            Bo = -self.K / (93.4 * self.lambda_u) * np.sinh(ku * y)
+            f_base = np.sin
+
+        # we enelarge the real effect of the magnetic field by 4 lambda_u
+        # on each extremity of the undulator
+        L_magn_field = self.L / 2.0 + 4.0 * self.lambda_u
+
+        # we know considere that if -(L/2 + lambda_u/4) < Z < (L/2 + lambda_u/4)
+        # the magnetic field if a classic cosinus (or sinus)
+        if coordonnee == 'y':
+            L_cosinus_part = self.L / 2.0 + self.lambda_u / 4.0
+
+        else:
+            L_cosinus_part = self.L / 2.0
+
+        # for i_z, z in enumerate(Z) :
+        if ((z < -L_magn_field) or (z > L_magn_field)):
+            dB = 0.0
+
+        else:
+            if (z < -L_cosinus_part or z > L_cosinus_part):
+                # print('hors cos part')
+                # in this case, we work with a gaussian,
+                # so we shift the coordinate frame for use a central gaussian
+                if z < -L_cosinus_part:
+                    sign = 1
+                else:  # z> L_cosinus_part
+                    sign = -1
+                shift_z = z + sign * L_cosinus_part
+                sigma2=(self.lambda_u)**2
+                dB = (Bo*f_base(ku*z)/(np.sqrt(2.0*np.pi*sigma2)) * np.exp(-0.5*shift_z**2/sigma2))
+                if (Bo*f_base(ku*z)*dB < 0):
+                    dB = -dB
+                # sigma2=((5.0*self.lambda_u)/16.0)**2
+                # dB = ( Bo*shift_z*f_base(ku*z)/(np.sqrt(2.0*np.pi*sigma2)) )* np.exp(-0.5*shift_z ** 2/sigma2)
+                # # print(dB)
+                # # test du signe)
+                # z_test = sign * (-L_cosinus_part + lambda_h / 4.0)
+                # test_trig = f_base(ku * z_test)
+                # if (sign * test_trig < 0):
+                #     dB = -dB
+            else:
+                dB = Bo * f_base(ku * z)
+                # print(ku*z)
+                # print(f_base(ku * z))
+                # print(Bo)
+                # print(dB)
 
         return dB
 

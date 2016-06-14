@@ -13,9 +13,11 @@ RADIATION_METHOD_APPROX_FARFIELD=3
 
 
 class RadiationFactory(object):
-    def __init__(self,method,omega):
+    def __init__(self,method,omega,Nb_pts):
         self.omega=omega
         self.method=method
+        self.Nb_pts=Nb_pts
+
 
     def copy(self):
         return RadiationFactory( method=self.method,omega=self.omega)
@@ -35,8 +37,8 @@ class RadiationFactory(object):
                 distance = 100
             #xy_max=np.sqrt(undulator.lambda_u*2.0*undulator.L)/(2.0*np.pi)
             xy_max = np.tan(1.0/undulator.gamma())*distance
-            X_arrays = np.linspace(0.0, xy_max, 101)
-            Y_arrays = np.linspace(0.0, xy_max, 101)
+            X_arrays = np.linspace(0.0, xy_max, self.Nb_pts)
+            Y_arrays = np.linspace(0.0, xy_max, self.Nb_pts)
 
         X = X_arrays.copy()
         Y = Y_arrays.copy()
@@ -85,8 +87,8 @@ class RadiationFactory(object):
             if distance == None:
                 distance = 100
             xy_max=np.sqrt(undulator.lambda_u*2.0*undulator.L)/(2.0*np.pi)
-            X = np.linspace(0.0, xy_max, 101)
-            Y = np.linspace(0.0, xy_max, 101)
+            X = np.linspace(0.0, xy_max, self.Nb_pts)
+            Y = np.linspace(0.0, xy_max, self.Nb_pts)
         map=self.calculate_radiation_intensity(trajectory=trajectory,undulator=undulator,
                                                distance=distance,X_arrays=X,Y_arrays=Y)
         radiation= Radiation(map=map,X=X,Y=Y,distance=distance)
@@ -340,8 +342,8 @@ if __name__ == "__main__" :
                                                                                            undulator=und_test)
 
     # start_time=time.time()
-    rad=RadiationFactory(omega=und_test.omega1(),method=RADIATION_METHOD_APPROX_FARFIELD).create_for_single_electron(
-                             trajectory=traj_test, undulator=und_test)
+    rad=RadiationFactory(omega=und_test.omega1(),method=RADIATION_METHOD_APPROX_FARFIELD,Nb_pts=101
+                         ).create_for_single_electron(trajectory=traj_test, undulator=und_test)
     print(rad.X)
 
     # interval = time.time() - start_time

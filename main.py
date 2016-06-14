@@ -29,7 +29,7 @@ print(omega)
 # recuperation des donnees de B en array en fonction de z
 reference=np.load("x_ray_booklet_field.npz")
 Z=reference['ct']
-Z -= (Z[len(Z)-1])/2.0
+Z -= (Z[-1])/2.0
 By=reference['B_y']
 SRW_magentic_field=MagneticField(x=0,y=0,z=Z,Bx=0,By=By,Bz=0)
 
@@ -39,13 +39,14 @@ cst_magentic_field=MagneticField(x=0,y=0,z=Z,Bx=0,By=Bo,Bz=0)
 
 
 
-
-# # minimum  :
-
+#
+# # # minimum  :
+#
 und_test=Undulator(K = 1.87,E = 1.3e9,lambda_u = 0.035,L=0.035*12,I=1.0)
-initial_cond=np.array([1e3,-1e5,np.sqrt((und_test.Beta()*codata.c)**2-(1e3)**2 -(-1e4)**2),1e-1,1e-3,-und_test.L/2.0-5.0*und_test.lambda_u])
+#initial_cond=np.array([1e3,-1e5,np.sqrt((und_test.Beta()*codata.c)**2-(1e3)**2 -(-1e4)**2),1e-1,1e-3,-und_test.L/2.0-5.0*und_test.lambda_u])
+initial_cond=np.array([0.0,0.0,(und_test.Beta()*codata.c),0.0,0.0,-und_test.L/2.0-5.0*und_test.lambda_u])
 traj_test=TrajectoryFactory(Nb_pts=1001,method=TRAJECTORY_METHOD_ODE,initial_condition=initial_cond)
-rad_test=RadiationFactory(method=RADIATION_METHOD_FARFIELD,omega=und_test.omega1())
+rad_test=RadiationFactory(method=RADIATION_METHOD_FARFIELD,omega=und_test.omega1(),Nb_pts=101)
 
 sim_test=create_simulation(undulator=und_test,trajectory_fact=traj_test,radiation_fact=rad_test)
 # #
@@ -63,24 +64,26 @@ L_cosinus_part = und_test.L / 2.0 + und_test.lambda_u / 4.0
 print('L_cosinus_part')
 print(L_cosinus_part)
 
-#Z=mag.z
-#Y=np.linspace(-2.0*1e-7,2.0*1e-7,len(Z))
+Z=mag.z
+Y=np.linspace(-2.0*1e-7,2.0*1e-7,len(Z))
 
-Z=sim_test.trajectory.z
-Y=sim_test.trajectory.y
+Z=sim_test.trajectory.z*codata.c
+Y=sim_test.trajectory.y*codata.c
 #print(sim_test.trajectory.y*codata.c)
-X=sim_test.trajectory.x
-
+X=sim_test.trajectory.x*codata.c
+Bo = (und_test.K / (93.4 * und_test.lambda_u)) * np.cosh((2.0 * np.pi / und_test.lambda_u) * 1e-3)
 print(Z)
 By=mag.By(Z,1e-3)
+By2=Bo*np.cos((2.0*np.pi/und_test.lambda_u)*Z)
 plt.plot(Z,By)
+#plt.plot(Z,By2)
 plt.show()
 
 
 
 fig = plt.figure()
 Bz=mag.Bz(Z,1e-3)
-# Bo=-und_test.K / (93.4 *und_test.lambda_u)*np.sinh((2.0*np.pi/und_test.lambda_u)*1e-3)
+
 # Bz2=Bo*np.sin((2.0*np.pi/und_test.lambda_u)*Z)
 # plt.plot(Z,Bz2)
 plt.plot(Z,Bz)
@@ -100,8 +103,8 @@ Bz=mag.Bz(0.1,Y)
 plt.plot(Y,Bz)
 plt.show()
 
-
-
+#
+#
 sim_test.trajectory.plot_3D()
 
 # print(Y)
@@ -128,8 +131,7 @@ sim_test.trajectory.plot_3D()
 # ax = fig.gca(projection='3d')
 # ax.plot(Y, Z,By, label='parametric curve')
 # ax.legend()
-
-plt.show()
+#plt.show()
 
 #sim_test.trajectory.draw()
 # print(sim_test.radiation.max())
@@ -158,17 +160,27 @@ plt.show()
 
 
 ## complete :
+# #
+
 #
-# ESRF18=Undulator(K = 1.68, E = 6.0e9,lambda_u = 0.018, L=2.0, I=0.2)
+# ESRF18=Undulator(K = 1.68, E = 6.0e9,lambda_u = 0.018, L=0.018*111, I=0.2)
+# print(ESRF18.omega1())
 # # [Vx,Vy,Vz,x,y,z]
-# initial_condition=np.array([0.0,0.0,ESRF18.Beta()*codata.c,0.0,0.0,-1.0])
-# traj=TrajectoryFactory(Nb_pts=501,method=TRAJECTORY_METHOD_ANALYTIC, initial_condition=initial_condition)
-# rad=RadiationFactory(method=RADIATION_METHOD_APPROX_FARFIELD,omega=omega)
+# #initial_condition=np.array([1e3,-1e5,np.sqrt((ESRF18.Beta()*codata.c)**2-(1e3)**2 -(-1e4)**2),1e-1,1e-3,-ESRF18.L/2.0-5.0*ESRF18.lambda_u])
+# initial_condition=np.array([0.0,0.0,ESRF18.Beta()*codata.c,0.0,0.0,-1.4])
+# traj=TrajectoryFactory(Nb_pts=2001,method=TRAJECTORY_METHOD_ODE, initial_condition=initial_condition)
+# rad=RadiationFactory(method=RADIATION_METHOD_APPROX_FARFIELD,omega=omega,Nb_pts=200)
 #
 # #
+# # #
+# #
+# #
 #
+# sim_ESRF=create_simulation(undulator=ESRF18,trajectory_fact=traj,radiation_fact=rad,distance=130.0)
+# #sim_ESRF.change_Nb_pts_radiation(200)
 #
-# sim_ESRF=create_simulation(undulator=ESRF18,trajectory_fact=traj,radiation_fact=rad)
+# sim_ESRF.trajectory.plot_3D()
+#
 # print(sim_ESRF.radiation.X)
 # # print(ESRF18.D_max_plane_undulator(alpha=2))
 # # print(type(sim_ESRF.radiation_fact))
@@ -177,8 +189,8 @@ plt.show()
 # # print(sim_ESRF.radiation.max())
 # # plt.plot(D,error_method)
 # # plt.show()
-# #
-# # #sim_ESRF.trajectory.draw()
+# # #
+# # # #sim_ESRF.trajectory.draw()
 # sim_ESRF.radiation.draw()
 
 

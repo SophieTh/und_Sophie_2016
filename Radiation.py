@@ -8,7 +8,7 @@ from TrajectoryFactory import TrajectoryFactory, TRAJECTORY_METHOD_ANALYTIC
 from UndulatorParameter import UndulatorParameters as Undulator
 
 class Radiation(object):
-    def __init__(self, map,X,Y,distance=None):
+    def __init__(self, map,X,Y,distance):
         self.intensity=map
         self.X=X
         self.Y=Y
