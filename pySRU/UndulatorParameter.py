@@ -15,9 +15,7 @@ class UndulatorParameters(object):
     def copy(self):
         return UndulatorParameters(K=self.K,E=self.E,lambda_u=self.lambda_u,L=self.L,I=self.I)
 
-    ## transcription SRW's code
-    # we considere tht in the middle of the undulator z =0
-    #and y=0 !!!!!!!!
+
     def SRW_fct_magnetic_field_plane_undulator(self, z, y, harmonic_number, coordonnee='y') :
         lambda_h= self.lambda_u / harmonic_number
         ku=2.0*np.pi/self.lambda_u
@@ -43,7 +41,6 @@ class UndulatorParameters(object):
         else :
             L_cosinus_part = self.L / 2.0
 
-        #for i_z, z in enumerate(Z) :
         if ((z < -L_magn_field) or (z > L_magn_field)) :
             dB=0.0
 
@@ -82,7 +79,7 @@ class UndulatorParameters(object):
 
         return dB
 
-#### essai
+    #### essai
     def SRW_fct_magnetic_field_plane_undulator2(self, z, y, harmonic_number, coordonnee='y'):
         lambda_h = self.lambda_u / harmonic_number
         ku = 2.0 * np.pi / self.lambda_u
@@ -143,7 +140,6 @@ class UndulatorParameters(object):
 
         return dB
 
-
     def SRW_magnetic_field(self,Z,Y,harmonic_number,coordonnee) :
         if (type(Z)==np.ndarray) :
             B=np.zeros_like(Z)
@@ -188,8 +184,6 @@ class UndulatorParameters(object):
         B = MagneticField(0.0, Y, Z, fct_null, By, Bz)
         return B
 
-
-
     def gamma(self) :
         return self.E/0.511e6
 
@@ -202,6 +196,9 @@ class UndulatorParameters(object):
         gamma=self.E/0.511e6
         Beta=np.sqrt(1.0-1.0/gamma**2)
         return Beta
+
+    def Nb_period(self):
+        return np.floor(self.L/self.lambda_u)
 
     def D_max_plane_undulator(self,alpha):
         lim= self.L/2.0

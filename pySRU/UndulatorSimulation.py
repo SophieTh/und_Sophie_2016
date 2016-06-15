@@ -46,7 +46,6 @@ class UndulatorSimulation(object):
                                                                                     X_arrays=self.radiation.X,
                                                                                     Y_arrays=self.radiation.Y)
 
-
     def change_radiation_method(self,method):
         self.radiation_fact.method=method
         #update intensity
@@ -84,6 +83,29 @@ class UndulatorSimulation(object):
             sim2.change_distance(D[i])
             error[i]=self.radiation.error_max(sim2.radiation)
         return error
+
+    def error_trajectory_cst_magnetic_field(self,nb_pts):
+        Bo = (self.undulator.K / (93.4 * self.undulator.lambda_u))
+        f = Bo * codata.e / (self.undulator.gamma() * codata.m_e)
+        vz_0=self.trajectory_fact.initial_condition[2]/codata.c
+        x_0=self.trajectory_fact.initial_condition[3]/codata.c
+        error = np.zeros((10,len(nb_pts)))
+        traj_ref=self.trajectory.copy()
+        print(len(nb_pts))
+        for i in range(len(nb_pts)):
+            print(i)
+            print(nb_pts[i])
+            self.change_Nb_pts_trajectory_only(nb_pts[i])
+            traj_ref_arrays= self.trajectory_fact.analytical_trajectory_cst_magnf(f=f,
+                                                    t=self.trajectory.t,vz_0=vz_0,x_0=x_0)
+            traj_ref.convert(traj_ref_arrays)
+            error_max=self.trajectory.error_max(traj_ref)
+            error[:,i]=error_max
+            # print(error_max.shape)
+            # for j in range(9) :
+            #      error[j+1][i] = error_max[j+1]
+        return error
+
 
     def relativ_error_radiation_method(self,method,D):
         sim2=self.copy()
@@ -126,7 +148,6 @@ class UndulatorSimulation(object):
             self.change_omega(omega_array[i])
             spectre[i]=self.radiation.max()
         return spectre , omega_array
-
 
     def spectre3(self,omega_array=None) :
         if omega_array == None :
@@ -179,7 +200,6 @@ class UndulatorSimulation(object):
         self.trajectory=self.trajectory_fact.create_for_plane_undulator(undulator=self.undulator,
                                                                          B=self.magnetic_filed)
 
-
     def change_Nb_pts_trajectory(self,Nb_pts) :
         self.trajectory_fact.Nb_pts = Nb_pts
         self.trajectory=self.trajectory_fact.create_for_plane_undulator(undulator=self.undulator,
@@ -189,7 +209,6 @@ class UndulatorSimulation(object):
                                                                                  distance=self.radiation.distance,
                                                                                  X_arrays=self.radiation.X,
                                                                                  Y_arrays=self.radiation.Y)
-
 
     def change_Nb_pts_radiation(self,Nb_pts) :
         self.radiation_fact.Nb_pts=Nb_pts
@@ -219,50 +238,68 @@ class UndulatorSimulation(object):
 
 
 
-
-def create_simulation(undulator, trajectory_fact, radiation_fact=None, magnetic_field=None, X=None, Y=None,
+def create_simulation(undulator, trajectory_fact, radiation_fact=None, magnetic_field=None, X_max=None, Y_max=None,
                       distance=None):
 
-    if (radiation_fact == None):
-        if X== None or Y== None :
-            Nb_pts=101
-        else :
-            Nb_pts=len(X)
+    if radiation_fact==None :
+        radiation_fact=RadiationFactory(method=RADIATION_METHOD_APPROX_FARFIELD,omega=undulator.omega1()
+                                        ,Nb_pts=101)
 
-        radiation_fact = RadiationFactory(method=RADIATION_METHOD_APPROX_FARFIELD,
-                                          omega=undulator.omega1(),Nb_pts=Nb_pts)
-    else:
-        radiation_fact = radiation_fact
-
-    if (trajectory_fact.initial_condition == None):
+    Nb_pts=radiation_fact.Nb_pts
+    if (trajectory_fact.initial_condition == None) :
         Zo=-(undulator.L / 2.0 + 5.0 * undulator.lambda_u)
         trajectory_fact.initial_condition = np.array([0.0, 0.0,
                                 np.sqrt(1.0 - (1.0 / (undulator.E / 0.511e6) ** 2)) * codata.c,
-                                           0.0, 0.0, -Zo])
-    Zo=-trajectory_fact.initial_condition[5]
-    Yo=-trajectory_fact.initial_condition[4]
-
-    if magnetic_field == None:
-        Z = np.linspace(-Zo,
-                        Zo, radiation_fact.Nb_pts)
+                                           0.0, 0.0, Zo])
+    Zo= trajectory_fact.initial_condition[5]
+    Yo=trajectory_fact.initial_condition[4]
+    print(Zo)
+    if magnetic_field == None :
+        if Zo== 0.0 :
+           Z=np.linspace(0.0,undulator.L +10.0 * undulator.lambda_u,radiation_fact.Nb_pts)
+        else :
+            Z = np.linspace(Zo,-Zo, radiation_fact.Nb_pts)
         if Yo!=0.0 :
             Y=np.linspace(-Yo,Yo,radiation_fact.Nb_pts)
         else :
             Y=0.0
         harmonic_number=np.floor(radiation_fact.omega/undulator.omega1())
+
         ### A changer !!!!!!!!!!!
         if (harmonic_number==0) :
             harmonic_number=1
         magnetic_field = undulator.create_magnetic_field_plane_undulator(Z=Z,Y=Y,
                                             harmonic_number=harmonic_number)
     else:
-        if type(magnetic_field.By)==np.ndarray :
+        if (magnetic_field.z != np.ndarray):
+            if Zo == 0.0:
+                Z = np.linspace(0.0, undulator.L + 10.0 * undulator.lambda_u, radiation_fact.Nb_pts)
+            else:
+                Z = np.linspace(Zo, -Zo, radiation_fact.Nb_pts)
+            magnetic_field.z=Z
+        elif type(magnetic_field.By)==np.ndarray :
             magnetic_field.enlargement_vector_for_interpolation(nb_enlarg=np.floor(len(magnetic_field.z) * 0.1))
             magnetic_field = interp1d(magnetic_field.z, magnetic_field.By)
         else :
             print('type de magnetic field inconnu')
+    print (magnetic_field.z)
 
     trajectory = trajectory_fact.create_for_plane_undulator(undulator=undulator, B=magnetic_field)
+
+    if X_max ==None or Y_max== None :
+        if (X_max != None) :
+            X=np.linspace(0.0,X_max,Nb_pts)
+            Y=np.linspace(0.0,X_max,Nb_pts)
+        elif Y_max != None :
+            X = np.linspace(0.0, Y_max, Nb_pts)
+            Y = np.linspace(0.0, Y_max, Nb_pts)
+        else :
+            X=None
+            Y=None
+    else :
+        X = np.linspace(0.0, X_max, Nb_pts)
+        Y = np.linspace(0.0, Y_max, Nb_pts)
+
 
     radiation = radiation_fact.create_for_single_electron(trajectory=trajectory,
                                                           undulator=undulator,
@@ -276,16 +313,22 @@ def create_simulation(undulator, trajectory_fact, radiation_fact=None, magnetic_
 
 if __name__ == "__main__" :
     und_test = Undulator(K=1.87, E=1.3e9, lambda_u=0.035, L=0.035 * 12, I=1.0)
-    traj_test = TrajectoryFactory(Nb_pts=101, method=TRAJECTORY_METHOD_ODE)
-    rad_test=RadiationFactory(method=RADIATION_METHOD_FARFIELD,omega=und_test.omega1())
+    #initial_cond = np.array(
+        #[0.0, 0.0, (und_test.Beta() * codata.c), 0.0, 0.0, -und_test.L / 2.0 - 5.0 * und_test.lambda_u])
+    traj_test = TrajectoryFactory(Nb_pts=1001, method=TRAJECTORY_METHOD_ODE)
+    #rad_test = RadiationFactory(method=RADIATION_METHOD_APPROX_FARFIELD, omega=und_test.omega1(), Nb_pts=101)
     distance=100
-    X = np.linspace(0.0, distance*1.01e-3, 101)
-    Y = np.linspace(0.0,distance*1.01e-3, 101)
-    sim_test = create_simulation(undulator=und_test, trajectory_fact=traj_test, distance=distance, X=X, Y=Y)
+    # X = np.linspace(0.0, distance*1.01e-3, 101)
+    # Y = np.linspace(0.0,distance*1.01e-3, 101)
+    Xmax=distance*1e-3
+    Ymax=distance*1e-3
+
+    sim_test = create_simulation(undulator=und_test, trajectory_fact=traj_test,
+                                 distance=distance, X_max=Xmax, Y_max=Ymax)
 
     # print('ok fin construction simulation')
-    # sim_test.trajectory.draw()
-    # sim_test.radiation.draw()
+    sim_test.trajectory.plot_3D()
+    sim_test.radiation.draw()
     # D_limite=und_test.D_max_plane_undulator(alpha=2)
     # print(D_limite)
 
@@ -295,19 +338,19 @@ if __name__ == "__main__" :
     # omega_array = np.arange(omega1 * 0.9, 5.0 * omega1 * 1.01, omega1*0.01)
     # sim_test.spectre_max(omega_array=omega_array)
 
-    print("calcul du temps")
-    Nb_period=und_test.L/und_test.lambda_u
-    Nb_pts_trajectory=np.linspace(Nb_period*2+1 ,Nb_period*101,100)
-    Nb_pts_radiation = np.linspace(10, 101,100)
-    calc_time=sim_test.time_radiation(Nb_pts_trajectory, Nb_pts_radiation)
-    X, Y = np.meshgrid(Nb_pts_trajectory,Nb_pts_radiation)
-    fig = plt.figure()
-    ax = Axes3D(fig)
-    ax.plot_surface(X, Y,calc_time, rstride=1, cstride=1)
-    ax.set_xlabel("trajectory pts")
-    ax.set_ylabel('radiation pts')
-    ax.set_zlabel("time")
-    plt.show()
+    # print("calcul du temps")
+    # Nb_period=und_test.L/und_test.lambda_u
+    # Nb_pts_trajectory=np.linspace(Nb_period*2+1 ,Nb_period*101,100)
+    # Nb_pts_radiation = np.linspace(10, 101,100)
+    # calc_time=sim_test.time_radiation(Nb_pts_trajectory, Nb_pts_radiation)
+    # X, Y = np.meshgrid(Nb_pts_trajectory,Nb_pts_radiation)
+    # fig = plt.figure()
+    # ax = Axes3D(fig)
+    # ax.plot_surface(X, Y,calc_time, rstride=1, cstride=1)
+    # ax.set_xlabel("trajectory pts")
+    # ax.set_ylabel('radiation pts')
+    # ax.set_zlabel("time")
+    # plt.show()
 
 
 

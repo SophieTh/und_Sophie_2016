@@ -1,5 +1,5 @@
 import numpy as np
-
+import matplotlib.pyplot as plt
 
 
 
@@ -39,3 +39,42 @@ class MagneticField(object):
             self.By = np.concatenate((enlarg_3, self.By))
             self.By = np.concatenate((self.By, enlarg_3))
 
+
+    def plot_z(self):
+        plt.plot(self.z, self.Bx(self.z,self.y[0]))
+        plt.title(" Bx = f(z) ")
+        plt.xlabel('Bx')
+        plt.ylabel('Z')
+        plt.show()
+
+        plt.plot(self.z, self.By(self.z,self.y[0]))
+        plt.title(" By = f(z) ")
+        plt.xlabel('By')
+        plt.ylabel('Z')
+        plt.show()
+
+        plt.plot(self.z, self.Bz(self.z,self.y[0]))
+        plt.title(" Bz = f(z) ")
+        plt.xlabel('Bz')
+        plt.ylabel('Z')
+        plt.show()
+
+
+    def plot_y(self):
+        plt.plot(self.y, self.Bx(self.z[0], self.y))
+        plt.title(" Bx = f(y) ")
+        plt.xlabel('Bx')
+        plt.ylabel('y')
+        plt.show()
+
+        plt.plot(self.y, self.By(self.z[0], self.y))
+        plt.title(" By = f(y) ")
+        plt.xlabel('By')
+        plt.ylabel('y')
+        plt.show()
+
+        plt.plot(self.y, self.Bz(self.z[0], self.y))
+        plt.title(" Bz = f(y) ")
+        plt.xlabel('Bz')
+        plt.ylabel('y')
+        plt.show()

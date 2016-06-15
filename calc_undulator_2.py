@@ -134,7 +134,6 @@ def trajectory_undulator_from_magnetic_field1( By=np.zeros(101),Z= np.zeros(101)
     return trajectory
 
 
-
 #electron's trajectory in a PLANE undulator that mean :  B=(0,By,0)
 def trajectory_undulator_from_magnetic_field2(By,Z,K,E,N,nb_enlarg,Vx=0.0,Vz=0.999997*codata.c,Xo=0.0,Zo=-0.175) :
     gamma = E / 0.511e6
@@ -154,19 +153,19 @@ def trajectory_undulator_from_magnetic_field2(By,Z,K,E,N,nb_enlarg,Vx=0.0,Vz=0.9
     trajectory = np.zeros((10,N))
     trajectory[0] = np.linspace(Z[0]/(Beta_et*codata.c),Z[len(Z)-1]/(Beta_et*codata.c), N)
     Vo = [Vx, 0.0, Vz, Xo, 0.0, Z[0]]
-    Z,By=enlargement_vector_for_interpolation(Z, By, nb_enlarg)
+    Z,By=enlargement_vector_for_interpolation(Z, By, nb_enlarg*100)
     B = interp1d(Z, By)
-    print(" min et max de B")
-    print(B(Z).min())
-    print(B(Z).max())
+    # print(" min et max de B")
+    # print(B(Z).min())
+    # print(B(Z).max())
     cst=-codata.e/(codata.m_e*gamma)
-    print("cst ODE")
-    print(cst)
+    # print("cst ODE")
+    # print(cst)
     res = odeint(fct_ODE,Vo,trajectory[0],args=(cst,B),full_output=True)
     traj=res[0]
     info=res[1]
-    print("1 : nonstiff problems, Adams . 2: stiff problem, BDF")
-    print(info.get('mused'))
+    # print("1 : nonstiff problems, Adams . 2: stiff problem, BDF")
+    # print(info.get('mused'))
     traj = np.transpose(traj)
     trajectory[4] = traj[0]
     trajectory[5] = traj[1]
@@ -237,23 +236,25 @@ def undulator_trajectory(K,E,lambda_u,Nb_period=10,Nb_point=100,Z_By=None,type_t
         # CASE B
         if Z_By == None :
             Z = np.linspace(-lambda_u * (Nb_period / 2),lambda_u * (Nb_period / 2), Nb_period * Nb_point + 1)
-            By= creation_magnetic_field(K,lambda_u,Nb_period,Z)
+            B_y= creation_magnetic_field(K,lambda_u,Nb_period,Z)
+            plt.plot(Z,B_y)
+            plt.show()
 
         # CASE A
         else :
             Z= Z_By[0]
-            By=Z_By[1]
+            B_y=Z_By[1]
         # plt.plot(Z, By)
         # plt.show()
 
         if (type_trajectory == 1) :
 
-            trajectory = trajectory_undulator_from_magnetic_field1(By=By, Z=Z,K=K,E=E,N=Nb_period * Nb_point + 1
+            trajectory = trajectory_undulator_from_magnetic_field1(By=B_y, Z=Z,K=K,E=E,N=Nb_period * Nb_point + 1
                                                                    ,nb_enlarg=np.floor(len(Z)/(0.1*Nb_point)),
                                                                    Vx=Vx,Xo=Xo,Zo=Z[0])
 
         else :
-            trajectory = trajectory_undulator_from_magnetic_field2(By=By, Z=Z,K=K,E=E,N=Nb_period * Nb_point + 1
+            trajectory = trajectory_undulator_from_magnetic_field2(By=B_y, Z=Z,K=K,E=E,N=Nb_period * Nb_point + 1
                                                                    ,nb_enlarg=np.floor(len(Z)/(0.1*Nb_point)),
                                                                    Vx=Vx,Vz=Vz,Xo=Xo,Zo=Z[0])
 
@@ -261,7 +262,6 @@ def undulator_trajectory(K,E,lambda_u,Nb_period=10,Nb_point=100,Z_By=None,type_t
         trajectory = analytical_trajectory_undulator(K=K, lambda_u=lambda_u, Nb_period=Nb_period, Nb_point=Nb_point)
 
     return trajectory
-
 
 #draw all coordinate of the trajectory in function of the time
 def draw_trajectory( trajectory = np.zeros((10,101))) :
@@ -407,9 +407,10 @@ def energy_radiated(omega=2.53465927101*10**17,gamma=2000.0,trajectory=np.zeros(
 
 # energy radiated without the the far filed approxiamation :
 #doesn't work for the moment....
-def energy_radiated_no_far_field(omega=2.53465927101*10**17,gamma=2000.0,trajectory=np.zeros((11,10)) , x=0.00 , y=0.0, D=100.0):
+def energy_radiated_no_far_field(omega=2.53465927101*10**17,gamma=2000.0,trajectory=np.zeros((11,10)) ,
+                                 x=0.00 , y=0.0, D=100.0):
     N = trajectory.shape[1]
-    n_chap =np.array([x/codata.c-trajectory[1],y/codata.c-trajectory[2],D/codata.c-trajectory[3]])
+    n_chap =np.array([x-trajectory[1]*codata.c,y-trajectory[2]*codata.c,D-trajectory[3]*codata.c])
     R=np.zeros(n_chap.shape[1])
     for i in range(n_chap.shape[1]) :
         R[i] = norm(n_chap[:,i])
@@ -418,16 +419,19 @@ def energy_radiated_no_far_field(omega=2.53465927101*10**17,gamma=2000.0,traject
     E = np.full((3,), 0. + 1j * 0., dtype=np.complex)
     integrand = np.full((3,N), 0. + 1j * 0., dtype=np.complex)
     Alpha=trajectory[7]*(n_chap[2]-trajectory[6]) - (n_chap[0]-trajectory[4])*trajectory[9]
-    Alpha2=np.exp(0. + 1j * omega * (trajectory[0] + R))
+    Alpha2=np.exp(0. + 1j * omega * (trajectory[0] + R/codata.c))
     #Alpha2 = np.exp(0. + 1j * omega * (trajectory[0] - n_chap[0] * trajectory[1] - n_chap[2] * trajectory[3]))
     Alpha1=(1.0 / (1.0 - n_chap[0]*trajectory[4]-n_chap[2]*trajectory[6])) ** 2
     Alpha3= codata.c/(gamma**2 * R)
     integrand[0] += (-(n_chap[1]**2)*trajectory[7]-n_chap[2]*Alpha
-                     + Alpha3 *(n_chap[0]-trajectory[4]))*Alpha2*Alpha1
+                     + Alpha3 *(n_chap[0]-trajectory[4])
+                     )*Alpha2*Alpha1
     integrand[1] += (n_chap[1]*(n_chap[0]*trajectory[7]+n_chap[2]*trajectory[9])
-                            + Alpha3 * (n_chap[1] - trajectory[5]))*Alpha2*Alpha1
+                            + Alpha3 * (n_chap[1] - trajectory[5])
+                     )*Alpha2*Alpha1
     integrand[2] += (-(n_chap[1]**2)*trajectory[9]+n_chap[0]*Alpha
-                     + Alpha3 *(n_chap[2]-trajectory[6]))*Alpha2*Alpha1
+                     + Alpha3 *(n_chap[2]-trajectory[6])
+                     )*Alpha2*Alpha1
     for k in range(3):
         E[k] = np.trapz(integrand[k], trajectory[0])
     return (np.abs(E[0]) ** 2 + np.abs(E[1])** 2 + np.abs(E[2])** 2)
@@ -458,7 +462,7 @@ def energy_radiated_initial(omega=2.53465927101*10**17,trajectory=np.zeros((11,1
     return (np.abs(E[0]) ** 2 + np.abs(E[1])** 2 + np.abs(E[2])** 2)
 
 # Photon's flow all over a screen situate at distance D of an undulator
-# warning : trajectory is the trajectory difine like the function "undulator trajectory" before :
+# warning : trajectory is the trajectory define like the function "undulator trajectory" before :
 def radiation_single_electron(K=1.87, E=1.3 * 10 ** 9, lambda_u=0.035, trajectory=np.zeros((11, 10)), D=None, omega=None,
               X=np.arange(-0.0011, 0.0011, 0.00002), Y=np.arange(-0.0011, 0.0011, 0.00002)):
 
@@ -474,7 +478,7 @@ def radiation_single_electron(K=1.87, E=1.3 * 10 ** 9, lambda_u=0.035, trajector
     # c4 = 1e-2 / omega1  # to get 1% energy bandwidth  #!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     # c5 = 0.1e-3 * 0.1e-3  # from rad to .1mrad angle bandwidth
     c6= codata.e*1e-10/(8.0*np.pi**2*codata.epsilon_0*codata.c*codata.h)
-    #c6 = codata.e**2 / (16.0* np.pi ** 3 * codata.epsilon_0 * codata.c)
+
 
     # res = np.zeros((len(X), len(Y)))
     # for i in range(len(X)):
@@ -544,8 +548,8 @@ def energy_radiated2(omega=2.53465927101*10**17,gamma=2000.0,trajectory=np.zeros
 
 
 # Same that before bur call the energy radiated 2
-def radiation_single_electron2(K=1.87, E=1.3 * 10 ** 9, lambda_u=0.035, trajectory=np.zeros((11, 10)), D=None, omega=None,
-              X=np.arange(-0.0011, 0.0011, 0.00002), Y=np.arange(-0.0011, 0.0011, 0.00002)):
+def radiation_single_electron2(K=1.87, E=1.3 * 10 ** 9, lambda_u=0.035, trajectory=np.zeros((11, 10)), D=None,
+            omega=None,X=np.arange(-0.0011, 0.0011, 0.00002), Y=np.arange(-0.0011, 0.0011, 0.00002)):
 
     gamma = E / 0.511e6
 

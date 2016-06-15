@@ -5,16 +5,16 @@ import matplotlib.pyplot as plt
 
 class Trajectory(object):
     def __init__(self, t, x, y, z, v_x, v_y, v_z, a_x, a_y, a_z):
-        self.t = t.copy()
-        self.x = x.copy()
-        self.y = y.copy()
-        self.z = z.copy()
-        self.v_x = v_x.copy()
-        self.v_y = v_y.copy()
-        self.v_z = v_z.copy()
-        self.a_x = a_x.copy()
-        self.a_y = a_y.copy()
-        self.a_z = a_z.copy()
+        self.t = t
+        self.x = x
+        self.y = y
+        self.z = z
+        self.v_x = v_x
+        self.v_y = v_y
+        self.v_z = v_z
+        self.a_x = a_x
+        self.a_y = a_y
+        self.a_z = a_z
 
     def nb_points(self):
         N=len(self.t)
@@ -25,14 +25,59 @@ class Trajectory(object):
             and len(self.a_z)==N ) :
             N = len(self.t)
         else :
+            #raise Exception("different lenght in trajectory.")
+            print("different lenght in trajectory.")
             N=0
         return N
 
-    # def error(self,trajec_test):
-    #     if self.t != trajec_test.t :
-    #         raise Exception("Problem : the two trajectory have not the same vector t.")
-    #     error=np.zeros((10,self.nb_points()))
-    #     error[0]=
+    def convert(self,T):
+        if T.shape[0]== 10 :
+            self.t = T[0]
+            self.x = T[1]
+            self.y = T[2]
+            self.z = T[3]
+            self.v_x = T[4]
+            self.v_y = T[5]
+            self.v_z = T[6]
+            self.a_x = T[7]
+            self.a_y = T[8]
+            self.a_z = T[9]
+
+
+    def error(self,trajec_test):
+        if all(self.t != trajec_test.t) :
+            raise Exception("Problem : the two trajectory have not the same vector t.")
+        error=np.zeros((10,self.nb_points()))
+        error[0]=self.t.copy()
+        error[1] = np.abs(self.x - trajec_test.x)
+        error[2] = np.abs(self.y - trajec_test.y)
+        error[3] = np.abs(self.z - trajec_test.z)
+        error[4] = np.abs(self.v_x - trajec_test.v_x)
+        error[5] = np.abs(self.v_y - trajec_test.v_y)
+        error[6] = np.abs(self.v_z - trajec_test.v_z)
+        error[7] = np.abs(self.a_x - trajec_test.a_x)
+        error[8] = np.abs(self.a_y - trajec_test.a_y)
+        error[9] = np.abs(self.a_z - trajec_test.a_z)
+        return error
+        # return Trajectory(error[0],error[1],error[2],error[3],error[4],error[5],error[6]
+        #                   ,error[7],error[8],error[9])
+
+    def error_max(self,trajec_test):
+        if all(self.t != trajec_test.t) :
+            raise Exception("Problem : the two trajectory have not the same vector t.")
+        error=np.zeros((10))
+        error[0]=self.nb_points()
+        error[1] = (np.abs(self.x - trajec_test.x)).max()
+        error[2] = (np.abs(self.y - trajec_test.y)).max()
+        error[3] = (np.abs(self.z - trajec_test.z)).max()
+        error[4] = (np.abs(self.v_x - trajec_test.v_x)).max()
+        error[5] = (np.abs(self.v_y - trajec_test.v_y)).max()
+        error[6] = (np.abs(self.v_z - trajec_test.v_z)).max()
+        error[7] = (np.abs(self.a_x - trajec_test.a_x)).max()
+        error[8] = (np.abs(self.a_y - trajec_test.a_y)).max()
+        error[9] = (np.abs(self.a_z - trajec_test.a_z)).max()
+        return error
+
 
     def copy(self):
         return Trajectory(t=self.t.copy(), x=self.x.copy(), y=self.y.copy(), z=self.z.copy(), v_x=self.v_x.copy(),

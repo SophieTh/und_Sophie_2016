@@ -22,7 +22,6 @@ class RadiationFactory(object):
     def copy(self):
         return RadiationFactory( method=self.method,omega=self.omega)
 
-
     # Photon's flow all over a screen situate at distance D of an undulator
     def calculate_radiation_intensity(self, trajectory,undulator,distance=None, X_arrays=None, Y_arrays=None):
         # c1 = codata.e ** 2 * omega1 ** 2 / (16 * np.pi ** 3 * codata.epsilon_0 * codata.c )
@@ -76,10 +75,6 @@ class RadiationFactory(object):
         res = res.reshape(shape1)
         return res
 
-
-
-## changer le undulateur en juste gamma
-
     # Photon's flow all over a screen situate at distance D of an undulator
     def create_for_single_electron(self, trajectory,undulator,distance=None,X=None,Y=None):
         if X== None or Y == None:
@@ -89,6 +84,7 @@ class RadiationFactory(object):
             xy_max=np.sqrt(undulator.lambda_u*2.0*undulator.L)/(2.0*np.pi)
             X = np.linspace(0.0, xy_max, self.Nb_pts)
             Y = np.linspace(0.0, xy_max, self.Nb_pts)
+
         map=self.calculate_radiation_intensity(trajectory=trajectory,undulator=undulator,
                                                distance=distance,X_arrays=X,Y_arrays=Y)
         radiation= Radiation(map=map,X=X,Y=Y,distance=distance)
@@ -167,7 +163,6 @@ class RadiationFactory(object):
         E += terme_bord
 
         return (np.abs(E[0]) ** 2 + np.abs(E[1]) ** 2 + np.abs(E[2]) ** 2)
-
 
     # exact equation for the energy radiated
     # warning !!!!!!! far field approximation
@@ -285,7 +280,7 @@ class RadiationFactory(object):
             E[k] = integrate.simps(integrand[k], trajectory.t)
         return (np.abs(E[0]) ** 2 + np.abs(E[1]) ** 2 + np.abs(E[2]) ** 2)
 
-# attention ici c'est faux
+    # attention ici c'est faux
     def energy_radiated_near_field2(self, trajectory, gamma,x, y, distance):
         # N = trajectory.shape[1]
         N = trajectory.nb_points()

@@ -84,6 +84,40 @@ class TrajectoryFactory(object):
         return trajectory
 
 
+
+    # # a change !!
+    def analytical_trajectory_cst_magnf(self,f,t,vz_0,x_0):
+        T= np.zeros((10, len(t)))
+        T[0]=t
+        T[1] = -vz_0 * (1.0 / f) * np.cos(f * t)+vz_0/f + x_0
+        T[2] = vz_0 * (0.0) * t
+        T[3] = vz_0 * (1.0 / f) * np.sin(f * t)
+        T[4] = vz_0 * np.sin(f * t)
+        T[5] = vz_0 * 0.0 * t
+        T[6] = vz_0 * np.cos(f * t)
+        T[7] = vz_0 * f * np.cos(f * t)
+        T[8] = vz_0 * 0.0 * t
+        T[9] = -vz_0* f * np.sin(f * t)
+        return T
+    # # a change !!
+
+
+    # ### cree speciale ment pour un test
+    # def analytical_trajectory_cst_magnf(self,Bo,gamma,t,vz_0,x_0):
+    #     T=self.copy()
+    #     f=Bo*codata.e/(gamma*codata.m_e)
+    #     T.x = (lambda t:-vz_0 * (1.0 / f) * np.cos(f * t) +vz_0/f + x_0)
+    #     T.y = (lambda t: vz_0 * (0.0) * t)
+    #     T.z = (lambda t: vz_0 * (1.0 / f) * np.sin(f * t))
+    #     T.v_x = (lambda t: vz_0 * np.sin(f * t))
+    #     T.v_y = (lambda t: vz_0 * 0.0 * t)
+    #     T.v_z = (lambda t: vz_0 * np.cos(f * t))
+    #     T.a_x = (lambda t:vz_0 * f * np.cos(f * t))
+    #     T.a_y = (lambda t:vz_0 * 0.0 * t)
+    #     T.a_z = (lambda t:-vz_0* f * np.sin(f * t))
+    #     return T
+
+
     #method aui ne marche pas
     # electron's trajectory in a PLANE undulator that mean :  B=(0,By,0)
     # other hypothesis norm(v)=constant
@@ -193,6 +227,7 @@ class TrajectoryFactory(object):
             if (self.initial_condition==None) :
                 self.initial_condition=np.array([0.0,0.0,np.sqrt(1.0 - (1.0 / ( undulator.E /0.511e6)** 2))*codata.c,
                                                  0.0,0.0,B.z[0]])
+                print(self.initial_condition)
             T=self.calculate_trajectory(undulator=undulator,B=B)
 
         else:
@@ -208,6 +243,14 @@ class TrajectoryFactory(object):
         trajectory = Trajectory(T[0], T[1], T[2], T[3], T[4], T[5], T[6], T[7], T[8], T[9])
         return trajectory
 
+
+    def create_for_cst_magnetic_field(self, undulator,t):
+        Bo = (undulator.K / (93.4 * undulator.lambda_u))
+        f = Bo * codata.e / (undulator.gamma() * codata.m_e)
+        T = self.analytical_trajectory_cst_magnf(f,t=t,vz_0=undulator.Beta(),
+                                                 x_0=-undulator.Beta()/f)
+        trajectory = Trajectory(T[0], T[1], T[2], T[3], T[4], T[5], T[6], T[7], T[8], T[9])
+        return trajectory
 
 
 

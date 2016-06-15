@@ -17,6 +17,7 @@ class Radiation(object):
     def copy(self):
         return Radiation( map=self.intensity.copy(),X=self.X.copy(),Y=self.Y.copy(),distance=self.distance)
 
+
     # draw all coordinate of the trajectory in function of the time
     def draw(self):
         if self.X== None or self.Y== None:
@@ -45,22 +46,18 @@ class Radiation(object):
       res=Radiation(error,self.X.copy().self.Y.copy())
       return res
 
-
     def max(self):
         res=(self.intensity).max()
         return res
 
-
     def error_max(self,radiation2):
         return (np.abs(self.intensity - radiation2.intensity)).max()
-
 
     def relativ_error(self,radiation2):
         if (self.max() ==0.0) :
            raise Exception("Problem : radiation max is null")
         res=self.error_max(radiation2)/self.max()
         return res
-
 
     def integration(self):
 
