@@ -43,10 +43,21 @@ class Trajectory(object):
             self.a_y = T[8]
             self.a_z = T[9]
 
+    def multiply_by(self,cst):
+        self.x *= cst
+        self.y *= cst
+        self.z *= cst
+        self.v_x *= cst
+        self.v_y *= cst
+        self.v_z *= cst
+        self.a_x *= cst
+        self.a_y *= cst
+        self.a_z *= cst
+
 
     def error(self,trajec_test):
         if all(self.t != trajec_test.t) :
-            raise Exception("Problem : the two trajectory have not the same vector t.")
+            raise Exception("Problem : the two trajectory have not the same vector t ??")
         error=np.zeros((10,self.nb_points()))
         error[0]=self.t.copy()
         error[1] = np.abs(self.x - trajec_test.x)
@@ -64,7 +75,7 @@ class Trajectory(object):
 
     def error_max(self,trajec_test):
         if all(self.t != trajec_test.t) :
-            raise Exception("Problem : the two trajectory have not the same vector t.")
+             raise Exception("Problem : the two trajectory have not the same vector t.")
         error=np.zeros((10))
         error[0]=self.nb_points()
         error[1] = (np.abs(self.x - trajec_test.x)).max()
@@ -76,6 +87,58 @@ class Trajectory(object):
         error[7] = (np.abs(self.a_x - trajec_test.a_x)).max()
         error[8] = (np.abs(self.a_y - trajec_test.a_y)).max()
         error[9] = (np.abs(self.a_z - trajec_test.a_z)).max()
+        return error
+
+    def error_rel(self,trajec_test):
+        if all(self.t != trajec_test.t) :
+             raise Exception("Problem : the two trajectory have not the same vector t.")
+        error=self.error(trajec_test)
+        for i in range(self.nb_points()) :
+            if self.x[i] != 0.0 :
+                error[1][i] *= 1.0/(np.abs(self.x[i]))
+            # else :
+            #     error[1][i]= -1
+
+            if self.y[i] != 0.0 :
+                error[2][i] *= 1.0/(np.abs(self.y[i]))
+            # else :
+            #     error[2][i]= -1
+
+            if self.z[i] != 0.0 :
+                error[3][i] *= 1.0/(np.abs(self.z[i]))
+            # else :
+            #     error[3][i]= -1
+
+            if self.v_x[i] != 0.0 :
+                error[4][i] *= 1.0/(np.abs(self.v_x[i]))
+            # else:
+            #     error[4][i] = -1
+
+            if self.v_y[i] != 0.0 :
+                error[5][i] *= 1.0/(np.abs(self.v_y[i]))
+            # else:
+            #     error[5][i] = -1
+
+            if self.v_z[i] != 0.0 :
+                error[6][i] *= 1.0/(np.abs(self.v_z[i]))
+            # else:
+            #     error[6][i] = -1
+
+            if self.a_x[i] != 0.0 :
+                error[7][i] *= 1.0/(np.abs(self.a_x[i]))
+            # else:
+            #     error[7][i] = -1
+
+            if self.a_y[i] != 0.0:
+                error[8][i] *= 1.0 / (np.abs(self.a_y[i]))
+            # else:
+            #     error[8][i] = -1
+
+            if self.a_z[i] != 0.0 :
+                error[9][i] *= 1.0/(np.abs(self.a_z[i]))
+            # else:
+            #     error[9][i] = -1
+
         return error
 
 
@@ -96,7 +159,7 @@ class Trajectory(object):
         plt.show()
 
 
-    def draw(self):
+    def plot(self):
         plt.plot(self.t, self.x)
         plt.title(" X = f(t) ")
         plt.xlabel('t')
@@ -144,11 +207,11 @@ class Trajectory(object):
         plt.ylabel('Vz')
         plt.show()
 
-        plt.plot(self.t, self.v_z - Beta_et)
-        plt.title(" Vz -Beta* = f(t) ")
-        plt.xlabel('t')
-        plt.ylabel('Vz')
-        plt.show()
+        # plt.plot(self.t, self.v_z - Beta_et)
+        # plt.title(" Vz -Beta* = f(t) ")
+        # plt.xlabel('t')
+        # plt.ylabel('Vz')
+        # plt.show()
 
         plt.plot(self.t, self.a_x)
         plt.title(" Ax = f(t) ")
@@ -170,7 +233,7 @@ class Trajectory(object):
 
     # draw all coordinate of the 2 trajectories in function of the time
     # It must have the same shape and the same fistr vector wich represent time.
-    def draw_2_trajectory(self,traj2):
+    def plot_2_trajectory(self,traj2):
         plt.plot(self.t, self.x)
         plt.plot(traj2.t, traj2.x)
         plt.title(" X = f(t) ")
@@ -185,9 +248,18 @@ class Trajectory(object):
         plt.ylabel('V')
         plt.show()
 
+
         plt.plot(self.t, self.z)
         plt.plot(traj2.t, traj2.z)
         plt.title(" Z  = f(t) ")
+        plt.xlabel('t')
+        plt.ylabel('Z')
+        plt.show()
+
+        Beta_et = np.sum(self.v_z) / len(self.v_z)
+        plt.plot(self.t, self.z-Beta_et*self.t)
+        plt.plot(traj2.t, traj2.z-Beta_et*self.t)
+        plt.title(" Z -Beta* t = f(t) ")
         plt.xlabel('t')
         plt.ylabel('Z')
         plt.show()
@@ -246,4 +318,9 @@ if __name__ == "__main__" :
     a_y=0.0*t
     a_z=-np.cos(t)
     Traj=Trajectory(t,x,y,z,v_x,v_y,v_z,a_x,a_y,a_z)
-    Traj.draw()
+    Traj.plot()
+
+    Traj2=Traj.copy()
+    Traj2.multiply_by(3)
+
+    Traj.plot_2_trajectory(Traj2)

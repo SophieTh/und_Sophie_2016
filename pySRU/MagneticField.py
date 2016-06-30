@@ -15,8 +15,31 @@ class MagneticField(object):
         self.Bz = Bz
 
     def copy(self):
-        return MagneticField(x=self.x.copy(), y=self.y.copy(), z=self.z.copy(),
-                             Bx=self.Bx.copy(), By=self.By.copy(), Bz=self.Bz.copy())
+        if type(self.x)==np.ndarray:
+            x = self.x.copy()
+        else :
+            x=self.x
+        if type(self.y)==np.ndarray:
+            y = self.y.copy()
+        else :
+            y=self.y
+        if type(self.z)==np.ndarray:
+            z = self.z.copy()
+        else :
+            z=self.z
+        if type(self.Bx)==np.ndarray:
+            Bx = self.Bx.copy()
+        else :
+            Bx=self.Bx
+        if type(self.By)==np.ndarray:
+            By = self.By.copy()
+        else :
+            By=self.By
+        if type(self.Bz)==np.ndarray:
+            Bz = self.Bz.copy()
+        else :
+            Bz=self.Bz
+        return MagneticField(x=x, y=y, z=z, Bx=Bx, By=By, Bz=Bz)
 
     #faire une fct aui fait l'interpolation  et elargissement
     #

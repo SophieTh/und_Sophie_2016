@@ -8,18 +8,18 @@ from TrajectoryFactory import TrajectoryFactory, TRAJECTORY_METHOD_ANALYTIC
 from UndulatorParameter import UndulatorParameters as Undulator
 
 class Radiation(object):
-    def __init__(self, map,X,Y,distance):
-        self.intensity=map
+    def __init__(self, intensity, X, Y, distance):
+        self.intensity=intensity
         self.X=X
         self.Y=Y
         self.distance=distance
 
     def copy(self):
-        return Radiation( map=self.intensity.copy(),X=self.X.copy(),Y=self.Y.copy(),distance=self.distance)
+        return Radiation(intensity=self.intensity.copy(), X=self.X.copy(), Y=self.Y.copy(), distance=self.distance)
 
 
     # draw all coordinate of the trajectory in function of the time
-    def draw(self):
+    def plot(self):
         if self.X== None or self.Y== None:
             print("oups")
             if self.distance == None:
@@ -42,8 +42,8 @@ class Radiation(object):
         plt.show()
 
     def difference_with(self,radiation2):
-      error=np.abs(self.map - radiation2.map)
-      res=Radiation(error,self.X.copy().self.Y.copy())
+      error=np.abs(self.intensity - radiation2.intensity)
+      res=Radiation(error,self.X.copy(),self.Y.copy(),distance=self.distance)
       return res
 
     def max(self):
@@ -82,10 +82,11 @@ if __name__ == "__main__" :
 
     X=np.linspace(0.0,0.005,101)
     Y=np.linspace(0.0,0.005,101)
+    distance=100
     X_grid,Y_grid=np.meshgrid(X,Y)
-    map = X_grid ** 2 * Y_grid ** 2
-    rad=Radiation(map=map,X=X,Y=Y)
+    intensity = X_grid ** 2 * Y_grid ** 2
+    rad=Radiation(intensity=intensity, X=X, Y=Y,distance=100)
     print(rad.intensity.shape)
     print(rad.integration())
-    rad.draw()
+    rad.plot()
 
