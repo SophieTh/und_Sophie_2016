@@ -4,9 +4,6 @@ import matplotlib.pyplot as plt
 from pylab import *
 from mpl_toolkits.mplot3d import Axes3D
 
-from TrajectoryFactory import TrajectoryFactory, TRAJECTORY_METHOD_ANALYTIC
-from UndulatorParameter import UndulatorParameters as Undulator
-
 class Radiation(object):
     def __init__(self, intensity, X, Y, distance):
         self.intensity=intensity

@@ -3,7 +3,10 @@ import scipy.constants as codata
 import scipy.integrate as integrate
 from scipy.integrate import odeint
 from Trajectory import Trajectory
-from UndulatorParameter import UndulatorParameters as Undulator
+from TrajectoryAnalitic import TrajectoryAnalitic
+from TrajectoryArray import TrajectoryArray
+from Parameter import Parameter,PLANE_UNDULATOR,BENDING_MAGNET
+from ParameterPlaneUndulator import ParameterPlaneUndulator as Undulator
 
 
 TRAJECTORY_METHOD_ANALYTIC=0
@@ -56,57 +59,44 @@ class TrajectoryFactory(object):
         Beta_et = 1.0 - (1.0 / (2.0 * gamma ** 2)) * (1.0 + (undulator.K ** 2) / 2.0)
         omega_u = Beta_et * codata.c * ku
         #
-        # print("ici")
-        # Bo = undulator.K / (93.4 * undulator.lambda_u)
-        # print((codata.e*Bo)/(gamma*codata.m_e))
-        # print((undulator.K**2*codata.c*omega_u)/(2.0*(gamma**2)*ku))
-        # trajectory =
-        #   [t........]
-        # 	[ X/c......]
-        # 	[ Y/c ......]
-        #	[ Z/c ......]
-        # 	[ Vx/c .....]
-        # 	[ Vy/c .....]
-        # 	[ Vz/c .....]
-        # 	[ Ax/c .....]
-        # 	[ Ay/c .....]
-        # 	[ Az/c .....]
-        trajectory = np.zeros((10, N))
         # t
-        trajectory[0] = np.linspace(-undulator.L / (2.0 * codata.c * Beta_et),
+        time = np.linspace(-undulator.L / (2.0 * codata.c * Beta_et),
                                      undulator.L / (2.0 * codata.c * Beta_et), N)
         #utiliser omegat!
-        omegat= np.linspace(-undulator.L *0.5,
-                                     undulator.L* 0.5, N)
-        omegat *= ku
-        # X et Z en fct de t
-        trajectory[3] = Beta_et * trajectory[0] + ((undulator.K / gamma) ** 2) * (1.0 / (8.0 * omega_u)) * np.sin(
-            2.0 * omegat)
-        trajectory[1] = -(undulator.K / (gamma * omega_u)) * np.cos(omegat)
-        # Vx et Vz en fct de t
-        trajectory[6] = Beta_et + ((undulator.K / gamma) ** 2) * (1.0 / 4.0) * np.cos(2.0 *omegat)
-        trajectory[4] = (undulator.K / (gamma )) * np.sin(omegat)
-        # Ax et Az en fct de t
-        trajectory[9] = -omega_u *( undulator.K / gamma) ** 2 * 0.5 * np.sin(
-            2.0 * omegat)
-        #trajectory[7] = (undulator.K / (gamma * ku * Beta_et * codata.c)) * (omega_u ** 2) * np.cos(omegat)
-        trajectory[7] = (undulator.K / (gamma )) * (omega_u ) * np.cos(omegat)
-        return trajectory
+        # # X et Z en fct de t
+        z = (lambda t :Beta_et * t + ((undulator.K / gamma) ** 2) * (1.0 / (8.0 * omega_u)
+                                    ) * np.sin( 2.0 * omega_u*t))
+        x =(lambda t :(-(undulator.K / (gamma * omega_u)) * np.cos(omega_u*t)))
+        # # Vx et Vz en fct de t
+        v_z = (lambda  t :Beta_et + ((undulator.K / gamma) ** 2) * (1.0 / 4.0) * np.cos(2.0 *omega_u*t))
+        v_x=(lambda t : (undulator.K / (gamma )) * np.sin(omega_u*t))
+        # # Ax et Az en fct de t
+        a_z=(lambda t :-omega_u *( undulator.K / gamma) ** 2 * 0.5 * np.sin( 2.0 * omega_u*t))
+        # #trajectory[7] = (undulator.K / (gamma * ku * Beta_et * codata.c)) * (omega_u ** 2) * np.cos(omegat)
+        a_x=(lambda  t : (undulator.K / (gamma )) * (omega_u ) * np.cos(omega_u*t))
+        fct_null=(lambda t : 0.0*t)
+        return TrajectoryAnalitic(t=time,x=x,y=fct_null,z=z,v_x=v_x,v_y=fct_null,v_z=v_z,
+                                  a_x=a_x,a_y=fct_null,a_z=a_z)
 
     # # a change !!
-    def analytical_trajectory_cst_magnf(self,f,t,vz_0,x_0):
-        T= np.zeros((10, len(t)))
-        T[0]=t
-        T[1] = -vz_0 * (1.0 / f) * np.cos(f * t)+vz_0/f + x_0
-        T[2] = vz_0 * (0.0) * t
-        T[3] = vz_0 * (1.0 / f) * np.sin(f * t)
-        T[4] = vz_0 * np.sin(f * t)
-        T[5] = vz_0 * 0.0 * t
-        T[6] = vz_0 * np.cos(f * t)
-        T[7] = vz_0 * f * np.cos(f * t)
-        T[8] = vz_0 * 0.0 * t
-        T[9] = -vz_0* f * np.sin(f * t)
-        return T
+    def analytical_trajectory_cst_magnf(self,bending_magnet):
+        #time= np.linspace(-undulator.L / (2.0 * codata.c * Beta_et),
+                                     #undulator.L / (2.0 * codata.c * Beta_et), N)
+        time = np.linspace(bending_magnet.Zo_analitic(),-bending_magnet.Zo_analitic(),
+                           self.Nb_pts) / ( bending_magnet.Beta_et()* codata.c)
+        f = -bending_magnet.Bo * codata.e / (bending_magnet.gamma() * codata.m_e)
+        vz_0 = bending_magnet.Beta()
+        x_0 = -bending_magnet.Beta() / f
+        x = (lambda t:-vz_0 * (1.0 / f) * np.cos(f * t)+vz_0/f + x_0)
+        y = (lambda t:vz_0 * 0.0 * t)
+        z = (lambda t:vz_0 * (1.0 / f) * np.sin(f * t))
+        vx = (lambda t:vz_0 * np.sin(f * t))
+        vy = (lambda t:vz_0 * 0.0 * t)
+        vz = (lambda t:vz_0 * np.cos(f * t))
+        ax =(lambda t: vz_0 * f * np.cos(f * t))
+        ay = (lambda t:vz_0 * 0.0 * t)
+        az = (lambda t:-vz_0* f * np.sin(f * t))
+        return TrajectoryAnalitic(t=time,x=x,y=y,z=z,v_x=vx,v_y=vy,v_z=vz,a_x=ax,a_y=ay,a_z=az)
     # # a change !!
 
 
@@ -128,11 +118,11 @@ class TrajectoryFactory(object):
 
     # electron's trajectory in a PLANE undulator that mean :  B=(0,By,0)
     # other hypothesis norm(v)=constant
-    def trajectory_undulator_from_magnetic_field_method1(self,undulator, B):
-        gamma = undulator.E / 0.511e6
+    def trajectory_from_magnetic_field_method_INT(self, parameter, B):
+        gamma = parameter.E / 0.511e6
         Beta = np.sqrt(1.0 - (1.0 / gamma ** 2))
-        ku = 2.0 * np.pi / undulator.lambda_u
-        Beta_et = 1.0 - (1.0 / (2.0 * gamma ** 2)) * (1.0 + (undulator.K ** 2) / 2.0)
+        ku = 2.0 * np.pi / parameter.lambda_u
+        Beta_et = 1.0 - (1.0 / (2.0 * gamma ** 2)) * (1.0 + (parameter.K ** 2) / 2.0)
         omega_u = Beta_et * codata.c * ku
         N=self.Nb_pts
         Z=np.linspace(B.z[0],B.z[-1],N)
@@ -179,11 +169,10 @@ class TrajectoryFactory(object):
         return trajectory
 
     # electron's trajectory in a PLANE undulator that mean :  B=(0,By,0)
-    def trajectory_undulator_from_magnetic_field_method2(self,undulator, B):
-        gamma = undulator.gamma()
+    def trajectory_from_magnetic_field_method_ODE(self, parameter, B):
+        gamma = parameter.gamma()
         Z = B.z
-        Beta = np.sqrt(1.0 - (1.0 / gamma ** 2))
-        Beta_et = 1.0 - (1.0 / (2.0 * gamma ** 2)) * (1.0 + (undulator.K ** 2) / 2.0)
+        Beta_et=parameter.Beta_et()
         N=self.Nb_pts
         #   trajectory =
         #   [t........]
@@ -197,7 +186,9 @@ class TrajectoryFactory(object):
         # 	[ Ay/c .....]
         # 	[ Az/c .....]
         trajectory = np.zeros((10, N))
-        trajectory[0] = np.linspace(Z[0] / (Beta_et * codata.c), Z[- 1] / (Beta_et * codata.c), N)
+        trajectory[0] = np.linspace(parameter.Zo_symetry() / (Beta_et * codata.c),
+                                    -parameter.Zo_symetry()  / (Beta_et * codata.c), N)
+        #trajectory[0] = np.linspace(Z[0] / (Beta_et * codata.c), Z[- 1] / (Beta_et * codata.c), N)
         cst = -codata.e / (codata.m_e * gamma)
         res = odeint(fct_ODE_undulator,self.initial_condition, trajectory[0],
                      args=(cst,B.Bx,B.By,B.Bz), full_output=True)
@@ -220,48 +211,54 @@ class TrajectoryFactory(object):
             k += 1
         return trajectory
 
-    def calculate_trajectory(self,undulator,B):
+    def calculate_trajectory(self, parameter, B):
         if (self.method == TRAJECTORY_METHOD_ODE or self.method == TRAJECTORY_METHOD_INTEGRATION):
             if self.method == TRAJECTORY_METHOD_INTEGRATION:
-                T = self.trajectory_undulator_from_magnetic_field_method1(undulator=undulator, B=B)
+                T = self.trajectory_from_magnetic_field_method_INT(parameter=parameter, B=B)
 
 
             else: # method=TRAJECTORY_METHOD_ODE
-                T = self.trajectory_undulator_from_magnetic_field_method2(undulator=undulator, B=B)
+                T = self.trajectory_from_magnetic_field_method_ODE(parameter=parameter, B=B)
 
         else:
-            T = self.analytical_trajectory_plane_undulator(undulator=undulator)
+            if parameter.type_magnet==PLANE_UNDULATOR:
+                T = self.analytical_trajectory_plane_undulator(undulator=parameter)
+            else :
+                T = self.analytical_trajectory_cst_magnf(undulator=parameter,B=B)
         return T
 
-    def create_for_plane_undulator(self,undulator,B):
-        if (self.method == 1 or self.method == 2):
+    def create_for_parameter(self,parameter,B):
+        if (self.method == TRAJECTORY_METHOD_INTEGRATION or self.method == TRAJECTORY_METHOD_ODE):
             if (self.initial_condition==None) :
-                self.initial_condition=np.array([0.0,0.0,np.sqrt(1.0 - (1.0 / ( undulator.E /0.511e6)** 2))*codata.c,
+                self.initial_condition=np.array([0.0,0.0,np.sqrt(1.0 - (1.0 / ( parameter.E /0.511e6)** 2))*codata.c,
                                                  0.0,0.0,B.z[0]])
                 #print(self.initial_condition)
-            T=self.calculate_trajectory(undulator=undulator,B=B)
-
+            T=self.calculate_trajectory(parameter=parameter,B=B)
+            trajectory = TrajectoryArray(T[0], T[1], T[2], T[3], T[4], T[5], T[6], T[7], T[8], T[9])
         else:
-            T = self.analytical_trajectory_plane_undulator(undulator=undulator)
-
-        trajectory = Trajectory(T[0],T[1],T[2],T[3],T[4],T[5],T[6],T[7],T[8],T[9])
+            if parameter.type_magnet==PLANE_UNDULATOR:
+                trajectory = self.analytical_trajectory_plane_undulator(undulator=parameter)
+            else :
+                trajectory = self.analytical_trajectory_cst_magnf(bending_magnet=parameter)
+            t0=trajectory.t[0]
+            self.initial_condition = np.array([trajectory.v_x(t0), trajectory.v_y(t0),
+                                    trajectory.v_z(t0), trajectory.x(t0),
+                                    trajectory.y(t0), trajectory.z(t0)])
+            self.initial_condition *= codata.c
 
         return trajectory
 
     def create_for_plane_undulator_ideal(self,undulator):
-        T = self.analytical_trajectory_plane_undulator(undulator)
-        trajectory = Trajectory(T[0], T[1], T[2], T[3], T[4], T[5], T[6], T[7], T[8], T[9])
-        self.initial_condition=np.array([T[4][0],T[5][0],T[6][0],T[1][0],T[2][0],T[3][0]])
+        trajectory = self.analytical_trajectory_plane_undulator(undulator=undulator)
+        self.initial_condition = np.array([trajectory.v_x(trajectory.t[0]), trajectory.v_y(trajectory.t[0]),
+                                           trajectory.v_z(trajectory.t[0]), trajectory.x(trajectory.t[0]),
+                                           trajectory.y(trajectory.t[0]), trajectory.z(trajectory.t[0])])
         self.method=TRAJECTORY_METHOD_ANALYTIC
         return trajectory
 
-    def create_for_cst_magnetic_field(self, undulator,t):
-        Bo = (undulator.K / (93.4 * undulator.lambda_u))
-        f = Bo * codata.e / (undulator.gamma() * codata.m_e)
-        T = self.analytical_trajectory_cst_magnf(f,t=t,vz_0=undulator.Beta(),
-                                                 x_0=-undulator.Beta()/f)
-        trajectory = Trajectory(T[0], T[1], T[2], T[3], T[4], T[5], T[6], T[7], T[8], T[9])
-        return trajectory
+    def create_for_cst_magnetic_field_ideal(self, parameter):
+        T = self.analytical_trajectory_cst_magnf(bending_magnet=parameter)
+        return T
 
 
 
@@ -284,5 +281,5 @@ if __name__ == "__main__" :
                                    initial_condition=initial_condition).create_for_plane_undulator_ideal(
                                     undulator=und_test)
 
-    traj_test.draw_2_trajectory(traj_test2)
+    traj_test.plot_2_trajectory(traj_test2)
     print(traj_test.z.max())

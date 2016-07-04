@@ -62,41 +62,50 @@ class MagneticField(object):
             self.By = np.concatenate((enlarg_3, self.By))
             self.By = np.concatenate((self.By, enlarg_3))
 
+# a change !! CAS POSOTF OU NON ECT ...
+        #FAIRE UNE CLASS COMD INITI OU DANS TRAJ FACT ?
+    def change_Zo(self,Zo):
+        if Zo ==0.0 :
+            self.z =np.linspace(Zo,self.z[-1],len(self.z))
+        else :
+            if Zo >0.0 :
+                Zo= -Zo
+            self.z=np.linspace(Zo,-Zo,len(self.z))
 
     def plot_z(self):
-        plt.plot(self.z, self.Bx(self.z,self.y[0]))
+        plt.plot(self.z, self.Bx(self.z,self.y))
         plt.title(" Bx = f(z) ")
-        plt.xlabel('Bx')
-        plt.ylabel('Z')
+        plt.ylabel('Bx')
+        plt.xlabel('Z')
         plt.show()
 
-        plt.plot(self.z, self.By(self.z,self.y[0]))
+        plt.plot(self.z, self.By(self.z,self.y))
         plt.title(" By = f(z) ")
-        plt.xlabel('By')
-        plt.ylabel('Z')
+        plt.ylabel('By')
+        plt.xlabel('Z')
         plt.show()
 
-        plt.plot(self.z, self.Bz(self.z,self.y[0]))
+        plt.plot(self.z, self.Bz(self.z,self.y))
         plt.title(" Bz = f(z) ")
-        plt.xlabel('Bz')
-        plt.ylabel('Z')
+        plt.ylabel('Bz')
+        plt.xlabel('Z')
         plt.show()
 
 
     def plot_y(self):
-        plt.plot(self.y, self.Bx(self.z[0], self.y))
+        plt.plot(self.y, self.Bx(self.z, self.y))
         plt.title(" Bx = f(y) ")
         plt.xlabel('Bx')
         plt.ylabel('y')
         plt.show()
 
-        plt.plot(self.y, self.By(self.z[0], self.y))
+        plt.plot(self.y, self.By(self.z, self.y))
         plt.title(" By = f(y) ")
         plt.xlabel('By')
         plt.ylabel('y')
         plt.show()
 
-        plt.plot(self.y, self.Bz(self.z[0], self.y))
+        plt.plot(self.y, self.Bz(self.z, self.y))
         plt.title(" Bz = f(y) ")
         plt.xlabel('Bz')
         plt.ylabel('y')
