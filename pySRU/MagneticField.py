@@ -73,19 +73,19 @@ class MagneticField(object):
             self.z=np.linspace(Zo,-Zo,len(self.z))
 
     def plot_z(self):
-        plt.plot(self.z, self.Bx(self.z,self.y))
+        plt.plot(self.z, self.Bx(self.z,self.y,self.x))
         plt.title(" Bx = f(z) ")
         plt.ylabel('Bx')
         plt.xlabel('Z')
         plt.show()
 
-        plt.plot(self.z, self.By(self.z,self.y))
+        plt.plot(self.z, self.By(self.z,self.y,self.x))
         plt.title(" By = f(z) ")
         plt.ylabel('By')
         plt.xlabel('Z')
         plt.show()
 
-        plt.plot(self.z, self.Bz(self.z,self.y))
+        plt.plot(self.z, self.Bz(self.z,self.y,self.x))
         plt.title(" Bz = f(z) ")
         plt.ylabel('Bz')
         plt.xlabel('Z')

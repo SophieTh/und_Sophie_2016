@@ -24,9 +24,9 @@ def fct_ODE_plane_undulator(y, t, cst, B):
 
 def fct_ODE_undulator(y, t, cst, Bx,By,Bz):
 
-    return [cst * (Bz(y[5],y[4]) * y[1] - By(y[5],y[4]) * y[2]),
-            cst * (Bx(y[5],y[4]) * y[2] - Bz(y[5],y[4]) * y[0]),
-            cst * (By(y[5],y[4]) * y[0] - Bx(y[5],y[4]) * y[1]),
+    return [cst * (Bz(y[5],y[4],y[3]) * y[1] - By(y[5],y[4],y[3]) * y[2]),
+            cst * (Bx(y[5],y[4],y[3]) * y[2] - Bz(y[5],y[4],y[3]) * y[0]),
+            cst * (By(y[5],y[4],y[3]) * y[0] - Bx(y[5],y[4],y[3]) * y[1]),
             y[0],
             y[1],
             y[2]]
@@ -119,17 +119,19 @@ class TrajectoryFactory(object):
     # electron's trajectory in a PLANE undulator that mean :  B=(0,By,0)
     # other hypothesis norm(v)=constant
     def trajectory_from_magnetic_field_method_INT(self, parameter, B):
-        gamma = parameter.E / 0.511e6
-        Beta = np.sqrt(1.0 - (1.0 / gamma ** 2))
-        ku = 2.0 * np.pi / parameter.lambda_u
-        Beta_et = 1.0 - (1.0 / (2.0 * gamma ** 2)) * (1.0 + (parameter.K ** 2) / 2.0)
-        omega_u = Beta_et * codata.c * ku
+        gamma=parameter.gamma()
+        Beta = parameter.Beta()
+        Beta_et = parameter.Beta_et()
         N=self.Nb_pts
         Z=np.linspace(B.z[0],B.z[-1],N)
         if type(B.y)== np.ndarray :
             Y = np.linspace(B.y[0], B.y[-1], N)
         else :
             Y=B.y
+        if type(B.x) == np.ndarray:
+            X = np.linspace(B.x[0], B.x[-1], N)
+        else:
+            X = B.x
         # trajectory =
         #   [t........]
         # 	[ X/c......]
@@ -146,7 +148,7 @@ class TrajectoryFactory(object):
         trajectory[0] = Z/(Beta_et*codata.c)
         # Ax
         Xm = codata.e *Beta_et/ (gamma * codata.m_e )
-        trajectory[7] = Xm * B.By(Z,Y)
+        trajectory[7] = Xm * B.By(Z,Y,X)
         # Vx et Vz
         for i in range(N):
             #np.trapz
@@ -171,9 +173,7 @@ class TrajectoryFactory(object):
     # electron's trajectory in a PLANE undulator that mean :  B=(0,By,0)
     def trajectory_from_magnetic_field_method_ODE(self, parameter, B):
         gamma = parameter.gamma()
-        Z = B.z
         Beta_et=parameter.Beta_et()
-        N=self.Nb_pts
         #   trajectory =
         #   [t........]
         # 	[ X/c......]
@@ -185,9 +185,9 @@ class TrajectoryFactory(object):
         # 	[ Ax/c .....]
         # 	[ Ay/c .....]
         # 	[ Az/c .....]
-        trajectory = np.zeros((10, N))
-        trajectory[0] = np.linspace(parameter.Zo_symetry() / (Beta_et * codata.c),
-                                    -parameter.Zo_symetry()  / (Beta_et * codata.c), N)
+        trajectory = np.zeros((10,self.Nb_pts))
+        trajectory[0] = np.linspace(B.z[0] / (Beta_et * codata.c),
+                                    B.z[-1] / (Beta_et * codata.c), self.Nb_pts)
         #trajectory[0] = np.linspace(Z[0] / (Beta_et * codata.c), Z[- 1] / (Beta_et * codata.c), N)
         cst = -codata.e / (codata.m_e * gamma)
         res = odeint(fct_ODE_undulator,self.initial_condition, trajectory[0],
@@ -203,8 +203,8 @@ class TrajectoryFactory(object):
         trajectory[1] = traj[3]
         trajectory[2] = traj[4]
         trajectory[3] = traj[5]
-        trajectory[7] = -cst * B.By(trajectory[3],trajectory[2]) * trajectory[6]
-        trajectory[9] = cst * B.By(trajectory[3],trajectory[2]) * trajectory[4]
+        trajectory[7] = - cst * B.By(trajectory[3], trajectory[2],trajectory[1]) * trajectory[6]
+        trajectory[9] = cst * B.By(trajectory[3], trajectory[2],trajectory[1]) * trajectory[4]
         k = 1
         while k < 10:
             trajectory[k] *= 1.0 / codata.c
@@ -245,6 +245,9 @@ class TrajectoryFactory(object):
                                     trajectory.v_z(t0), trajectory.x(t0),
                                     trajectory.y(t0), trajectory.z(t0)])
             self.initial_condition *= codata.c
+        # a changer TODO
+        if (type(trajectory)==TrajectoryAnalitic) :
+            trajectory=trajectory.convert()
 
         return trajectory
 
@@ -260,6 +263,11 @@ class TrajectoryFactory(object):
         T = self.analytical_trajectory_cst_magnf(bending_magnet=parameter)
         return T
 
+    def create_from_array(self,array):
+        if array.shape[0] != 10 :
+            raise Exception('this array can not be convert in Trajectory')
+        return TrajectoryArray(t=array[0],x=array[1],y=array[2],z=array[3],v_x=array[4],v_y=array[5],
+                    v_z = array[6],a_x=array[7],a_y=array[8],a_z=array[9])
 
 
 

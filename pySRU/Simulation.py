@@ -105,7 +105,7 @@ class Simulation(object):
 
     def change_Nb_pts_trajectory(self, Nb_pts):
         self.trajectory_fact.Nb_pts = Nb_pts
-        self.trajectory = self.trajectory_fact.create_for_plane_undulator(undulator=self.parameter,
+        self.trajectory = self.trajectory_fact.create_for_parameter(parameter =self.parameter,
                                                                           B=self.magnetic_field)
         self.radiation.intensity = self.radiation_fact.calculate_radiation_intensity(trajectory=self.trajectory,
                                                                                      parameter=self.parameter,
@@ -154,15 +154,15 @@ class Simulation(object):
         sim2.change_trajectory_method(method)
         error_rad=np.zeros_like(nb_pts)
         error_traj=np.zeros((10,len(nb_pts)))
-        print(len(nb_pts))
         for i in range(len(nb_pts)) :
-            print(i)
             self.change_Nb_pts_trajectory(nb_pts[i])
             sim2.change_Nb_pts_trajectory(nb_pts[i])
             error_traj[:,i]=self.trajectory.error_max(sim2.trajectory)
             error_rad[i]=self.radiation.error_max(sim2.radiation)
-        return error_rad, error_traj
+        traj_error_traj=self.trajectory_fact.create_from_array(error_traj)
+        return error_rad, traj_error_traj
 
+    # a changer #TODO
     def error_trajectory_cst_magnetic_field(self,nb_pts):
         Bo = (self.parameter.K / (93.4 * self.parameter.lambda_u))
         f = Bo * codata.e / (self.parameter.gamma() * codata.m_e)
@@ -170,10 +170,7 @@ class Simulation(object):
         x_0=self.trajectory_fact.initial_condition[3]/codata.c
         error = np.zeros((10,len(nb_pts)))
         traj_ref=self.trajectory.copy()
-        print(len(nb_pts))
         for i in range(len(nb_pts)):
-            print(i)
-            print(nb_pts[i])
             self.change_Nb_pts_trajectory_only(nb_pts[i])
             traj_ref_arrays= self.trajectory_fact.analytical_trajectory_cst_magnf(f=f,
                                                     t=self.trajectory.t,vz_0=vz_0,x_0=x_0)
@@ -183,7 +180,8 @@ class Simulation(object):
             # print(error_max.shape)
             # for j in range(9) :
             #      error[j+1][i] = error_max[j+1]
-        return error
+        traj_err=self.trajectory_fact.create_from_array(error)
+        return traj_err
 
     def relativ_error_radiation_method_distance(self,method,D):
         sim2=self.copy()
@@ -304,6 +302,7 @@ def create_simulation(parameter, trajectory_fact, radiation_fact=None, magnetic_
 
         trajectory_fact.initial_condition = np.array([0.0, 0.0, parameter.Beta() * codata.c,
                                                       0.0, 0.0, parameter.Zo_symetry()])
+        # a changer
     elif(trajectory_fact.method==TRAJECTORY_METHOD_ANALYTIC):
         trajectory_fact.initial_condition = np.array([0.0, 0.0, parameter.Beta() * codata.c,
                                                       0.0, 0.0,  parameter.Zo_analitic()])

@@ -56,8 +56,8 @@ class TrajectoryArray(Trajectory):
             if any((self.t != trajectory_test.t) ):
                 print("the time vecto change for the analitical trajectory")
                 trajectory_test.t=self.t
-            trajec_test=trajectory_test.convert_array()
-        elif all((self.t - trajectory_test.t) <= np.abs(self.t).max() * 1e-6):
+            trajec_test=trajectory_test.convert()
+        elif any(np.abs(self.t - trajectory_test.t) > np.abs(self.t).max()*1e-6):
             raise Exception("Problem : the two trajectory have not the same vector t ??")
         else :
             trajec_test=trajectory_test
@@ -72,12 +72,12 @@ class TrajectoryArray(Trajectory):
         error[7] = np.abs(self.a_x - trajec_test.a_x)
         error[8] = np.abs(self.a_y - trajec_test.a_y)
         error[9] = np.abs(self.a_z - trajec_test.a_z)
-        return Trajectory(error[0],error[1],error[2],error[3],error[4],error[5],error[6]
+        return TrajectoryArray(error[0],error[1],error[2],error[3],error[4],error[5],error[6]
                            ,error[7],error[8],error[9])
 
 
     def error_max(self, trajectory_test):
-        if type(trajectory_test)!=TrajectoryArray :
+        if type(trajectory_test) !=TrajectoryArray :
             if any((self.t != trajectory_test.t) ):
                 print("the time vector change for the analitical trajectory")
                 trajectory_test.t=self.t
@@ -89,7 +89,7 @@ class TrajectoryArray(Trajectory):
             raise Exception("Problem : the two trajectory have not the same vector t ??")
 
         print(type(trajec_test))
-        error = np.zeros((10, self.nb_points()))
+        error = np.zeros(10)
         error[0] = self.nb_points()
         error[1] = (np.abs(self.x - trajec_test.x)).max()
         error[2] = (np.abs(self.y - trajec_test.y)).max()
@@ -160,8 +160,57 @@ class TrajectoryArray(Trajectory):
                 # else:
                 #     error[9][i] = -1
 
-        return Trajectory(error[0], error[1], error[2], error[3], error[4], error[5], error[6]
+        return TrajectoryArray(error[0], error[1], error[2], error[3], error[4], error[5], error[6]
                           , error[7], error[8], error[9])
+
+    def error_rel_max(self, trajectory_test):
+        if type(trajectory_test) != TrajectoryArray:
+            if any((self.t != trajectory_test.t)):
+                print("the time vecto change for the analitical trajectory")
+                trajectory_test.t = self.t
+            trajec_test = trajectory_test.convert_array()
+        elif any((self.t - trajectory_test.t) > np.abs(self.t).max() * 1e-6):
+            raise Exception("Problem : the two trajectory have not the same vector t ??")
+        else:
+            trajec_test = trajectory_test
+        error = self.error(trajec_test)
+        xm=np.abs(self.x).max()
+        if xm != 0.0:
+            error.x *= 1.0 / xm
+
+        ym = np.abs(self.y).max()
+        if ym != 0.0 :
+            error.y *= 1.0 /ym
+
+        zm = np.abs(self.z).max()
+        if zm != 0.0 :
+            error.z *= 1.0 /zm
+
+        vxm = np.abs(self.v_x).max()
+        if vxm != 0.0:
+            error.v_x *= 1.0 / vxm
+
+        vym = np.abs(self.v_y).max()
+        if vym != 0.0:
+            error.v_y *= 1.0 / vym
+
+        vzm = np.abs(self.v_z).max()
+        if vzm != 0.0:
+            error.v_z *= 1.0 / vzm
+
+        axm = np.abs(self.a_x).max()
+        if axm != 0.0:
+            error.a_x *= 1.0 / axm
+
+        aym = np.abs(self.a_y).max()
+        if aym != 0.0:
+            error.a_y *= 1.0 / aym
+
+        azm = np.abs(self.a_z).max()
+        if azm != 0.0:
+            error.a_z *= 1.0 / azm
+
+        return error
 
 
     # draw all coordinate of the trajectory in function of the time

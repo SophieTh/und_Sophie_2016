@@ -1,6 +1,7 @@
 import unittest
 import numpy as np
 from pySRU.Trajectory import Trajectory
+from pySRU.TrajectoryArray import TrajectoryArray
 
 class TrajectoryTest(unittest.TestCase):
     def test_error_nb_pts_copy(self):
@@ -14,7 +15,8 @@ class TrajectoryTest(unittest.TestCase):
         a_x = -np.sin(t)
         a_y = 0.0 * t
         a_z = -np.cos(t)
-        Traj = Trajectory(t, x, y, z, v_x, v_y, v_z, a_x, a_y, a_z)
+        Traj = TrajectoryArray(t, x, y, z, v_x, v_y, v_z, a_x, a_y, a_z)
+
         Traj2 = Traj.copy()
 
         self.assertEqual(Traj.nb_points(), 1200)

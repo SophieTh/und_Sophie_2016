@@ -52,9 +52,9 @@ class Parameter(object):
         return B
 
     def create_magnetic_field(self,Z,Y,X,harmonic_number):
-        By = (lambda z,y: self.magnetic_field(Z=z,Y=y,x=X,harmonic_number=harmonic_number,coordonnee='y'))
-        Bz = (lambda z, y: self.magnetic_field(Z=z, Y=y,x=X, harmonic_number=harmonic_number, coordonnee='z'))
-        Bx=(lambda z, y: self.magnetic_field(Z=z, Y=y, x=X,harmonic_number=harmonic_number, coordonnee='x'))
+        By = (lambda z,y,x: self.magnetic_field(Z=z,Y=y,x=X,harmonic_number=harmonic_number,coordonnee='y'))
+        Bz = (lambda z, y,x: self.magnetic_field(Z=z, Y=y,x=X, harmonic_number=harmonic_number, coordonnee='z'))
+        Bx=(lambda z, y,x: self.magnetic_field(Z=z, Y=y, x=X,harmonic_number=harmonic_number, coordonnee='x'))
         #B = MagneticField(0.0, Y, Z, fct_null, By, fct_null)
         B = MagneticField(X, Y, Z, Bx, By, Bz)
         return B

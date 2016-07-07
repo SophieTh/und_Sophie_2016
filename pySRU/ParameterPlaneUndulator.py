@@ -103,6 +103,11 @@ class ParameterPlaneUndulator(Parameter):
     def Zo_analitic(self):
         return -self.L/2.0
 
+    # n is the harmonic number
+    # l un the wave number
+    def theta(self,n,l):
+        return np.sqrt((l/n)*(1.0 + self.K ** 2 / 2.0)) * (1.0 / self.gamma())
+
 if __name__ == "__main__" :
     K = 1.87
     E = 1.3e9

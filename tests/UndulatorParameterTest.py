@@ -1,6 +1,6 @@
 import unittest
 import numpy as np
-from pySRU.UndulatorParameter import UndulatorParameters as Undulator
+from pySRU.ParameterPlaneUndulator import ParameterPlaneUndulator as Undulator
 
 
 class UndulatorParameterTest(unittest.TestCase):
@@ -34,10 +34,11 @@ class UndulatorParameterTest(unittest.TestCase):
         undulator = Undulator(K=K, E=E, lambda_u=lambda_u, L=L, I=I)
         Z=np.linspace(-1.,1.,101)
         Y=0.0
-        B=undulator.create_magnetic_field_plane_undulator(Z=Z,Y=Y,harmonic_number=1)
-        By=B.By(Z,Y)
+        X=0.0
+        B=undulator.create_magnetic_field(Z=Z,Y=Y,X=X,harmonic_number=1)
+        By=B.By(Z,Y,X)
         self.assertTrue(By.shape==((101,)))
 
         Y=Z
-        By=B.By(Z,Y)
+        By=B.By(Z,Y,X)
         self.assertEqual(By.shape , ((101,)))
