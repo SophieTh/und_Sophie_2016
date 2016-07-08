@@ -1,7 +1,7 @@
 import numpy as np
 import scipy.constants as codata
 from abc import abstractmethod
-from MagneticField import MagneticField
+from pySRU.MagneticField import MagneticField
 
 PLANE_UNDULATOR=0
 BENDING_MAGNET=1

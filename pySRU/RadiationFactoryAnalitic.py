@@ -1,7 +1,7 @@
 import numpy as np
 import scipy.constants as codata
 import scipy.integrate as integrate
-from RadiationFactory import RadiationFactory , RADIATION_METHOD_APPROX_FARFIELD,RADIATION_METHOD_FARFIELD,\
+from   pySRU.RadiationFactory import RadiationFactory , RADIATION_METHOD_APPROX_FARFIELD,RADIATION_METHOD_FARFIELD,\
                                             RADIATION_METHOD_NEAR_FIELD,RADIATION_METHOD_AUTOMATIC
 
 

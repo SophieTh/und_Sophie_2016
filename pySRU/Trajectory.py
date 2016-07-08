@@ -1,8 +1,5 @@
 import numpy as np
 from abc import abstractmethod
-import matplotlib.pyplot as plt
-
-
 
 class Trajectory(object):
     def __init__(self, t, x, y, z, v_x, v_y, v_z, a_x, a_y, a_z):

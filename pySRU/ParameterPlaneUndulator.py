@@ -1,7 +1,7 @@
 import numpy as np
 import scipy.constants as codata
 from MagneticField import MagneticField
-from Parameter import Parameter , PLANE_UNDULATOR,BENDING_MAGNET
+from pySRU.Parameter import Parameter , PLANE_UNDULATOR,BENDING_MAGNET
 
 
 

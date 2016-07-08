@@ -1,7 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
-from Trajectory import Trajectory
-from TrajectoryArray import TrajectoryArray
+from pySRU.Trajectory import Trajectory
+from pySRU.TrajectoryArray import TrajectoryArray
 
 
 class TrajectoryAnalitic(Trajectory):

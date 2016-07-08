@@ -126,9 +126,8 @@ def simulation_undulator_method(und_test,traj_method,rad_method,distance=None,om
     theta_max=und_test.theta(n=num_har,l=1)
     Xmax = distance * theta_max
     Ymax = distance * theta_max
-    print(und_test.L/und_test.lambda_u)
+
     Nb_pts=int(2.0*und_test.lambda_u*1e3*und_test.Nb_period())
-    print(und_test.Nb_period())
     print('Nb point trajectory')
     print(Nb_pts)
     traj_test=TrajectoryFactory(Nb_pts=Nb_pts,method=traj_method)

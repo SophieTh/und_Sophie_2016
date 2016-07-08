@@ -5,16 +5,16 @@ from mpl_toolkits.mplot3d import Axes3D
 import scipy.constants as codata
 import time
 from scipy.interpolate import interp1d
-from TrajectoryAnalitic import TrajectoryAnalitic
-from TrajectoryArray import TrajectoryArray
-from Radiation import Radiation
-from MagneticField import MagneticField
-from ParameterPlaneUndulator import ParameterPlaneUndulator as Undulator ,PLANE_UNDULATOR,BENDING_MAGNET
+from pySRU.TrajectoryAnalitic import TrajectoryAnalitic
+from pySRU.TrajectoryArray import TrajectoryArray
+from pySRU.Radiation import Radiation
+from pySRU.MagneticField import MagneticField
+from pySRU.ParameterPlaneUndulator import ParameterPlaneUndulator as Undulator ,PLANE_UNDULATOR,BENDING_MAGNET
 
-from TrajectoryFactory import TrajectoryFactory, TRAJECTORY_METHOD_ANALYTIC,TRAJECTORY_METHOD_ODE,\
-                                        TRAJECTORY_METHOD_INTEGRATION
-from RadiationFactoryAnalitic import RadiationFactoryAnalitic
-from RadiationFactory import RadiationFactory,RADIATION_METHOD_NEAR_FIELD, \
+from pySRU.TrajectoryFactory import TrajectoryFactory, TRAJECTORY_METHOD_ANALYTIC,TRAJECTORY_METHOD_ODE,\
+                                       TRAJECTORY_METHOD_INTEGRATION
+from pySRU.RadiationFactoryAnalitic import RadiationFactoryAnalitic
+from pySRU.RadiationFactory import RadiationFactory,RADIATION_METHOD_NEAR_FIELD, \
                                 RADIATION_METHOD_FARFIELD, RADIATION_METHOD_APPROX_FARFIELD
 
 

@@ -3,9 +3,9 @@ from Radiation import Radiation
 import scipy.constants as codata
 import scipy.integrate as integrate
 from abc import abstractmethod
-from TrajectoryFactory import TrajectoryFactory, TRAJECTORY_METHOD_ANALYTIC , TRAJECTORY_METHOD_INTEGRATION
-from ParameterPlaneUndulator import ParameterPlaneUndulator as Undulator
-from TrajectoryAnalitic import TrajectoryAnalitic
+from pySRU.TrajectoryFactory import TrajectoryFactory, TRAJECTORY_METHOD_ANALYTIC , TRAJECTORY_METHOD_INTEGRATION
+from pySRU.ParameterPlaneUndulator import ParameterPlaneUndulator as Undulator
+from pySRU.TrajectoryAnalitic import TrajectoryAnalitic
 
 RADIATION_METHOD_AUTOMATIC=0
 RADIATION_METHOD_NEAR_FIELD=1

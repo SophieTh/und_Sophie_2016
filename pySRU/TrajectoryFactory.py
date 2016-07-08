@@ -2,11 +2,11 @@ import numpy as np
 import scipy.constants as codata
 import scipy.integrate as integrate
 from scipy.integrate import odeint
-from Trajectory import Trajectory
-from TrajectoryAnalitic import TrajectoryAnalitic
-from TrajectoryArray import TrajectoryArray
-from Parameter import Parameter,PLANE_UNDULATOR,BENDING_MAGNET
-from ParameterPlaneUndulator import ParameterPlaneUndulator as Undulator
+from pySRU.Trajectory import Trajectory
+from pySRU.TrajectoryAnalitic import TrajectoryAnalitic
+from pySRU.TrajectoryArray import TrajectoryArray
+from pySRU.Parameter import Parameter,PLANE_UNDULATOR,BENDING_MAGNET
+from pySRU.ParameterPlaneUndulator import ParameterPlaneUndulator as Undulator
 
 
 TRAJECTORY_METHOD_ANALYTIC=0
