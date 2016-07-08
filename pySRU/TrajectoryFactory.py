@@ -85,17 +85,17 @@ class TrajectoryFactory(object):
         time = np.linspace(bending_magnet.Zo_analitic(),-bending_magnet.Zo_analitic(),
                            self.Nb_pts) / ( bending_magnet.Beta_et()* codata.c)
         f = -bending_magnet.Bo * codata.e / (bending_magnet.gamma() * codata.m_e)
-        vz_0 = bending_magnet.Beta()
-        x_0 = -bending_magnet.Beta() / f
-        x = (lambda t:-vz_0 * (1.0 / f) * np.cos(f * t)+vz_0/f + x_0)
-        y = (lambda t:vz_0 * 0.0 * t)
-        z = (lambda t:vz_0 * (1.0 / f) * np.sin(f * t))
-        vx = (lambda t:vz_0 * np.sin(f * t))
-        vy = (lambda t:vz_0 * 0.0 * t)
-        vz = (lambda t:vz_0 * np.cos(f * t))
-        ax =(lambda t: vz_0 * f * np.cos(f * t))
-        ay = (lambda t:vz_0 * 0.0 * t)
-        az = (lambda t:-vz_0* f * np.sin(f * t))
+        vz_0 = self.initial_condition[2]/codata.c
+        t0 = bending_magnet.Zo_analitic()/(codata.c*bending_magnet.Beta_et())
+        x = (lambda t:-vz_0 * (1.0 / f) * np.cos(f * (t-t0))+vz_0/f+self.initial_condition[3]/codata.c )
+        y = (lambda t:vz_0 * 0.0 * (t-t0)+self.initial_condition[4]/codata.c)
+        z = (lambda t:vz_0 * (1.0 / f) * np.sin(f * (t-t0))+self.initial_condition[5]/codata.c)
+        vx = (lambda t:vz_0 * np.sin(f * (t-t0))+self.initial_condition[0]/codata.c)
+        vy = (lambda t:vz_0 * 0.0 * (t-t0)+self.initial_condition[1]/codata.c)
+        vz = (lambda t:vz_0 * np.cos(f * (t-t0))+self.initial_condition[2]/codata.c)
+        ax =(lambda t: vz_0 * f * np.cos(f * (t-t0)))
+        ay = (lambda t:vz_0 * 0.0 * (t-t0))
+        az = (lambda t:-vz_0* f * np.sin(f * (t-t0)))
         return TrajectoryAnalitic(t=time,x=x,y=y,z=z,v_x=vx,v_y=vy,v_z=vz,a_x=ax,a_y=ay,a_z=az)
     # # a change !!
 

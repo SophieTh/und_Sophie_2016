@@ -59,22 +59,53 @@ class Parameter(object):
         B = MagneticField(X, Y, Z, Bx, By, Bz)
         return B
 
+    @abstractmethod
+    def get_L(self):
+        return
+
+    @abstractmethod
+    def get_K(self):
+        return
+
+    @abstractmethod
+    def get_lambda_u(self):
+        return
+
+    @abstractmethod
+    def get_Bo(self):
+        return
+
+    @abstractmethod
+    def theta_max(self):
+        return self.get_K()/self.gamma()
 
     def gamma(self) :
         return self.E/0.511e6
-
 
     def Beta(self) :
         gamma=self.gamma()
         Beta=np.sqrt(1.0-1.0/gamma**2)
         return Beta
 
-    @abstractmethod
+    def omega1(self):
+        gamma = self.gamma()
+        first_harm = ((2.0 * gamma ** 2) / (1.0 + (self.get_K() ** 2) / 2.0)) * ((2.0 * np.pi * codata.c) / self.get_lambda_u())
+        return first_harm
+
     def Beta_et(self):
-        return
+        Beta_et = 1.0 - (1.0 / (2.0 * self.gamma() ** 2)) * (1.0 + (self.get_K()** 2) / 2.0)
+        return Beta_et
+
+    def Nb_period(self):
+        return np.floor(self.get_L() / self.get_lambda_u())
+
+
+    def D_max(self, alpha):
+        lim = self.get_L() / 2.0
+        return lim * 10 ** alpha
 
     @abstractmethod
-    def L(self):
+    def Zmax_no_symetry(self):
         return
 
     @abstractmethod
@@ -85,10 +116,9 @@ class Parameter(object):
     def Zo_analitic(self):
         return
 
-    @abstractmethod
-    def Zmax_no_symetry(self):
-        return
-
-    @abstractmethod
-    def omega1(self):
-        return
+    # n is the harmonic number
+    # l un the wave number
+    def theta(self, n, l):
+        if n == 0:
+            raise Exception('n must be != 0')
+        return np.sqrt((l / n) * (1.0 + self.get_K() ** 2 / 2.0)) * (1.0 / self.gamma())

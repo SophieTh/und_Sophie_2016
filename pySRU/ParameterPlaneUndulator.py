@@ -75,40 +75,33 @@ class ParameterPlaneUndulator(Parameter):
 
         return dB
 
-    def omega1(self) :
-        gamma=self.gamma()
-        first_harm=((2.0 * gamma ** 2) / (1.0 + (self.K ** 2) / 2.0)) * ((2.0 * np.pi * codata.c) / self.lambda_u)
-        return first_harm
 
-    def Beta_et(self) :
-        Beta_et = 1.0 - (1.0 / (2.0 * self.gamma() ** 2)) * (1.0 + (self.K ** 2) / 2.0)
-        return Beta_et
-
-    def Nb_period(self):
-        return np.floor(self.L/self.lambda_u)
-
-    def Bo(self):
+    def get_Bo(self):
         return (2.0*np.pi*codata.m_e * codata.c*self.K)/( self.lambda_u*codata.e)
 
+    def get_L(self):
+        return  self.L
 
+    def get_K(self):
+        return self.K
 
-    def D_max_plane_undulator(self,alpha):
-        lim= self.L/2.0
-        return lim *10**alpha
+    def theta_max(self):
+        theta11=self.theta(1,1)
+        return theta11
+
+    def get_lambda_u(self):
+        return self.lambda_u
 
     def Zmax_no_symetry(self):
-        return self.L + 10.0 * self.lambda_u
+        return self.get_L() + 10.0 * self.get_lambda_u()
 
     def Zo_symetry(self):
-        return  -(self.L/ 2.0 + 5.0 * self.lambda_u)
+        return -(self.get_L() / 2.0 + 5.0 * self.get_lambda_u())
 
     def Zo_analitic(self):
-        return -self.L/2.0
+        return -self.get_L() / 2.0
 
-    # n is the harmonic number
-    # l un the wave number
-    def theta(self,n,l):
-        return np.sqrt((l/n)*(1.0 + self.K ** 2 / 2.0)) * (1.0 / self.gamma())
+
 
 if __name__ == "__main__" :
     K = 1.87
