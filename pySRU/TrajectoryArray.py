@@ -87,8 +87,6 @@ class TrajectoryArray(Trajectory):
 
         else :
             raise Exception("Problem : the two trajectory have not the same vector t ??")
-
-        print(type(trajec_test))
         error = np.zeros(10)
         error[0] = self.nb_points()
         error[1] = (np.abs(self.x - trajec_test.x)).max()

@@ -38,7 +38,9 @@ class ParameterPlaneUndulator(Parameter):
             # we know considere that if -(L/2 + lambda_u/4) < Z < (L/2 + lambda_u/4)
             # the magnetic field if a classic cosinus (or sinus)
             if coordonnee == 'y':
-                L_cosinus_part=self.L/2.0 + self.lambda_u/4.0
+                a1=self.L/self.lambda_u-self.Nb_period()
+                a2=(0.25-a1/2.0)
+                L_cosinus_part=self.L/2.0 + self.lambda_u*a2
 
             else :
                 L_cosinus_part = self.L / 2.0

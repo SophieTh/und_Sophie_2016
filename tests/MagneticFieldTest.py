@@ -47,11 +47,11 @@ class MagneticFieldTest(unittest.TestCase):
 
     def test_magn_field(self):
         und_test = Undulator(K=1.87, E=1.3e9, lambda_u=0.035, L=0.035 * 14, I=1.0)
-        ESRF18 = Undulator(K=1.68, E=6.0e9, lambda_u=0.018, L=0.018 * 111.5, I=0.2)
+        ESRF18 = Undulator(K=1.68, E=6.0e9, lambda_u=0.018, L=0.018 * 111, I=0.2)
         # ESRFBM = BM(E=6.0e9, Bo=0.8, div=5e-3, R=25.0, I=0.2)
 
-        self.create_magn_field_test(und_test=und_test, method_traj=TRAJECTORY_METHOD_ANALYTIC,formule=1)
-        print("TRAJECTORY_METHOD_ANALYTIC, ok")
-
         self.create_magn_field_test(und_test=und_test, method_traj=TRAJECTORY_METHOD_ODE,formule=1)
-        print("TRAJECTORY_METHOD_ODE, ok")
+        print("und_test, ok")
+
+        self.create_magn_field_test(und_test=ESRF18, method_traj=TRAJECTORY_METHOD_ODE,formule=1)
+        print("esrf18, ok")

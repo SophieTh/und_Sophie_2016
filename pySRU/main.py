@@ -29,26 +29,19 @@ print("omega")
 print(omega)
 
 
-# recuperation des donnees de B en array en fonction de z
-reference=np.load("../tests/x_ray_booklet_field.npz")
-Z=reference['ct']
-Z -= (Z[-1])/2.0
-By=reference['B_y']
-#SRW_magentic_field=MagneticField(x=0,y=0,z=Z,Bx=0,By=By,Bz=0)
-
-# #Bo=1.87/(93.4*0.035)*np.ones_like(Z)
-# cst_magentic_field=MagneticField(x=0,y=0,z=Z,Bx=,By=Bo,Bz=0)
-#
-
+# # recuperation des donnees de B en array en fonction de z
+# reference=np.load("../tests/x_ray_booklet_field.npz")
+# Z=reference['ct']
+# Z -= (Z[-1])/2.0
+# By=reference['B_y']
 
 
 #
 # # # minimum  :
 #
 und_test=Undulator(K = 1.87,E = 1.3e9,lambda_u = 0.035,L=0.035*14,I=1.0)
-ESRF18=Undulator(K = 1.68, E = 6.0e9,lambda_u = 0.018, L=0.018*111.5, I=0.2)
+ESRF18=Undulator(K = 1.68, E = 6.0e9,lambda_u = 0.018, L=2.0, I=0.2)
 ESRFBM=BM(E=6.0e9,Bo=0.8,div=5e-3,R=25.0,I=0.2)
-
 
 
 def simul_und_analitic_formule_near_farfield(und_test,formule) :
@@ -113,9 +106,48 @@ def simul_und_analitic_erreur_near_farfield(und_test,formule) :
     plt.show()
 #simul_und_analitic_erreur_near_farfield(und_test,1)
 
+def simulation_undulator_method(und_test,traj_method,rad_method,distance=None,omega=None) :
+    print('begin simulation')
+    if distance==None :
+        distance=und_test.D_max_plane_undulator(2)*2.0
+    print('distance')
+    print(distance)
 
+    if omega==None :
+        omega=und_test.omega1()
+        print('omega')
+    print(omega)
 
-def simulation_undulator(und_test,distance=None,omega=None) :
+    num_har=np.floor(omega/und_test.omega1())
+    if num_har==0 :
+        num_har==1
+    print('harmonic numb')
+    print(num_har)
+    theta_max=und_test.theta(n=num_har,l=1)
+    Xmax = distance * theta_max
+    Ymax = distance * theta_max
+    print(und_test.L/und_test.lambda_u)
+    Nb_pts=int(2.0*und_test.lambda_u*1e3*und_test.Nb_period())
+    print(und_test.Nb_period())
+    print('Nb point trajectory')
+    print(Nb_pts)
+    traj_test=TrajectoryFactory(Nb_pts=Nb_pts,method=traj_method)
+    rad_test=RadiationFactory(method=rad_method,omega=omega,Nb_pts=100,formula=1)
+
+    print('begin calcul')
+    start_time=time.time()
+    sim_test = create_simulation(parameter=und_test, trajectory_fact=traj_test, radiation_fact=rad_test,
+                                           distance=distance,X_max=Xmax,Y_max=Ymax)
+    delta_time=time.time()-start_time
+    print('calcul time')
+    print(delta_time)
+    sim_test.magnetic_field.plot_z()
+    sim_test.trajectory.plot_3D()
+    print(sim_test.radiation.max())
+    sim_test.radiation.plot()
+    return sim_test
+
+def simulation_undulator(und_test,distance=None,initial_condition=None,omega=None) :
     print('begin simulation')
     if distance==None :
         distance=und_test.D_max_plane_undulator(2)*2.0
@@ -136,24 +168,39 @@ def simulation_undulator(und_test,distance=None,omega=None) :
     Xmax = distance * theta_max
     Ymax = distance * theta_max
 
-    Nb_pts=int(und_test.lambda_u*1e3*und_test.Nb_period())
+    Nb_pts=int(2.0*und_test.lambda_u*10**3*und_test.Nb_period())
     print('Nb point trajectory')
     print(Nb_pts)
-    traj_test=TrajectoryFactory(Nb_pts=Nb_pts,method=TRAJECTORY_METHOD_ODE)
-    rad_test=RadiationFactory(method=RADIATION_METHOD_APPROX_FARFIELD,omega=omega,Nb_pts=100,formula=1)
+    traj_test=TrajectoryFactory(Nb_pts=Nb_pts,method=TRAJECTORY_METHOD_ODE,initial_condition=initial_condition)
+    rad_test=RadiationFactory(method=RADIATION_METHOD_APPROX_FARFIELD,omega=omega,Nb_pts=101,formula=1)
 
-    print('bigin calculation')
+    print('begin calcul')
     start_time=time.time()
     sim_test = create_simulation(parameter=und_test, trajectory_fact=traj_test, radiation_fact=rad_test,
                                            distance=distance,X_max=Xmax,Y_max=Ymax)
     delta_time=time.time()-start_time
-    print('calculation time')
+    print('calcul time')
     print(delta_time)
     sim_test.magnetic_field.plot_z()
     sim_test.trajectory.plot_3D()
     print(sim_test.radiation.max())
     sim_test.radiation.plot()
+    return sim_test
 
 
-simulation_undulator(und_test=und_test)
+#simulation_undulator(und_test=und_test)
 
+
+test1=simulation_undulator_method(ESRF18,traj_method=TRAJECTORY_METHOD_ODE,
+                                  rad_method=RADIATION_METHOD_APPROX_FARFIELD)
+
+# test2=test1.copy()
+# test2.change_trajectory_method(TRAJECTORY_METHOD_INTEGRATION)
+#
+# test2.radiation.plot()
+#
+#
+# err=test1.radiation.difference_with(test2.radiation)
+# err.plot()
+# err.intensity *= (1.0/test1.radiation.max())
+# err.plot()

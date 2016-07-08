@@ -24,9 +24,9 @@ def fct_ODE_plane_undulator(y, t, cst, B):
 
 def fct_ODE_undulator(y, t, cst, Bx,By,Bz):
 
-    return [cst * (Bz(y[5],y[4],y[3]) * y[1] - By(y[5],y[4],y[3]) * y[2]),
-            cst * (Bx(y[5],y[4],y[3]) * y[2] - Bz(y[5],y[4],y[3]) * y[0]),
-            cst * (By(y[5],y[4],y[3]) * y[0] - Bx(y[5],y[4],y[3]) * y[1]),
+    return [cst * (Bz(z=y[5],y=y[4],x=y[3]) * y[1] - By(z=y[5],y=y[4],x=y[3]) * y[2]),
+            cst * (Bx(z=y[5],y=y[4],x=y[3]) * y[2] - Bz(z=y[5],y=y[4],x=y[3]) * y[0]),
+            cst * (By(z=y[5],y=y[4],x=y[3]) * y[0] - Bx(z=y[5],y=y[4],x=y[3]) * y[1]),
             y[0],
             y[1],
             y[2]]
@@ -153,16 +153,16 @@ class TrajectoryFactory(object):
         for i in range(N):
             #np.trapz
             # trajectory[4][i] = integrate.simps(trajectory[7][0:(i + 1)], trajectory[0][0:(i + 1)]) \
-            trajectory[4][i] =  integrate.simps(trajectory[7][0:(i + 1)], trajectory[0][0:(i + 1)]) \
+            trajectory[4][i] = integrate.simps(trajectory[7][0:(i + 1)], trajectory[0][0:(i + 1)]) \
                                        + self.initial_condition[0]/ codata.c
         trajectory[6] = np.sqrt((Beta) ** 2 - trajectory[4] ** 2)
         # X et Z
         for i in range(N):
             #trajectory[1][i] = integrate.simps(trajectory[4][0:(i + 1)], trajectory[0][0:(i + 1)]) \
-            trajectory[1][i] =  integrate.simps(trajectory[4][0:(i + 1)], trajectory[0][0:(i + 1)]) \
+            trajectory[1][i] =  np.trapz(trajectory[4][0:(i + 1)], trajectory[0][0:(i + 1)]) \
                                + self.initial_condition[3]/ codata.c
             #trajectory[3][i] = integrate.simps(trajectory[6][0:(i + 1)], trajectory[0][0:(i + 1)]) \
-            trajectory[3][i] =  integrate.simps(trajectory[6][0:(i + 1)], trajectory[0][0:(i + 1)]) \
+            trajectory[3][i] = np.trapz(trajectory[6][0:(i + 1)], trajectory[0][0:(i + 1)]) \
                                +  self.initial_condition[5]/ codata.c
 
             # Az
