@@ -1,20 +1,18 @@
 import numpy as np
 import scipy.constants as codata
-from MagneticField import MagneticField
-from ParameterPlaneUndulator import ParameterPlaneUndulator
-from pySRU.Parameter import Parameter , PLANE_UNDULATOR,BENDING_MAGNET
+from pySRU.MagneticStructure import MagneticStructure, PLANE_UNDULATOR,BENDING_MAGNET
 
 
 
-class ParameterBendingMagnet(Parameter):
-    def __init__(self, E, Bo, R, I, div):
-        super(self.__class__, self).__init__(E=E, I=I, type_magnet=BENDING_MAGNET)
+class MagneticStructureBendingMagnet(MagneticStructure):
+    def __init__(self, Bo, R, div):
+        super(self.__class__, self).__init__(magnet_type=BENDING_MAGNET)
         self.R=R
         self.Bo = Bo
         self.div = div
 
     def copy(self):
-        return ParameterBendingMagnet(R=self.R, E=self.E,Bo=self.Bo,div=self.div, I=self.I)
+        return MagneticStructureBendingMagnet(R=self.R, Bo=self.Bo,div=self.div)
 
     def fct_magnetic_field2(self, z, y, x, harmonic_number, coordonnee='y'):
         lambda_inv = self.get_L() / 4.0
@@ -35,13 +33,13 @@ class ParameterBendingMagnet(Parameter):
 
             # we enelarge the real effect of the magnetic field by 4 lambda_u
             # on each extremity of the undulator
-            lambda_inv=self.L()/4.0
+            lambda_inv=self.get_L()/4.0
 
-            L_magn_field = self.L() / 2.0 + 4.0*lambda_inv
+            L_magn_field = self.get_L() / 2.0 + 4.0*lambda_inv
 
             # we know considere that if -(L/2 + lambda_u/4) < Z < (L/2 + lambda_u/4)
             # the magnetic field if a classic cosinus (or sinus)
-            L_cosinus_part = self.L() / 2.0
+            L_cosinus_part = self.get_L() / 2.0
 
             if ((z < -L_magn_field) or (z > L_magn_field)):
                 dB = 0.0
@@ -73,6 +71,8 @@ class ParameterBendingMagnet(Parameter):
                     dB = Bo
 
         return dB
+
+
     def fct_magnetic_field(self, z, y, x, harmonic_number, coordonnee='y'):
         if coordonnee == 'y':
                 # codata.m_e * codata.c / codata.e= 0.00170450894933
@@ -123,9 +123,6 @@ class ParameterBendingMagnet(Parameter):
     def get_lambda_u(self):
         return self.get_L()*4.0
 
-    def theta_max(self):
-        return 5.0*self.get_K()/self.gamma()
-
 
     def Zmax_no_symetry(self):
         return self.get_L() + 10.0*self.get_L()/4.0
@@ -137,3 +134,19 @@ class ParameterBendingMagnet(Parameter):
 
     def Zo_analitic(self):
         return -self.get_L() / 2.0
+
+if __name__ == "__main__" :
+    BM_test=MagneticStructureBendingMagnet(Bo=0.8, div=5e-3, R=25.0)
+
+    print(' Bending magnet lenght (m)')
+    print(BM_test.get_L())
+
+    print( ' Magnetic field intensity in (0,0,0)')
+    Bx = BM_test.fct_magnetic_field(z=0.0, y=0.0, x=0.0,harmonic_number=1, coordonnee='x')
+    By=BM_test.fct_magnetic_field(z=0.0,y=0.0,x=0.0,harmonic_number=1,coordonnee='y')
+    Bz = BM_test.fct_magnetic_field(z=0.0, y=0.0, x=0.0,harmonic_number=1, coordonnee='z')
+    B=np.array([Bx,By,Bz])
+    print(B)
+
+
+

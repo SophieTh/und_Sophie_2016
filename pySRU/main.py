@@ -4,16 +4,17 @@ import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 import scipy.integrate as integrate
 import time
-from Trajectory import Trajectory
-from Radiation import Radiation
-from MagneticField import MagneticField
-from operator import *
-from ParameterPlaneUndulator import ParameterPlaneUndulator  as Undulator
-from ParameterBendingMagnet import ParameterBendingMagnet  as BM
-from Simulation import Simulation ,create_simulation
-from TrajectoryFactory import TrajectoryFactory, TRAJECTORY_METHOD_ANALYTIC,TRAJECTORY_METHOD_ODE,\
+from pySRU.Trajectory import Trajectory
+from pySRU.Radiation import Radiation
+from pySRU.MagneticField import MagneticField
+from pySRU.MagneticStructureUndulatorPlane import MagneticStructureUndulatorPlane  as Undulator
+from pySRU.MagneticStructureBendingMagnet import MagneticStructureBendingMagnet  as BM
+from pySRU.ElectronBeam import ElectronBeam
+from pySRU.Source import Source
+from pySRU.Simulation import Simulation ,create_simulation
+from pySRU.TrajectoryFactory import TrajectoryFactory, TRAJECTORY_METHOD_ANALYTIC,TRAJECTORY_METHOD_ODE,\
                                         TRAJECTORY_METHOD_INTEGRATION
-from RadiationFactory import RadiationFactory ,RADIATION_METHOD_NEAR_FIELD, RADIATION_METHOD_APPROX,\
+from pySRU.RadiationFactory import RadiationFactory ,RADIATION_METHOD_NEAR_FIELD, RADIATION_METHOD_APPROX,\
                                 RADIATION_METHOD_FARFIELD, RADIATION_METHOD_APPROX_FARFIELD
 
 
@@ -39,9 +40,13 @@ print(omega)
 #
 # # # minimum  :
 #
-und_test=Undulator(K = 1.87,E = 1.3e9,lambda_u = 0.035,L=0.035*14,I=1.0)
-ESRF18=Undulator(K = 1.68, E = 6.0e9,lambda_u = 0.018, L=2.0, I=0.2)
-ESRFBM=BM(E=6.0e9,Bo=0.8,div=5e-3,R=25.0,I=0.2)
+beam_test=ElectronBeam(E=1.3e9,I=1.0)
+beam_ESRF=ElectronBeam(E=6.0e9,I=0.2)
+und_test=Undulator(K = 1.87,lambda_u = 0.035,L=0.035*14)
+ESRF18=Undulator(K = 1.68, lambda_u = 0.018, L=2.0)
+ESRFBM=BM(Bo=0.8,div=5e-3,R=25.0)
+
+
 
 
 def simul_und_analitic_formule_near_farfield(und_test,formule) :
@@ -106,51 +111,89 @@ def simul_und_analitic_erreur_near_farfield(und_test,formule) :
     plt.show()
 #simul_und_analitic_erreur_near_farfield(und_test,1)
 
+def n_min(und_test,alpha) :
+    racine=(np.pi*und_test.Nb_period()*10**(alpha))/(45.)
+    n_mini=(2.0*np.pi*und_test.Nb_period())*np.exp(0.25*np.log(racine))
+    return n_mini
+
+def n_min2(und_test,alpha) :
+    racine=(10**(alpha)*und_test.L())/(6*und_test.Beta_et()*codata.c)
+    n_mini=(2.0*np.pi*und_test.Nb_period())*np.exp(np.log(racine)/3.)
+    return n_mini
+
+def n_min3(und_test,alpha) :
+    racine=((0.5-10**(-alpha))*180.*2.0*np.pi*und_test.Nb_period())
+    n_mini=np.exp(0.2*np.log(1./racine))*(2.0*np.pi*und_test.Nb_period())
+    return n_mini
 
 
+#test1=simulation(ESRFBM,traj_method=TRAJECTORY_METHOD_ANALYTIC,omega=ESRFBM.omega1())
 
-def simulation(parameter,traj_method=TRAJECTORY_METHOD_ODE,rad_method=RADIATION_METHOD_APPROX_FARFIELD,
-                         distance=None,initial_condition=None,omega=None) :
-    print('begin simulation')
-    if distance==None :
-        distance=parameter.D_max(2)*2.0
-    print('distance')
-    print(distance)
+# spectre1,omega_array=test1.spectre()
+# plt.plot(omega_array,spectre1)
+# plt.show()
 
-    if omega==None :
-        omega=parameter.omega1()
-        print('omega')
-    print(omega)
+# spectre2,omega_array=test1.spectre2()
+# plt.plot(omega_array,spectre2)
+# plt.show()
+#
+# spectre3,omega_array=test1.spectre3(omega_array)
+# plt.plot(omega_array,spectre3)
+# plt.show()
 
-    num_har=np.floor(omega/parameter.omega1())
-    if num_har==0 :
-        num_har=1
-    print('harmonic numb')
-    print(num_har)
-    theta_max=parameter.theta_max()
-    Xmax = distance * theta_max
-    Ymax = distance * theta_max
+test2=create_simulation(electron_beam=beam_test,magnetic_structure=und_test,
+                        traj_method=TRAJECTORY_METHOD_ANALYTIC,rad_method=RADIATION_METHOD_APPROX_FARFIELD)
+#test2.change_trajectory_method(TRAJECTORY_METHOD_ODE)
 
-    Nb_pts=int(2.0*parameter.get_L()*1e3)
-    print('Nb point trajectory')
-    print(Nb_pts)
-    traj_test=TrajectoryFactory(Nb_pts=Nb_pts,method=traj_method,initial_condition=initial_condition)
-    rad_test=RadiationFactory(method=rad_method,omega=omega,Nb_pts=101,formula=1)
-
-    print('begin calcul')
-    start_time=time.time()
-    sim_test = create_simulation(parameter=parameter, trajectory_fact=traj_test, radiation_fact=rad_test,
-                                           distance=distance,X_max=Xmax,Y_max=Ymax)
-    delta_time=time.time()-start_time
-    print('calcul time')
-    print(delta_time)
-    sim_test.magnetic_field.plot_z()
-    sim_test.trajectory.plot_3D()
-    print(sim_test.radiation.max())
-    sim_test.radiation.plot()
-    return sim_test
+c1=test2.radiation.max()
+print('rad max 2')
+print(c1)
+print('la theorie')
+c2=source_test.flux_on_axis_theoric(n=1)
+print(c2)
+print('dif')
+print((c1-c2)/c2)
+# #
+# test3=test2.copy()
+# test3.change_trajectory_method(TRAJECTORY_METHOD_INTEGRATION)
+# test2.trajectory.plot_2_trajectory(test3.trajectory)
+# error=test2.trajectory.error_rel_max(test3.trajectory)
+# print('error.v_x[-1]')
+# print(error.v_x[-1])
+# error.plot()
+# print('radiation max test 3 ')
+# print(test3.radiation.max())
+# diff=test2.radiation.difference_with(test3.radiation)
+# diff.plot()
 
 
-test1=simulation(ESRFBM,traj_method=TRAJECTORY_METHOD_ANALYTIC)
-test2=simulation(und_test,traj_method=TRAJECTORY_METHOD_ODE)
+# print('n min')
+#
+#
+#
+#
+# alpha=4
+# print(10**alpha)
+# print("n mini 1")
+# print(n_min(und_test=source_test,alpha=alpha))
+# print(n_min(und_test=source_ESRF18,alpha=alpha))
+# print("n mini2")
+# print(n_min2(und_test=source_test,alpha=alpha))
+# print(n_min2(und_test=source_ESRF18,alpha=alpha))
+# print("n max")
+# print(n_min3(und_test=source_test,alpha=alpha))
+# print(n_min3(und_test=source_ESRF18,alpha=alpha))
+
+
+# f=np.array([0.0,1./3.,2./3.,1.0])
+# x=np.array([0.0,1./9.,4./9.,1.0])
+# int=integrate.simps(f,x)
+# print(int)
+#
+# rtue=und_test.Beta_et()*codata.c/(und_test.lambda_u*500)
+# print(rtue)
+# print(np.cos(2.0*np.pi*rtue))
+
+
+#print(source_test.Beta_et()*codata.c*2.*np.pi/source_test.lambda_u())
 

@@ -1,19 +1,20 @@
 import numpy as np
 import scipy.constants as codata
-from MagneticField import MagneticField
-from pySRU.Parameter import Parameter , PLANE_UNDULATOR,BENDING_MAGNET
+from scipy.special import jn,yn,jv,yv
+from pySRU.MagneticField import MagneticField
+from pySRU.MagneticStructure import MagneticStructure , PLANE_UNDULATOR,BENDING_MAGNET
 
 
 
-class ParameterPlaneUndulator(Parameter):
-    def __init__(self, K, E, lambda_u, L, I):
-        super(self.__class__, self).__init__(E=E,I=I,type_magnet=PLANE_UNDULATOR)
+class MagneticStructureUndulatorPlane(MagneticStructure):
+    def __init__(self, K,lambda_u, L):
+        super(self.__class__, self).__init__(magnet_type=PLANE_UNDULATOR)
         self.K = K
         self.lambda_u = lambda_u
         self.L = L
 
     def copy(self):
-        return ParameterPlaneUndulator(K=self.K,E=self.E,lambda_u=self.lambda_u,L=self.L,I=self.I)
+        return MagneticStructureUndulatorPlane(K=self.K,lambda_u=self.lambda_u,L=self.L)
 
     def fct_magnetic_field(self, z, y,x, harmonic_number, coordonnee='y') :
         lambda_h= self.lambda_u / harmonic_number
@@ -75,7 +76,6 @@ class ParameterPlaneUndulator(Parameter):
 
         return dB
 
-
     def get_Bo(self):
         return (2.0*np.pi*codata.m_e * codata.c*self.K)/( self.lambda_u*codata.e)
 
@@ -84,10 +84,6 @@ class ParameterPlaneUndulator(Parameter):
 
     def get_K(self):
         return self.K
-
-    def theta_max(self):
-        theta11=self.theta(1,1)
-        return theta11
 
     def get_lambda_u(self):
         return self.lambda_u
@@ -101,16 +97,42 @@ class ParameterPlaneUndulator(Parameter):
     def Zo_analitic(self):
         return -self.get_L() / 2.0
 
+    def Fn(self,n):
+        cst1=((n*self.K)/(1.+(self.K**2)/2.))**2
+        cst2 = (n * self.K**2) / (4. + (2.*self.K ** 2))
+        Fn=cst1*(jn(0.5*(n-1),cst2)-jn(0.5*(n+1),cst2))**2
+        return Fn
+
+    def print_parameters(self):
+        print'    K : %.2f'%(self.K)
+        print'    periodlenght : %.3f' % (self.lambda_u)
+        print'    lenght : %.2f'% (self.L)
+        print'    number of period : %.2f' % (self.Nb_period())
+        print'    magntic field intensity: %.2f'% (self.get_Bo())
+
+
+    # in photon /sec /1% /mrad*mrad
+    def flux_on_axis(self,n,electron_beam):
+        if n%2==1 :
+            cst=1.744e15*((self.Nb_period()*electron_beam.E*1e-9)**2)*electron_beam.I
+            result=cst*self.Fn(n)
+        else :
+            result=0.0
+        return  result
+
 
 
 if __name__ == "__main__" :
-    K = 1.87
-    E = 1.3e9
-    lambda_u = 0.035
-    L = 0.035 * 12
-    I = 1.0
-    undulator=ParameterPlaneUndulator(K=K,E=E,lambda_u=lambda_u,L=L,I=I)
-    print("The frequency for first harmotic is %f"%undulator.omega1())
+    undulator_test=MagneticStructureUndulatorPlane(K=1.87, lambda_u=0.035, L=0.035 * 14)
 
-    Bo=undulator.K / (93.4 * undulator.lambda_u)
-    print(codata.e*Bo/(undulator.gamma()*codata.m))
+    print(' magnetic field intensity (T)')
+    print(undulator_test.get_Bo())
+
+    print( ' Magnetic field intensity in (0,0,0)')
+    Bx = undulator_test.fct_magnetic_field(z=0.0, y=0.0, x=0.0,harmonic_number=1, coordonnee='x')
+    By=undulator_test.fct_magnetic_field(z=0.0,y=0.0,x=0.0,harmonic_number=1,coordonnee='y')
+    Bz = undulator_test.fct_magnetic_field(z=0.0, y=0.0, x=0.0,harmonic_number=1, coordonnee='z')
+    B=np.array([Bx,By,Bz])
+    print(B)
+
+    print(undulator_test.Fn(1))
