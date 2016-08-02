@@ -19,7 +19,9 @@ class RadiationGrid(Radiation):
             raise Exception(" X and Y must be grid or a list for plotting")
         fig = plt.figure()
         ax = Axes3D(fig)
-        ax.plot_surface(self.X, self.Y, self.intensity, rstride=1, cstride=1)
+        ax.plot_surface(self.X, self.Y, self.intensity, rstride=1, cstride=1,cmap='hot_r')
+        plt.xlabel('X')
+        plt.ylabel('Y')
         plt.show()
 
     def XY_are_like_in(self,rad2):
@@ -47,16 +49,15 @@ class RadiationGrid(Radiation):
             print("pb ds Radiation . integration")
             res = 0
         else:
-            Nb_pts=len(self.X) # TODO pas sure que ca marche pour X != Y
-            X = np.linspace(self.X.min(),self.X.max(),Nb_pts)
-            Y = np.linspace(self.Y.min(), self.Y.max(),Nb_pts)
+            X = np.linspace(self.X[0].min(), self.X[0].max(), len(self.X[0]))
+            Y = np.linspace(self.Y[:, 0].min(), self.Y[:, 0].max(),len(self.Y[:,0]))
             res1=integrate.trapz(self.intensity, X)
             res = integrate.trapz(res1, Y)
         return res
 
     def change_Nb_pts(self, Nb_pts):
         X= np.linspace(self.X[0].min(), self.X[0].max(), Nb_pts)
-        Y= np.linspace(self.Y[0].min(), self.Y[0].max(), Nb_pts)
+        Y= np.linspace(self.Y[:,0].min(), self.Y[:,0].max(), Nb_pts)
         self.X,self.Y=np.meshgrid(X,Y)
 
 

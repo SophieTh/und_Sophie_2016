@@ -2,8 +2,8 @@ import unittest
 import numpy as np
 import scipy.constants as codata
 from pySRU.MagneticStructureUndulatorPlane import MagneticStructureUndulatorPlane as Undulator
+from pySRU.SourceUndulatorPlane import SourceUndulatorPlane
 from pySRU.ElectronBeam import ElectronBeam
-from pySRU.Source import Source
 from pySRU.TrajectoryFactory import TrajectoryFactory,TRAJECTORY_METHOD_ANALYTIC,TRAJECTORY_METHOD_INTEGRATION,\
                                                         TRAJECTORY_METHOD_ODE
 
@@ -17,17 +17,21 @@ class TrajectoryFactoryTest(unittest.TestCase):
         # les produi scalaire de l'acc avec la vitesse est ...
         # difference max entre deux trajectoire
 
-        undulator_test = Undulator(K=1.87, lambda_u=0.035, L=0.035 * 14)
-        electron_beam_test = ElectronBeam(E=1.3e9, I=1.0)
-        source_test=Source(magnetic_structure=undulator_test,electron_beam=electron_beam_test)
+        K = 1.87
+        lambda_u = 0.035
+        L = 0.035 * 14
+        E=1.3
+        I=1.0
+        undulator = Undulator(K=K, period_length=lambda_u, length=L)
+        beam=ElectronBeam(Electron_energy=E, I_current=I)
+        source=SourceUndulatorPlane(magnetic_structure=undulator,electron_beam=beam)
 
         fact_test = TrajectoryFactory(Nb_pts=201,method=TRAJECTORY_METHOD_INTEGRATION)
-        traj_test = fact_test.create_from_source(source=source_test)
+        traj_test = fact_test.create_from_source(source=source)
 
         self.assertFalse(fact_test.initial_condition==None)
 
-        self.assertTrue(all(fact_test.initial_condition==np.array([0.0,0.0,source_test.Beta()*codata.c,
-                                                     0.0,0.0,source_test.Zo_symetry()])))
+        self.assertTrue(all(fact_test.initial_condition==source.choose_initial_contidion_automatic()))
         self.assertTrue(fact_test.method==TRAJECTORY_METHOD_INTEGRATION)
 
         scalar_product=traj_test.v_x*traj_test.a_x + traj_test.a_z*traj_test.v_z

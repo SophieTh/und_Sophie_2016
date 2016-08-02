@@ -3,9 +3,8 @@ from pySRU.RadiationGrid import RadiationGrid
 from pySRU.RadiationList import RadiationList
 import scipy.constants as codata
 import scipy.integrate as integrate
-from abc import abstractmethod
 from pySRU.TrajectoryFactory import TrajectoryFactory, TRAJECTORY_METHOD_ANALYTIC , TRAJECTORY_METHOD_ODE
-from pySRU.MagneticStructureUndulatorPlane import MagneticStructureUndulatorPlane as Undulator
+
 
 
 RADIATION_METHOD_AUTOMATIC=0
@@ -40,12 +39,13 @@ class RadiationFactory(object):
         if X == None or Y == None:
             print('calculate X and Y array')
             if distance == None:
-                distance = source.D_min(2)*2.
-            xy_max = np.tan(1.0 / source.gamma()) * distance
+                distance = source.choose_distance_automatic(2)*2.
+            xy_max = np.tan(1./ source.Lorentz_factor()) * distance
             X = np.linspace(0.0, xy_max, self.Nb_pts)
             Y = np.linspace(0.0, xy_max, self.Nb_pts)
 
         if not XY_are_list :
+            print('create for single electron')
             X, Y = np.meshgrid(X, Y)
 
         intensity = self.calculate_radiation_intensity(trajectory=trajectory, source=source,
@@ -65,9 +65,9 @@ class RadiationFactory(object):
         # c1 = codata.e ** 2 * omega1 ** 2 / (16 * np.pi ** 3 * codata.epsilon_0 * codata.c )
         # c2 = I / codata.e  # multiply by number of electrons in 1 A
         # c3 = 2.0*np.pi / (codata.h * omega1)  # divide by e energy (to get number of photons)
-        # c4 = 1e-2 / omega1  # to get 1% energy bandwidth  #!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-        # c5 = 1e-3 * e-3  # from rad to .1mrad angle bandwidth
-        c6 = codata.e * source.I() * 1e-8 / (8.0 * np.pi ** 2 * codata.epsilon_0 * codata.c * codata.h)
+        # c4 = 1e-3 / omega1  # to get 1% energy bandwidth  #!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+        # c5 = 1e-3 * 1e-3  # from rad to .1mrad angle bandwidth
+        c6 = codata.e * source.I_current() * 1e-9 / (8.0 * np.pi ** 2 * codata.epsilon_0 * codata.c * codata.h)
 
         if X_array.size != Y_array.size:
             raise Exception("X and Y dimensions must be equal.")
@@ -77,7 +77,7 @@ class RadiationFactory(object):
         X = X_array.flatten()
         Y = Y_array.flatten()
         res = res.flatten()
-        gamma = source.gamma()
+        gamma = source.Lorentz_factor()
         if self.method == RADIATION_METHOD_APPROX_FARFIELD:
             if self.formula ==1 :
                 #print('APPROX AND FARFIELD OK')
@@ -120,8 +120,6 @@ class RadiationFactory(object):
         res = res.reshape(shape1)
         return res
 
-
-
     def energy_radiated_approximation_and_farfield(self,trajectory, x, y, distance):
         # N = trajectory.shape[1]
         N = trajectory.nb_points()
@@ -149,7 +147,7 @@ class RadiationFactory(object):
         integrand[2] += (A1 * (n_chap[2] - trajectory.v_z) - A2 * trajectory.a_z) * Alpha2 * Alpha1
         for k in range(3):
             # E[k] = np.trapz(integrand[k], self.trajectory.t)
-            E[k] = integrate.simps(integrand[k], trajectory.t)
+            E[k] = np.trapz(integrand[k], trajectory.t)
         return (np.abs(E[0]) ** 2 + np.abs(E[1]) ** 2 + np.abs(E[2]) ** 2)
 
     def energy_radiated_approximation_and_farfield2(self, trajectory, x, y, distance):
@@ -223,7 +221,7 @@ class RadiationFactory(object):
                          + cst * (n_chap[2] - trajectory.v_z)  ) * Alpha2 * Alpha1
         for k in range(3):
                 # E[k] = np.trapz(integrand[k], self.trajectory.t)
-            E[k] = integrate.simps(integrand[k], trajectory.t)
+            E[k] = np.trapz(integrand[k], trajectory.t)
         return (np.abs(E[0]) ** 2 + np.abs(E[1]) ** 2 + np.abs(E[2]) ** 2)
 
     def energy_radiated_farfield2(self, trajectory, x, y,gamma, distance):
@@ -371,7 +369,7 @@ class RadiationFactory(object):
                          ) * Alpha2 * Alpha1
         for k in range(3):
             # E[k] = np.trapz(integrand[k], trajectory[0])
-            E[k] = integrate.simps(integrand[k], trajectory.t)
+            E[k] = np.trapz(integrand[k], trajectory.t)
         return (np.abs(E[0]) ** 2 + np.abs(E[1]) ** 2 + np.abs(E[2]) ** 2)
 
     def energy_radiated_near_field2(self, trajectory, gamma,x, y, distance):
@@ -446,12 +444,12 @@ class RadiationFactory(object):
 
 
 def Exemple_FARFIELD():
-    from MagneticStructureUndulatorPlane import MagneticStructureUndulatorPlane as Undulator
+    from SourceUndulatorPlane import MagneticStructureUndulatorPlane as Undulator
     from ElectronBeam import ElectronBeam
     from Source import Source
 
     undulator_test = Undulator(K=1.87, lambda_u=0.035, L=0.035 * 14)
-    electron_beam_test = ElectronBeam(E=1.3e9, I=1.0)
+    electron_beam_test = ElectronBeam(Electron_energy=1.3e9, I_current=1.0)
     magnetic_field_test = undulator_test.create_magnetic_field()
     source_test = Source(magnetic_structure=undulator_test,
                          electron_beam=electron_beam_test,
@@ -482,12 +480,12 @@ def Exemple_FARFIELD():
 
 
 def Exemple_NEARFIELD():
-    from MagneticStructureUndulatorPlane import MagneticStructureUndulatorPlane as Undulator
+    from SourceUndulatorPlane import MagneticStructureUndulatorPlane as Undulator
     from ElectronBeam import ElectronBeam
     from Source import Source
 
     undulator_test = Undulator(K=1.87, lambda_u=0.035, L=0.035 * 14)
-    electron_beam_test = ElectronBeam(E=1.3e9, I=1.0)
+    electron_beam_test = ElectronBeam(Electron_energy=1.3e9, I_current=1.0)
     magnetic_field_test = undulator_test.create_magnetic_field()
     source_test = Source(magnetic_structure=undulator_test,
                          electron_beam=electron_beam_test,

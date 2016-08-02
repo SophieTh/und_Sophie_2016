@@ -15,15 +15,17 @@ class UndulatorSimulationTest(unittest.TestCase):
 
 
     def test_simulation(self):
-        undulator_test = Undulator(K=1.87, lambda_u=0.035, L=0.035 * 14)
-        electron_beam_test = ElectronBeam(E=1.3e9, I=1.0)
+        electron_beam_test = ElectronBeam(Electron_energy=1.3, I_current=1.0)
+        beam_ESRF = ElectronBeam(Electron_energy=6.0, I_current=0.2)
+        undulator_test = Undulator(K=1.87, period_length=0.035, length=0.035 * 14)
+        ESRF18 = Undulator(K=1.68, period_length=0.018, length=2.0)
 
         sim_test = create_simulation(magnetic_structure=undulator_test,electron_beam=electron_beam_test,
                                      traj_method=TRAJECTORY_METHOD_ANALYTIC)
         source_test=sim_test.source
 
-        self.assertFalse(all(sim_test.trajectory_fact.initial_condition==np.array([0.0,0.0,source_test.Beta()*codata.c,
-                                                     0.0,0.0,source_test.Zo_symetry()])))
+        self.assertFalse(all(sim_test.trajectory_fact.initial_condition==
+                             source_test.choose_initial_contidion_automatic()))
         ref=sim_test.copy()
         rad_max = sim_test.radiation.max()
 
@@ -57,16 +59,15 @@ class UndulatorSimulationTest(unittest.TestCase):
         self.assertTrue(ref.radiation.X.min() == sim_test.radiation.X.min())
         self.assertTrue(ref.radiation.X.max() == sim_test.radiation.X.max())
         self.assertTrue(ref.radiation.Y.min() == sim_test.radiation.Y.min())
-        #TODO pb here
-        #self.assertTrue(ref.radiation.Y.max() == sim_test.radiation.Y.max())
+        self.assertTrue(ref.radiation.Y.max() == sim_test.radiation.Y.max())
         self.assertFalse(len(ref.radiation.X) == len(sim_test.radiation.X))
 
         sim_test.change_distance(50)
         self.assertEqual(sim_test.radiation.distance,50)
         self.assertFalse(ref.radiation.distance == sim_test.radiation.distance)
 
-        sim_test.change_omega(source_test.omega1()*0.8)
-        self.assertEqual(sim_test.radiation_fact.omega,source_test.omega1()*0.8)
+        sim_test.change_omega(source_test.harmonic_frequency(1)*0.8)
+        self.assertEqual(sim_test.radiation_fact.omega,source_test.harmonic_frequency(1)*0.8)
         self.assertFalse(ref.radiation_fact.omega == sim_test.radiation_fact.omega)
 
 

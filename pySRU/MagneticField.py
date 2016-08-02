@@ -11,7 +11,7 @@ class MagneticField(object):
         self.By = By
         self.Bz = Bz
 
-    def copy(self):
+    def copy(self): #TODO a changer ?
         # if type(self.x)==np.ndarray:
         #     x = self.x.copy()
         # else :
@@ -81,7 +81,8 @@ class MagneticField(object):
         plt.xlabel('Z')
         plt.show()
 
-# # A CHANGER COMME PLOT_z
+# # TODO A CHANGER COMME PLOT_z
+        #TODO quiver plot ?
 #     def plot_y(self):
 #         plt.plot(self.y, self.Bx(self.z, self.y))
 #         plt.title(" Bx = f(y) ")

@@ -3,7 +3,7 @@ import numpy as np
 import scipy.constants as codata
 from pySRU.MagneticStructureUndulatorPlane import MagneticStructureUndulatorPlane as Undulator
 from pySRU.ElectronBeam import ElectronBeam
-from pySRU.Source import Source
+from pySRU.SourceUndulatorPlane import SourceUndulatorPlane
 from pySRU.TrajectoryFactory import TrajectoryFactory,TRAJECTORY_METHOD_ANALYTIC,TRAJECTORY_METHOD_INTEGRATION,\
                                                         TRAJECTORY_METHOD_ODE
 from pySRU.RadiationFactory import RadiationFactory , RADIATION_METHOD_APPROX_FARFIELD,RADIATION_METHOD_NEAR_FIELD ,\
@@ -13,13 +13,13 @@ from pySRU.RadiationFactory import RadiationFactory , RADIATION_METHOD_APPROX_FA
 class RadiationFactoryTest(unittest.TestCase):
 
     #TODO des print sont cache qql part
-    def test_create_radiation(self):
-        undulator_test = Undulator(K=1.87, lambda_u=0.035, L=0.035 * 14)
-        electron_beam_test = ElectronBeam(E=1.3e9, I=1.0)
-        source_test=Source(magnetic_structure=undulator_test,electron_beam=electron_beam_test)
+    def test_create_radiation_undulator(self):
+        undulator_test = Undulator(K=1.87, period_length=0.035, length=0.035 * 14)
+        electron_beam_test = ElectronBeam(Electron_energy=1.3, I_current=1.0)
+        source_test=SourceUndulatorPlane(magnetic_structure=undulator_test,electron_beam=electron_beam_test)
         traj_fact=TrajectoryFactory(Nb_pts=1001, method=TRAJECTORY_METHOD_ANALYTIC)
         traj=traj_fact.create_from_source(source_test)
-        rad_fact = RadiationFactory(omega=source_test.omega1(), method=RADIATION_METHOD_APPROX_FARFIELD, Nb_pts=101)
+        rad_fact = RadiationFactory(omega=source_test.harmonic_frequency(1), method=RADIATION_METHOD_APPROX_FARFIELD, Nb_pts=101)
         rad=rad_fact.create_for_single_electron(trajectory=traj,source=source_test)
         self.assertFalse(rad.X == None)
         self.assertFalse(rad.Y == None)
