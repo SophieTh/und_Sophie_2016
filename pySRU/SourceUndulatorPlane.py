@@ -9,17 +9,17 @@ from pySRU.Source import Source,PLANE_UNDULATOR,BENDING_MAGNET
 
 
 class SourceUndulatorPlane(Source):
-    def __init__(self,electron_beam, magnetic_structure,magnetic_field=None):
+    def __init__(self, electron_beam, undulator, magnetic_field=None):
         super(self.__class__, self).__init__(electron_beam=electron_beam,
                                              magnetic_field=magnetic_field,
-                                             magnetic_structure=magnetic_structure)
+                                             magnetic_structure=undulator)
 
 
 
     def copy(self):
         return SourceUndulatorPlane(electron_beam=self.electron_beam.copy(),
                                     magnetic_field=self.magnetic_field.copy(),
-                                    magnetic_structure=self.magnetic_structure.copy())
+                                    undulator=self.magnetic_structure.copy())
 
     def period_number(self):
         return self.magnetic_structure.period_number()
@@ -61,11 +61,15 @@ class SourceUndulatorPlane(Source):
     #se demander quel angles choisir automatiquement
     def choose_angle_deflection_max(self):
         gamma=self.Lorentz_factor()
-        return self.magnetic_structure.K/gamma
+        return 1.5*self.magnetic_structure.K/gamma
 
     def angle_deflection_max(self):
         gamma=self.Lorentz_factor()
         return self.magnetic_structure.K/gamma
+
+    def angle_deflection_central_cone(self):
+        wave1=self.angle_wave_number(harmonic_number=1,wave_number=1)
+        return wave1/4.
 
     def average_z_speed_in_undulator(self):
         Beta_et = 1.0 - (1.0 / (2.0 * self.Lorentz_factor() ** 2)) * (
@@ -92,70 +96,6 @@ class SourceUndulatorPlane(Source):
                 time=np.linspace(to,2.*to,Nb_pts)
         return time
 
-
-    def fct_magnetic_field(self, z, y,x, harmonic_number, coordonnee='y') :
-        lambda_h= self.magnetic_structure.period_length / harmonic_number
-        ku=2.0*np.pi/self.magnetic_structure.period_length
-
-        if coordonnee=='x' :
-            dB=0.0
-        else :
-            if coordonnee=='y' :
-                #codata.m_e * codata.c / codata.e= 0.00170450894933
-                Bo = (self.magnetic_structure.K * ku * 0.00170450894933)*np.cosh(ku*y)
-                #print(Bo)
-                f_base=np.cos
-            else:#  coordonnee == 'z' :
-                Bo=-(self.magnetic_structure.K * ku * 0.00170450894933)*np.sinh(ku*y)
-                f_base=np.sin
-
-            #we enelarge the real effect of the magnetic field by 4 lambda_u
-            # on each extremity of the undulator
-            L_magn_field=self.magnetic_structure.length/2.0+4.0*self.magnetic_structure.period_length
-
-            # we know considere that if -(L/2 + lambda_u/4) < Z < (L/2 + lambda_u/4)
-            # the magnetic field if a classic cosinus (or sinus)
-            if coordonnee == 'y':
-                a1=self.magnetic_structure.length/self.magnetic_structure.period_length\
-                   -np.floor(self.period_number())
-                a2=(0.25-a1/2.0)
-                L_cosinus_part=self.magnetic_structure.length/2.0 \
-                               + self.magnetic_structure.period_length*a2
-
-            else :
-                L_cosinus_part = self.magnetic_structure.length / 2.0
-
-            if ((z < -L_magn_field) or (z > L_magn_field)) :
-                dB=0.0
-
-            else :
-                if (z < -L_cosinus_part or z> L_cosinus_part) :
-
-                # in this case, we work with a gaussian,
-                # so we shift the coordinate frame for use a central gaussian
-                    if z < -L_cosinus_part :
-                        sign=1
-                    else : # z> L_cosinus_part
-                        sign = -1
-
-                    shift_z = z + sign * L_cosinus_part
-
-                    p=2.0*np.pi**2/(3.0*lambda_h**2)
-                    dB=((2.0*np.pi*Bo/lambda_h)*shift_z)*(1.0-4.0*np.pi**2*shift_z**2/(9.0*lambda_h**2)
-                                                          )*np.exp(-p*shift_z**2)
-
-                    # test du signe
-                    z_test=sign*(-L_cosinus_part + lambda_h/4.0)
-                    test_trig = f_base(ku*z_test)
-                    if (sign * test_trig < 0) :
-                        dB = -dB
-
-                else :
-                    # in this case we work in the cosinus part
-                    dB=Bo*f_base(ku*z)
-
-        return dB
-
     def Fn(self,n):
         K=self.magnetic_structure.K
         cst1=((n*K)/(1.+(K**2)/2.))**2
@@ -163,17 +103,13 @@ class SourceUndulatorPlane(Source):
         Fn=cst1*(jn(0.5*(n-1),cst2)-jn(0.5*(n+1),cst2))**2
         return Fn
 
-
-
-
-
     #electron energy en Gev
     def critical_frequency(self,electron_energy):
         critical_energy=self.magnetic_field_strength()*(electron_energy/2.9)**2*5.59e3
         return critical_energy/codata.hbar
     #TODO TALMAN
 
-    #TODO a changer ?
+    #TODO a changer , faire des exemples
     def describe_wave(self,distance,harmonic_number,wave_number,t=None):
         if wave_number==0 :
             X=np.array([0.0])
@@ -189,9 +125,9 @@ class SourceUndulatorPlane(Source):
         return X,Y
 
     # in photon /sec /1% /mrad*mrad
-    def theorical_flux_on_axis(self,n,electron_beam):
+    def theorical_flux_on_axis(self,n):
         if n%2==1 :
-            cst=1.744e15*((self.period_number()*electron_beam.E*1e-9)**2)*electron_beam.I
+            cst=1.744e14*((self.period_number()*self.Electron_energy())**2)*self.I_current()
             result=cst*self.Fn(n)
         else :
             result=0.0
@@ -227,6 +163,6 @@ def Exemple1_undulator(undulator):
 if __name__ == "__main__" :
     electron_beam_test = ElectronBeam(Electron_energy=1.3, I_current=1.0)
     undulator_test=Undulator( K=1.87, period_length=0.035, length=0.035 * 14)
-    source=SourceUndulatorPlane(electron_beam=electron_beam_test,magnetic_structure=undulator_test)
+    source=SourceUndulatorPlane(electron_beam=electron_beam_test, undulator=undulator_test)
 
     Exemple1_undulator(source)

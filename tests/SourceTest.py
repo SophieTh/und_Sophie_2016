@@ -15,7 +15,7 @@ class UndulatorParameterTest(unittest.TestCase):
         I=1.0
         undulator = Undulator(K=K, period_length=lambda_u, length=L)
         beam=ElectronBeam(Electron_energy=E, I_current=I)
-        source=SourceUndulatorPlane(magnetic_structure=undulator,electron_beam=beam)
+        source=SourceUndulatorPlane(undulator=undulator, electron_beam=beam)
 
         source2=source.copy()
         source2.electron_beam.I_current=0.3

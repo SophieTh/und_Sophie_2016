@@ -4,7 +4,7 @@ import scipy.special as special
 from pySRU.MagneticStructure import MagneticStructure, PLANE_UNDULATOR,BENDING_MAGNET
 
 
-#TODO changer et mettre la divergeance en paramettre
+#TODO changer et mettre la divergeance en parametre ?
 class MagneticStructureBendingMagnet(MagneticStructure):
     def __init__(self, Bo, L):
         super(self.__class__, self).__init__(magnet_type=BENDING_MAGNET)

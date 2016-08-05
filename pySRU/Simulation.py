@@ -5,8 +5,7 @@ from mpl_toolkits.mplot3d import Axes3D
 import scipy.constants as codata
 import time
 from scipy.interpolate import interp1d
-from pySRU.RadiationList import RadiationList
-from pySRU.RadiationGrid import RadiationGrid
+from pySRU.Radiation import Radiation,RADIATION_LIST,RADIATION_GRID
 from pySRU.MagneticField import MagneticField
 from SourceUndulatorPlane import SourceUndulatorPlane
 from SourceBendingmagnet import SourceBendingMagnet
@@ -114,6 +113,16 @@ class Simulation(object):
                                                                                      X_array=self.radiation.X,
                                                                                      Y_array=self.radiation.Y)
 
+    def change_nb_period(self, Nb_period):
+        self.source.magnetic_structure.length=Nb_period*self.source.magnetic_structure.period_length
+        self.source.magnetic_field=self.source.magnetic_structure.create_magnetic_field()
+        self.trajectory_fact.Nb_pts = int(self.source.choose_nb_pts_trajectory(2))
+        self.trajectory = self.trajectory_fact.create_from_source(source=self.source)
+        self.radiation.intensity = self.radiation_fact.calculate_radiation_intensity(trajectory=self.trajectory,
+                                                                                     source=self.source,
+                                                                                     distance=self.radiation.distance,
+                                                                                     X_array=self.radiation.X,
+                                                                                     Y_array=self.radiation.Y)
 
     def change_Nb_pts_radiation(self, Nb_pts):
         self.radiation_fact.Nb_pts = Nb_pts
@@ -124,38 +133,73 @@ class Simulation(object):
                                                                                      X_array=self.radiation.X,
                                                                                      Y_array=self.radiation.Y)
 
+
     def change_XY_radiation(self,X,Y):
-        if type(self.radiation)==RadiationGrid :
-            X,Y=np.meshgrid(X,Y)
-        self.radiation.X=X
-        self.radiation.Y = Y
-        self.radiation.intensity = self.radiation_fact.calculate_radiation_intensity(trajectory=self.trajectory,
+
+        intensity = self.radiation_fact.calculate_radiation_intensity(trajectory=self.trajectory,
                                                                                      source=self.source,
                                                                                      distance=self.radiation.distance,
-                                                                                     X_array=self.radiation.X,
-                                                                                     Y_array=self.radiation.Y)
+                                                                                     X_array=X,
+                                                                                     Y_array=Y)
+        self.radiation.X=X
+        self.radiation.Y=Y
+        self.radiation.intensity=intensity
 
 
 
-    #TODO possible que pour Undulator
-    def calculate_until_wave_number(self,wave_number,harmonic_number=1.):
+    #TODO possible que pour Undulator, a revoir
+    def calculate_until_wave_number(self,wave_number):
+        harmonic_number=self.source.omega/self.source.harmonic_number(1)
         self.radiation_fact.omega=self.source.harmonic_frequency(harmonic_number)
         X=np.array([])
         Y = np.array([])
         t = np.linspace(0.0, 2.0* np.pi, self.radiation_fact.Nb_pts)
         for i in range(int(wave_number)+1) :
-            Xi,Yi= self.source. describe_wave(distance=self.radiation.distance,harmonic_number=harmonic_number,
+            Xi,Yi= self.source.describe_wave(distance=self.radiation.distance,harmonic_number=harmonic_number,
                                               wave_number=i,t=t)
             X=np.concatenate((X,Xi))
             Y=np.concatenate((Y,Yi))
         self.change_XY_radiation(X=X,Y=Y)
 
+    def calculate_on_central_cone(self):
+        theta_max=self.source.angle_deflection_central_cone()
+        if self.radiation.distance==None :
+            X_max=theta_max
+            Y_max=theta_max
+        else :
+            X_max=self.radiation.distance*theta_max
+            Y_max=self.radiation.distance*theta_max
 
+        X=np.linspace(0.0,X_max,self.radiation_fact.Nb_pts)
+        Y=np.linspace(0.0,Y_max,self.radiation_fact.Nb_pts)
+        X,Y=np.meshgrid(X,Y)
+        self.change_XY_radiation(X=X,Y=Y)
+
+
+
+    def calculate_for_observation_angles(self,observation_angle):
+        D=self.radiation.distance
+        X = np.array([])
+        Y = np.array([])
+        t = np.linspace(0.0, 2.0 * np.pi, self.radiation_fact.Nb_pts)
+        for theta in observation_angle:
+            if theta==0.0 :
+                Xi=np.array([0.0])
+                Yi=np.array([0.0])
+            else :
+                Xi=np.cos(t)*D*theta
+                Yi=np.sin(t)*D*theta
+            X = np.concatenate((X, Xi))
+            Y = np.concatenate((Y, Yi))
+        #X,Y=np.meshgrid(X,Y)
+        self.change_XY_radiation(X=X, Y=Y)
 
 
             # spectre
 
-# TODO spectre sur le cone , comparaison avec les formules)
+
+
+
     def spectre(self, omega_array=None):
         if omega_array == None:
             omega1 = self.source. choose_photon_frequency()
@@ -187,57 +231,14 @@ class Simulation(object):
         Y=np.array([0.0])
         self.change_XY_radiation(X=X,Y=Y)
         if omega_array == None:
-            omega1 = self.source.omega1()
-            omega_array = np.arange(omega1 * 0.9, 5.0 * omega1 * 1.1, omega1 * 0.01)
+            omega1 = self.source.harmonic_frequency(1)
+            omega_array = np.arange(omega1 * 0.9, 5.0 * omega1 * 1.1, omega1 * 0.001)
         spectre = np.zeros_like(omega_array)
         for i in range(len(spectre)):
             self.change_omega(omega_array[i])
             spectre[i] = self.radiation.intensity.max()
         self.change_XY_radiation(X=save_X,Y=save_Y)
         return spectre, omega_array
-
-    #TODO a tester attention possible que pour BENDING magnet
-    def create_theoric_radiation(self):
-        #TODO faire le cas None
-        radiation=self.radiation.copy()
-        shape1 = radiation.intensity.shape
-        # X = radiation.X.flatten()
-        # Y = radiation.X.flatten()
-        # res=radiation.intensity.flatten()
-        # cas grid :
-        print(type(radiation))
-        print(type(radiation.Y))
-        Y=radiation.Y
-        X=radiation.X
-        for i in range(Y.shape[0]):
-            for j in range(Y.shape[1]) :
-                observation_angle=(Y[i,j]/radiation.distance)
-                #TODO changer pour qu'on calcul avec des angles
-                radiation.intensity[i,j]=self.source.radiation_theoric(
-                    omega=self.radiation_fact.omega,observation_angle=observation_angle)
-        return radiation
-
-
-        # TODO a tester attention possible que pour BENDING magnet
-    def create_theoric_radiation2(self):
-        # TODO faire le cas None
-        radiation = self.radiation.copy()
-        shape1 = radiation.intensity.shape
-        # X = radiation.X.flatten()
-        # Y = radiation.X.flatten()
-        # res=radiation.intensity.flatten()
-        # cas grid :
-        print(type(radiation))
-        print(type(radiation.Y))
-        Y = radiation.Y
-        X = radiation.X
-        for i in range(Y.shape[0]):
-            for j in range(Y.shape[1]):
-                observation_angle = (Y[i, j] / radiation.distance)
-                # TODO changer pour qu'on calcul avec des angles
-                radiation.intensity[i, j] = self.source.radiation_theoric(
-                    omega=self.radiation_fact.omega, observation_angle=observation_angle)
-        return radiation
 
 
     def plot_spectre(self,omega_array=None):
@@ -247,26 +248,26 @@ class Simulation(object):
         plt.show()
 
     def plot_spectre_central_cone(self, omega_array=None):
-        xy_max=self.source.theta(n=1,l=1)/2.
-        X = np.linspace(0.0,xy_max,self.radiation_fact.Nb_pts)
-        Y = np.linspace(0.0, xy_max, self.radiation_fact.Nb_pts)
-        X , Y = np.meshgrid(X,Y)
-        if type(self.radiation)==RadiationList :
-            self.radiation=RadiationGrid(intensity=0.0,X=0.0,Y=0.0)
-        self.change_XY_radiation(X=X,Y=Y)
+        self.radiation_fact.distance=None
+        self.calculate_on_central_cone()
         self.plot_spectre(omega_array=omega_array)
 
     def plot_spectre_on_axis(self, omega_array=None):
         import matplotlib.pyplot as plt
         spectre,omega_array=self.spectre_on_axis(omega_array=omega_array)
-        omega1 = self.source.omega1()
-        harm_num_min = np.ceil(omega_array[0] / omega1)
-        harm_num_max = np.floor(omega_array[-1] / omega1)
+        omega1 = self.source.harmonic_frequency(1)
+        harm_num_min = np.ceil(omega_array.min() / omega1)
+        harm_num_max = np.floor(omega_array.max() / omega1)
+        print('harm min')
+        print(harm_num_min)
+        print('harm mmax')
+        print(harm_num_max)
         harm_number=np.arange(harm_num_min,harm_num_max+0.5,1)
         spectre_theoritical=np.zeros_like(harm_number)
-        #TODO changer doit y avoir un autre moyen ?
+        print(len(spectre_theoritical))
         for i in range(len(spectre_theoritical)):
-            spectre_theoritical[i]=self.source.flux_on_axis_theoric(harm_number[i])
+            spectre_theoritical[i]=self.source.theorical_flux_on_axis(harm_number[i])
+        print(spectre_theoritical)
         plt.plot(omega_array,spectre,label='calculad radiation on axis')
         plt.plot(harm_number*omega1,spectre_theoritical, "g*",label='theoritical value')
         plt.legend()
@@ -291,6 +292,19 @@ class Simulation(object):
 
 
     # error
+
+    def error_radiation_method_nb_period(self, method, nb_period):
+        sim2=self.copy()
+        sim2.change_radiation_method(method)
+        error=np.zeros_like(nb_period)
+        print(len(nb_period))
+        for i in range(len(nb_period)) :
+            print(i)
+            self.change_nb_period(nb_period[i])
+            print(self.trajectory_fact.Nb_pts)
+            sim2.change_nb_period(nb_period[i])
+            error[i]=self.radiation.error_max(sim2.radiation)
+        return error
 
     def error_radiation_method_nb_pts_traj(self,method,nb_pts):
         sim2=self.copy()
@@ -355,6 +369,45 @@ class Simulation(object):
         return  calc_time
 
 
+
+    #TODO a tester attention possible que pour BENDING magnet
+    def create_theoric_radiation(self):
+        #TODO faire le cas None
+        radiation=self.radiation.copy()
+        shape1 = radiation.intensity.shape
+        # X = radiation.X.flatten()
+        # Y = radiation.X.flatten()
+        # res=radiation.intensity.flatten()
+        # cas grid :
+        print(type(radiation))
+        print(type(radiation.Y))
+        Y=radiation.Y
+        X=radiation.X
+        for i in range(Y.shape[0]):
+            for j in range(Y.shape[1]) :
+                observation_angle=(Y[i,j]/radiation.distance)
+                #TODO changer pour qu'on calcul avec des angles
+                radiation.intensity[i,j]=self.source.radiation_theoric(
+                    omega=self.radiation_fact.omega,observation_angle=observation_angle)
+        return radiation
+    def create_theoric_radiation2(self):
+        radiation = self.radiation.copy()
+        shape1 = radiation.intensity.shape
+        # X = radiation.X.flatten()
+        # Y = radiation.X.flatten()
+        # res=radiation.intensity.flatten()
+        # cas grid :
+        print(type(radiation))
+        print(type(radiation.Y))
+        Y = radiation.Y
+        X = radiation.X
+        for i in range(Y.shape[0]):
+            for j in range(Y.shape[1]):
+                observation_angle = (Y[i, j] / radiation.distance)
+                radiation.intensity[i, j] = self.source.radiation_theoric(
+                    omega=self.radiation_fact.omega, observation_angle=observation_angle)
+        return radiation
+
 #
 
 def create_simulation(magnetic_structure,electron_beam, magnetic_field=None, photon_energy=None,
@@ -363,8 +416,8 @@ def create_simulation(magnetic_structure,electron_beam, magnetic_field=None, pho
                       initial_condition=None, distance=None,XY_are_list=False,X=None,Y=None) :
 
     if type(magnetic_structure)==Undulator :
-        source=SourceUndulatorPlane(magnetic_structure=magnetic_structure,
-                      electron_beam=electron_beam,magnetic_field=magnetic_field)
+        source=SourceUndulatorPlane(undulator=magnetic_structure,
+                                    electron_beam=electron_beam, magnetic_field=magnetic_field)
         print("source undulateur")
     elif type(magnetic_structure)==BM:
         source = SourceBendingMagnet(magnetic_structure=magnetic_structure,
@@ -372,11 +425,6 @@ def create_simulation(magnetic_structure,electron_beam, magnetic_field=None, pho
         print("source BM")
     else :
         raise Exception('magnet type unknown')
-
-
-    #TODO a changer pour imprimer en fct dee theta x et y ...
-    if distance==None :
-        distance= source.choose_distance_automatic(2)
 
     if photon_energy==None :
         omega=source.choose_photon_frequency()
@@ -387,6 +435,9 @@ def create_simulation(magnetic_structure,electron_beam, magnetic_field=None, pho
     if Nb_pts_trajectory==None :
         Nb_pts_trajectory = int(source.choose_nb_pts_trajectory(2))
 
+    if distance==None and (rad_method==RADIATION_METHOD_NEAR_FIELD or rad_method==RADIATION_METHOD_FARFIELD) :
+        distance=source.choose_distance_automatic(2)
+
     if X ==None or Y== None :
         if (X != None) :
             Y=X
@@ -395,8 +446,12 @@ def create_simulation(magnetic_structure,electron_beam, magnetic_field=None, pho
         else :
             if not (XY_are_list):
                 theta_max=source.choose_angle_deflection_max()
-                X_max = distance * theta_max
-                Y_max = distance * theta_max
+                if distance==None :
+                    X_max=theta_max
+                    Y_max=theta_max
+                else :
+                    X_max = distance * theta_max
+                    Y_max = distance * theta_max
                 X = np.linspace(0.0, X_max, 101)
                 Y = np.linspace(0.0, Y_max, 101)
             else :
@@ -424,8 +479,8 @@ def create_simulation(magnetic_structure,electron_beam, magnetic_field=None, pho
     #print('step 3')
     trajectory=traj_fact.create_from_source(source=source)
     #print('step 4')
-    radiation = rad_fact.create_for_single_electron(trajectory=trajectory, source=source,XY_are_list=XY_are_list,
-                                                          distance=distance, X=X, Y=Y)
+    radiation = rad_fact.create_for_one_relativistic_electron(trajectory=trajectory, source=source, XY_are_list=XY_are_list,
+                                                              distance=distance, X=X, Y=Y)
 
     #print('step 5')
     return Simulation(source=source, trajectory_fact=traj_fact,
@@ -453,6 +508,10 @@ def Exemple_minimum():
     simulation_test.trajectory.plot_3D()
 
     simulation_test.radiation.plot()
+
+    simulation_test.change_distance(D=100)
+    simulation_test.radiation.plot()
+
 
 
 def Exemple_meshgrid():
@@ -512,7 +571,9 @@ def Exemple_list():
 
     simulation_test.radiation.plot_wave(Nb_pts=simulation_test.radiation_fact.Nb_pts)
 
-
+    observation_angle = np.linspace(0.0, simulation_test.source.angle_wave_number(1, 2), 101)
+    simulation_test.calculate_for_observation_angles(observation_angle=observation_angle)
+    simulation_test.radiation.plot()
 
 
 

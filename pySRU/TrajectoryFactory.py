@@ -24,6 +24,7 @@ TRAJECTORY_METHOD_INTEGRATION=2
 #             y[1],
 #             y[2]]
 
+
 def fct_ODE_magnetic_field(y, t, cst, Bx,By,Bz):
     return [cst * (Bz(z=y[5],y=y[4],x=y[3]) * y[1] - By(z=y[5],y=y[4],x=y[3]) * y[2]),
             cst * (Bx(z=y[5],y=y[4],x=y[3]) * y[2] - Bz(z=y[5],y=y[4],x=y[3]) * y[0]),
@@ -78,56 +79,22 @@ class TrajectoryFactory(object):
         return Trajectory(t=t,x=x,y=y,z=z,v_x=v_x,v_y=v_y,v_z=v_z,
                                   a_x=a_x,a_y=a_y,a_z=a_z)
 
-    # #TODO changer pour mettre avec des conditions initial
-    # def analytical_trajectory_cst_magnf(self, bending_magnet):
-    #     f = bending_magnet.Bo() * codata.e / (bending_magnet.gamma() * codata.m_e)
-    #     vz_0 = bending_magnet.Beta()
-    #     sinto=(bending_magnet.L()*f/(vz_0*codata.c))
-    #     to =np.arcsin(sinto)/f
-    #     t=np.linspace(0.0,to,self.Nb_pts)
-    #     x = -vz_0 * (1.0 / f) * np.cos(f * (t))
-    #     y = vz_0 * 0.0 * (t)
-    #     z = vz_0 * (1.0 / f) * np.sin(f * (t))+bending_magnet.Zo_analitic()/codata.c
-    #     vx = vz_0 * np.sin(f * (t))
-    #     vy = vz_0 * 0.0 * (t)
-    #     vz = vz_0 * np.cos(f * (t))
-    #     ax = vz_0 * f * np.cos(f * (t))
-    #     ay = vz_0 * 0.0 * (t)
-    #     az = -vz_0* f * np.sin(f * (t))
-    #     t -= to/2.
-    #     return Trajectory(t=t,x=x,y=y,z=z,v_x=vx,v_y=vy,v_z=vz,a_x=ax,a_y=ay,a_z=az)
 
-    def analytical_trajectory_cst_magnf3(self, bending_magnet):
-        # ro=bending_magnet.magnetic_structure.radius_curvature(bending_magnet.E())
-        Bo= bending_magnet.magnetic_structure.Bo
-        omega_p =Bo*codata.e / (codata.m_e * bending_magnet.Lorentz_factor())
-        vz_0 = bending_magnet.electron_speed()
-        t = bending_magnet.analytical_times_vector(Nb_pts=self.Nb_pts)
-        to = t[0]
-        x = (vz_0 / omega_p) *(np.cos(omega_p *(t - to))-1.)
-        y = 0.0 * (t)
-        z = (vz_0 / omega_p) * np.sin(omega_p * (t - to)) - bending_magnet.magnetic_structure.L/(2.*codata.c)
-        vx = -vz_0 * np.sin(omega_p * (t - to))
-        vy = vz_0 * 0.0 * (t)
-        vz = vz_0 * np.cos(omega_p * (t - to))
-        ax = -vz_0 * omega_p * np.cos(omega_p * (t - to))
-        ay = vz_0 * 0.0 * (t)
-        az = -vz_0 * omega_p * np.sin(omega_p * (t - to))
 
-        return Trajectory(t=t, x=x, y=y, z=z, v_x=vx, v_y=vy, v_z=vz, a_x=ax, a_y=ay, a_z=az)
-
+    # #TODO changer pour mettre avec des conditions initial ?
     def analytical_trajectory_cst_magnf(self, bending_magnet):
         Bo= bending_magnet.magnetic_structure.Bo
         #ro=bending_magnet.magnetic_structure.radius_curvature(bending_magnet.E())
         omega_p=Bo*codata.e/(codata.m_e*bending_magnet.Lorentz_factor())
         vz_0 = bending_magnet.electron_speed()
-        Zo=bending_magnet.magnetic_structure.L / 2.
+
         t=bending_magnet.analytical_times_vector(Nb_pts=self.Nb_pts)
-        #t=np.linspace(0.0,Zo/(vz_0*codata.c))
+        Zo = bending_magnet.magnetic_structure.L / 2.
+        #t=np.linspace(0.0,2.*Zo/(vz_0*codata.c))
         to=t[0]
         x = (vz_0/omega_p)*(1.-np.cos(omega_p*(t-to)))
         y = 0.0 * (t)
-        z = (vz_0/omega_p)*np.sin(omega_p*(t-to))-bending_magnet.magnetic_structure.L/(2.*codata.c)
+        z = (vz_0/omega_p)*np.sin(omega_p*(t-to))-Zo/codata.c
         vx = vz_0 * np.sin(omega_p*(t-to))
         vy = vz_0 * 0.0 * (t)
         vz = vz_0 * np.cos(omega_p*(t-to))
@@ -137,21 +104,6 @@ class TrajectoryFactory(object):
 
         return Trajectory(t=t,x=x,y=y,z=z,v_x=vx,v_y=vy,v_z=vz,a_x=ax,a_y=ay,a_z=az)
 
-    def analytical_trajectory_cst_magnf2(self, bending_magnet):
-        t = bending_magnet.analytical_times_vector
-        f = -bending_magnet.Bo() * codata.e / (bending_magnet.gamma() * codata.m_e)
-        vz_0 = self.initial_condition[2]/codata.c
-        t0 = bending_magnet.Zo_analitic() / (codata.c * bending_magnet.Beta_et())
-        x = -vz_0 * (1.0 / f) * np.cos(f * (t-t0))+vz_0/f+self.initial_condition[3]/codata.c
-        y = vz_0 * 0.0 * (t-t0)+self.initial_condition[4]/codata.c
-        z = vz_0 * (1.0 / f) * np.sin(f * (t-t0))+self.initial_condition[5]/codata.c
-        vx = vz_0 * np.sin(f * (t-t0))+self.initial_condition[0]/codata.c
-        vy = vz_0 * 0.0 * (t-t0)+self.initial_condition[1]/codata.c
-        vz = vz_0 * np.cos(f * (t-t0))+self.initial_condition[2]/codata.c
-        ax = vz_0 * f * np.cos(f * (t-t0))
-        ay = vz_0 * 0.0 * (t-t0)
-        az = -vz_0* f * np.sin(f * (t-t0))
-        return Trajectory(t=t,x=x,y=y,z=z,v_x=vx,v_y=vy,v_z=vz,a_x=ax,a_y=ay,a_z=az)
     # # a change !!
 
 
@@ -242,8 +194,6 @@ class TrajectoryFactory(object):
         trajectory = np.zeros((10,self.Nb_pts))
         trajectory[0] = source.construct_times_vector(initial_contition=self.initial_condition,Nb_pts=self.Nb_pts)
 
-        # trajectory[0] = np.linspace(B.z[0] / (Beta_et * codata.c),
-        #                             B.z[-1] / (Beta_et * codata.c), self.Nb_pts)
         cst = -codata.e / (codata.m_e * gamma)
         initial_condition_for_ODE=self.initial_condition
         res = odeint(fct_ODE_magnetic_field,initial_condition_for_ODE, trajectory[0],
@@ -301,7 +251,7 @@ class TrajectoryFactory(object):
             method = ' Trajectory from integration on the magnetic field'
         return method
 
-    #TODO a completer !
+
     def print_parameters(self):
         print("Trajectory ")
         print '    method : %s' %self.get_method()
@@ -311,16 +261,17 @@ class TrajectoryFactory(object):
         print('    initial velocity (x,y,z)  ')
         print(self.initial_condition[0:3])
 
-#TODO
+
 if __name__ == "__main__" :
-    undulator_test = Undulator(K=1.87, lambda_u=0.035, L=0.035 * 14)
+    undulator_test = Undulator(K=1.87, period_length=0.035, length=0.035 * 14)
     electron_beam_test = ElectronBeam(Electron_energy=1.3e9, I_current=1.0)
+
     source_test=Source(magnetic_structure=undulator_test,electron_beam=electron_beam_test)
 
 
     print('Create trajectory with autamatic choise of initial condition and automatic magnetic field')
 
-    trajectory_fact_ODE = TrajectoryFactory(Nb_pts=2000, method=TRAJECTORY_METHOD_ODE)
+    trajectory_fact_ODE = TrajectoryFactory(Nb_pts=20000, method=TRAJECTORY_METHOD_INTEGRATION)
     trajectory1=trajectory_fact_ODE.create_from_source(source_test)
     print(' ')
     print('trajectory 1 create with ODE method')

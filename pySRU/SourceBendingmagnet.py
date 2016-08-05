@@ -3,8 +3,7 @@ import scipy.constants as codata
 import scipy.special as special
 from pySRU.Source import Source,PLANE_UNDULATOR,BENDING_MAGNET
 from pySRU.ElectronBeam import ElectronBeam
-from pySRU.RadiationList import RadiationList
-from pySRU.RadiationGrid import RadiationGrid
+
 
 
 #TODO
@@ -60,7 +59,7 @@ class SourceBendingMagnet(Source):
         K23=special.kv((2./3.),0.5*y)
         return (y*K23)**2
 
-    #TODO changer le nom
+
     def flux_on_axis_theoric(self,omega):
         y=omega/self.critical_frequency()
         print('y= %.3f'%y)
@@ -81,7 +80,7 @@ class SourceBendingMagnet(Source):
 
 
 
-    #TODO a chercher !
+
     def choose_distance_automatic(self, alpha):
         return self.L*10**(alpha)
 
@@ -141,7 +140,7 @@ class SourceBendingMagnet(Source):
         print('    horizontal divergeance : %.5f (rad ?)' % self.horizontal_divergence())
         print('    radius curvature : %.3f (m)' % self.radius_curvature())
         print('    critical frequency : %f *1e20 (unite ?)' %(self.critical_frequency()/1e20))
-        #TODO completer
+
 
 
 

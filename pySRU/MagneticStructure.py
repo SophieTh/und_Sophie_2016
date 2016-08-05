@@ -80,7 +80,6 @@ class MagneticStructure(object):
                                                        coordonnee=coordonnee)
                 else:
                     B = self.fct_magnetic_field(z=Z, y=Y, x=X, harmonic_number=harmonic_number, coordonnee=coordonnee)
-
         return B
 
 
