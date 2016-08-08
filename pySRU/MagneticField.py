@@ -11,19 +11,7 @@ class MagneticField(object):
         self.By = By
         self.Bz = Bz
 
-    def copy(self): #TODO a changer ?
-        # if type(self.x)==np.ndarray:
-        #     x = self.x.copy()
-        # else :
-        #     x=self.x
-        # if type(self.y)==np.ndarray:
-        #     y = self.y.copy()
-        # else :
-        #     y=self.y
-        # if type(self.z)==np.ndarray:
-        #     z = self.z.copy()
-        # else :
-        #    z=self.z
+    def copy(self):
         if type(self.Bx)==np.ndarray:
             Bx = self.Bx.copy()
         else :
@@ -41,6 +29,7 @@ class MagneticField(object):
     #faire une fct aui fait l'interpolation  et elargissement
     #
 
+    #TODO a modifier
     # enelarge 2 vector for the interpolation of the magnetic field use in trajectory_undulator_from_magnetic_field2
     def enlargement_vector_for_interpolation(self,Z,Y ,nb_enlarg=0):
         dz = Z[1] -Z[0]
@@ -58,6 +47,10 @@ class MagneticField(object):
             enlarg_3 = np.zeros(nb_enlarg)
             self.By = np.concatenate((enlarg_3, self.By))
             self.By = np.concatenate((self.By, enlarg_3))
+        return Z,Y
+
+
+
 
 # rajouter un code qui qffiche la legende ??
     def plot_z(self,X,Y,Z):
@@ -101,3 +94,22 @@ class MagneticField(object):
 #         plt.xlabel('Bz')
 #         plt.ylabel('y')
 #         plt.show()
+
+
+if __name__ == "__main__" :
+    Bx=lambda x,y,z : np.cos(y*z)
+    By = lambda x,y,z : np.sin(x)*np.cos(z)
+    Bz = lambda x,y,z : np.sin(y*z)
+
+    B=MagneticField(Bx=Bx,By=By,Bz=Bz)
+
+    Z=np.linspace(0.0,2.*np.pi,10000)
+    Y=np.linspace(0.0,2.*np.pi,10000)
+    X=np.linspace(0.0,2.*np.pi,10000)
+
+    print('plot X=pi/2 , Y=1 , Z in [0,2 pi]')
+    B.plot_z(X=np.pi*0.5,Y=1.0,Z=Z)
+    print('plot X= pi/2 , Y and Z in [0,2 pi]')
+    B.plot_z(X=np.pi*0.5,Y=Y,Z=Z)
+    print('plot X , Y and Z in [0,2 pi]')
+    B.plot_z(X=X,Y=Y,Z=Z)

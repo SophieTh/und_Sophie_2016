@@ -31,7 +31,7 @@ class Radiation(object):
         fig = plt.figure()
         if len(self.X.shape) ==2 :
             ax = Axes3D(fig)
-            ax.plot_surface(self.X, self.Y, self.intensity, rstride=1, cstride=1)
+            ax.plot_surface(self.X, self.Y, self.intensity, rstride=1, cstride=1,cmap='hot_r')
         else :
             ax = fig.gca(projection='3d')
             ax.plot(self.X, self.Y, self.intensity, label='brigthness')
@@ -131,30 +131,30 @@ class Radiation(object):
             self.Y= np.linspace(self.Y.min(), self.Y.max(), Nb_pts)
 
 
-# def plot_wave(self, Nb_pts):
-#     import matplotlib.pyplot as plt
-#     from mpl_toolkits.mplot3d import Axes3D
-#
-#     if self.X == None or self.Y == None:
-#         raise Exception(" X and Y must be grid or a list for plotting")
-#     fig = plt.figure()
-#     ax = fig.gca(projection='3d')
-#     X = np.array([self.X[0]])
-#     Y = np.array([self.Y[0]])
-#     intensity = np.array([self.intensity[0]])
-#     ax.plot(X, Y, intensity, '^', label='wave number 0')
-#     wave_number = 1
-#     while (wave_number * Nb_pts < len(self.X)):
-#         X = self.X[(wave_number - 1) * Nb_pts + 1:wave_number * Nb_pts + 1]
-#         Y = self.Y[(wave_number - 1) * Nb_pts + 1:wave_number * Nb_pts + 1]
-#         intensity = self.intensity[(wave_number - 1) * Nb_pts + 1:wave_number * Nb_pts + 1]
-#         ax.plot(X, Y, intensity, label='wave number %d' % wave_number)
-#         wave_number += 1
-#     ax.set_xlabel("X")
-#     ax.set_ylabel('Y')
-#     ax.set_zlabel("itensity")
-#     ax.legend()
-#     plt.show()
+#TODO possible que pour l'undulateur
+    def plot_wave(self, Nb_pts):
+        import matplotlib.pyplot as plt
+        from mpl_toolkits.mplot3d import Axes3D
+        if self.X == None or self.Y == None:
+            raise Exception(" X and Y must be grid or a list for plotting")
+        fig = plt.figure()
+        ax = fig.gca(projection='3d')
+        X = np.array([self.X[0]])
+        Y = np.array([self.Y[0]])
+        intensity = np.array([self.intensity[0]])
+        ax.plot(X, Y, intensity, '^', label='wave number 0')
+        wave_number = 1
+        while (wave_number * Nb_pts < len(self.X)):
+            X = self.X[(wave_number - 1) * Nb_pts + 1:wave_number * Nb_pts + 1]
+            Y = self.Y[(wave_number - 1) * Nb_pts + 1:wave_number * Nb_pts + 1]
+            intensity = self.intensity[(wave_number - 1) * Nb_pts + 1:wave_number * Nb_pts + 1]
+            ax.plot(X, Y, intensity, label='wave number %d' % wave_number)
+            wave_number += 1
+        ax.set_xlabel("X")
+        ax.set_ylabel('Y')
+        ax.set_zlabel("itensity")
+        ax.legend()
+        plt.show()
 
 
 def Exemple_Grid():
@@ -194,11 +194,11 @@ def Exemple_Grid():
 
 
 def Exemple_List():
-    X = np.linspace(0.0, 0.005, 101)
-    Y = np.linspace(0.0025, 0.0025, 101)
+    X = np.linspace(0.0, 5., 101)
+    Y = np.linspace(2.5, 2.5, 101)
     distance = 100
 
-    intensity = (X * 1e3) ** 2 * (Y * 1e3) ** 2
+    intensity = (X ) ** 2 * (Y ) ** 2
     rad = Radiation(intensity=intensity, X=X, Y=Y, distance=distance)
     print('maximum intensity radiation')
     print(rad.max())
@@ -210,7 +210,7 @@ def Exemple_List():
     print(' ')
     print('create a second radiation on the same X,Y')
     rad2 = rad.copy()
-    rad2.intensity = (X * 1e3) ** 2 + (Y * 1e3) ** 2
+    rad2.intensity = (X ) ** 2 + (Y) ** 2
     print('maximum intensity radiation')
     print(rad2.max())
     print(' integration of the intensity on X,Y')

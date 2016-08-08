@@ -27,13 +27,12 @@ class SourceUndulatorPlane(Source):
     def magnetic_field_strength(self):
         return self.magnetic_structure.magnetic_field_strength()
 
-    def angle_wave_number(self,harmonic_number,wave_number):
-        racine=(wave_number/harmonic_number)*(1.+(self.magnetic_structure.K**2)/2.)
-        theta = np.sqrt(racine)/self.Lorentz_factor()
-        return theta
 
-    # constante de construction
+    ###############
+    # choix automatic lors de la construction d'une simulation
+    ################
 
+    #TODO useful ?
     def choose_distance_automatic(self, alpha):
         lim = self.magnetic_structure.length
         return lim * 10 ** alpha
@@ -48,12 +47,6 @@ class SourceUndulatorPlane(Source):
         ic=np.array([0.0,0.0,self.electron_speed()*codata.c,0.0,0.0,Zo])
         return ic
 
-    def harmonic_frequency(self,harmonic_number=1):
-        gamma = self.Lorentz_factor()
-        first_harm = ((2.0 * gamma ** 2) / (1.0 + (self.magnetic_structure.K ** 2) / 2.0)) * (
-                (2.0 * np.pi * codata.c) / self.magnetic_structure.period_length)
-        return harmonic_number*first_harm
-
     def choose_photon_frequency(self):
         first_harm=self.harmonic_frequency(harmonic_number=1)
         return first_harm
@@ -61,40 +54,70 @@ class SourceUndulatorPlane(Source):
     #se demander quel angles choisir automatiquement
     def choose_angle_deflection_max(self):
         gamma=self.Lorentz_factor()
-        return 1.5*self.magnetic_structure.K/gamma
+        return self.magnetic_structure.K/gamma
+
+
+    ###########
+    #property of the trajectory
+    ##################
+
+    def average_z_speed_in_undulator(self):
+        Beta_et = 1.0 - (1.0 / (2.0 * self.Lorentz_factor() ** 2)) * (
+            1.0 + (self.magnetic_structure.K ** 2) / 2.0)
+        return Beta_et
+
+    def analytical_times_vector(self, Nb_pts):
+        to = self.magnetic_structure.length / (2. * self.average_z_speed_in_undulator() * codata.c)
+        time = np.linspace(-to, to, Nb_pts)
+        return time
+
+    def construct_times_vector(self, initial_contition, Nb_pts):
+        to = initial_contition[5] / (self.average_z_speed_in_undulator() * codata.c)
+        if to < 0.0:
+            time = np.linspace(to, -to, Nb_pts)
+        elif to == 0.0:
+            t1 = self.magnetic_structure.length / 2.0 + 5. * self.magnetic_structure.period_length
+            time = np.linspace(to, t1)
+        else:
+            delta_t = to - self.magnetic_structure.length / (2. * self.average_z_speed_in_undulator() * codata.c)
+            if delta_t > 0.0:
+                time = np.linspace(to, to + 2. * delta_t, Nb_pts)
+            else:
+                time = np.linspace(to, 2. * to, Nb_pts)
+        return time
+
+
+    ###########
+    #property of the radiation
+    ##################
 
     def angle_deflection_max(self):
         gamma=self.Lorentz_factor()
         return self.magnetic_structure.K/gamma
 
     def angle_deflection_central_cone(self):
-        wave1=self.angle_wave_number(harmonic_number=1,wave_number=1)
-        return wave1/4.
+        # wave1=self.angle_wave_number(harmonic_number=1,wave_number=1)
+        # return wave1/4.
+        N=self.magnetic_structure.period_number()
+        gamma=self.Lorentz_factor()
+        return 1./(gamma*np.sqrt(N))
 
-    def average_z_speed_in_undulator(self):
-        Beta_et = 1.0 - (1.0 / (2.0 * self.Lorentz_factor() ** 2)) * (
-            1.0 + (self.magnetic_structure.K** 2) / 2.0)
-        return Beta_et
+    def angle_wave_number(self,harmonic_number,wave_number):
+        racine=(wave_number/harmonic_number)*(1.+(self.magnetic_structure.K**2)/2.)
+        theta = np.sqrt(racine)/self.Lorentz_factor()
+        return theta
 
-    def analytical_times_vector(self,Nb_pts):
-        to = self.magnetic_structure.length / (2.*self.average_z_speed_in_undulator()*codata.c)
-        time=np.linspace(-to,to,Nb_pts)
-        return time
+    def harmonic_frequency(self,harmonic_number=1):
+        gamma = self.Lorentz_factor()
+        first_harm = ((2.0 * gamma ** 2) / (1.0 + (self.magnetic_structure.K ** 2) / 2.0)) * (
+                (2.0 * np.pi * codata.c) / self.magnetic_structure.period_length)
+        return harmonic_number*first_harm
 
-    def construct_times_vector(self, initial_contition,Nb_pts):
-        to = initial_contition[5]/ (self.average_z_speed_in_undulator() * codata.c)
-        if to < 0.0 :
-            time = np.linspace(to, -to, Nb_pts)
-        elif to==0.0 :
-            t1=self.magnetic_structure.length/2.0 + 5.*self.magnetic_structure.period_length
-            time=np.linspace(to,t1)
-        else :
-            delta_t=to-self.magnetic_structure.length/(2.*self.average_z_speed_in_undulator() * codata.c)
-            if delta_t >0.0 :
-                time= np.linspace(to,to+2.*delta_t,Nb_pts)
-            else :
-                time=np.linspace(to,2.*to,Nb_pts)
-        return time
+
+
+    #######3
+    #theoretical result
+    ##############
 
     def Fn(self,n):
         K=self.magnetic_structure.K
@@ -119,7 +142,10 @@ class SourceUndulatorPlane(Source):
                 t=np.linspace(0.0,0.5*np.pi,101)
             n=harmonic_number
             theta=self.angle_wave_number(harmonic_number=n, wave_number=wave_number)
-            R=distance*np.tan(theta)
+            if distance==None :
+                R=theta
+            else :
+                R=distance*np.tan(theta)
             X=R*np.cos(t)
             Y=R*np.sin(t)
         return X,Y
@@ -132,6 +158,9 @@ class SourceUndulatorPlane(Source):
         else :
             result=0.0
         return  result
+
+
+
 
 def Exemple1_undulator(undulator):
 

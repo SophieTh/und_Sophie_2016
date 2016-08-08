@@ -97,4 +97,17 @@ class MagneticStructureUndulatorPlane(MagneticStructure):
         return Bo
 
 if __name__ == "__main__" :
-    pass
+    und_test = MagneticStructureUndulatorPlane(K=1.87, period_length=0.035, length=0.035 * 14)
+    ESRF18 = MagneticStructureUndulatorPlane(K=1.68, period_length=0.018, length=2.0)
+
+    print('undulator test :')
+    und_test.print_parameters()
+    B=und_test.create_magnetic_field()
+    Z=np.linspace(-und_test.length/2.0,und_test.length/2.0,10000)
+    B.plot_z(Z=Z,Y=0.0,X=0.0)
+
+    print('undulator ESRF18 :')
+    ESRF18.print_parameters()
+    B=ESRF18.create_magnetic_field()
+    Z=np.linspace(-ESRF18.length/2.0,ESRF18.length/2.0,10000)
+    B.plot_z(Z=Z,Y=0.0,X=0.0)

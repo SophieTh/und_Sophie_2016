@@ -186,8 +186,8 @@ class RadiationFactory(object):
 
     def energy_radiated_farfield(self, trajectory, x, y,gamma, distance):
         N = trajectory.nb_points()
-        if distance==None : #TODO a changer
-            distance=100
+        if distance==None :
+            distance=200
 
         R = np.sqrt(x ** 2 + y ** 2 + distance ** 2)
         n_chap = np.array([x, y, distance]) / R

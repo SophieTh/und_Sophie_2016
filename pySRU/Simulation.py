@@ -147,9 +147,9 @@ class Simulation(object):
 
 
 
-    #TODO possible que pour Undulator, a revoir
+    #TODO possible que pour Undulator, a revoir , a tester
     def calculate_until_wave_number(self,wave_number):
-        harmonic_number=self.source.omega/self.source.harmonic_number(1)
+        harmonic_number=np.floor(self.radiation_fact.omega/self.source.harmonic_frequency(1))
         self.radiation_fact.omega=self.source.harmonic_frequency(harmonic_number)
         X=np.array([])
         Y = np.array([])
@@ -179,6 +179,8 @@ class Simulation(object):
 
     def calculate_for_observation_angles(self,observation_angle):
         D=self.radiation.distance
+        if D==None :
+            D=1
         X = np.array([])
         Y = np.array([])
         t = np.linspace(0.0, 2.0 * np.pi, self.radiation_fact.Nb_pts)
@@ -203,11 +205,19 @@ class Simulation(object):
     def spectre(self, omega_array=None):
         if omega_array == None:
             omega1 = self.source. choose_photon_frequency()
-            omega_array = np.arange(omega1 * 0.9, 3.0 * omega1 * 1.05, omega1 * 0.01)
+            omega_array1 = np.arange(omega1 * 0.9, omega1 * 1.11, omega1 * 0.01)
+            omega_array3 = np.arange(omega1 * 2.9, omega1 * 3.11, omega1 * 0.01)
+            omega_array2=np.arange(omega1*1.2,omega1*2.85,omega1*0.2)
+            print(len(omega_array1.shape))
+            print(len(omega_array2.shape))
+            print(len(omega_array3.shape))
+            # omega_array=np.concatenate((omega_array2,omega_array3))
+            # omega_array=np.concatenate((omega_array1,omega_array))
+            omega_array=np.concatenate((omega_array1,omega_array2,omega_array3))
         spectre = np.zeros_like(omega_array)
-        #print(len(spectre))
+        print(len(spectre))
         for i in range(len(spectre)):
-            #print(i)
+            print(i)
             self.change_omega(omega_array[i])
             spectre[i] = self.radiation.integration()
         return spectre, omega_array
@@ -258,10 +268,6 @@ class Simulation(object):
         omega1 = self.source.harmonic_frequency(1)
         harm_num_min = np.ceil(omega_array.min() / omega1)
         harm_num_max = np.floor(omega_array.max() / omega1)
-        print('harm min')
-        print(harm_num_min)
-        print('harm mmax')
-        print(harm_num_max)
         harm_number=np.arange(harm_num_min,harm_num_max+0.5,1)
         spectre_theoritical=np.zeros_like(harm_number)
         print(len(spectre_theoritical))
@@ -289,6 +295,15 @@ class Simulation(object):
         self.trajectory_fact.print_parameters()
 
         self.radiation_fact.print_parameters()
+
+    def plot_everything(self):
+        # self.trajectory.plot()
+        # self.trajectory.plot_3D()
+        self.radiation.plot()
+        self.calculate_on_central_cone()
+        self.radiation.plot()
+        # self.plot_spectre()
+        # self.plot_spectre_on_axis()
 
 
     # error
@@ -429,8 +444,10 @@ def create_simulation(magnetic_structure,electron_beam, magnetic_field=None, pho
     if photon_energy==None :
         omega=source.choose_photon_frequency()
     else :
-        omega = photon_energy / codata.hbar
+        omega = photon_energy *eV_to_J / codata.hbar
 
+    # print('omega=')
+    # print(omega)
 
     if Nb_pts_trajectory==None :
         Nb_pts_trajectory = int(source.choose_nb_pts_trajectory(2))
@@ -458,10 +475,13 @@ def create_simulation(magnetic_structure,electron_beam, magnetic_field=None, pho
                 X=np.array([0.0])
                 Y=np.array([0.0])
 
-    if type(X) == float or type(X) == int:
+    if type(X) == float:
         X= np.linspace(0.0, X, 101)
-    if type(Y) == float or type(Y) == int:
+    if type(Y) == float:
         Y = np.linspace(0.0, Y, 101)
+
+
+
 
     if X.shape != Y.shape :
         raise Exception('X and Y must have the same shape')
@@ -512,6 +532,8 @@ def Exemple_minimum():
     simulation_test.change_distance(D=100)
     simulation_test.radiation.plot()
 
+    simulation_test.calculate_on_central_cone()
+    simulation_test.radiation.plot()
 
 
 def Exemple_meshgrid():
@@ -523,12 +545,12 @@ def Exemple_meshgrid():
     ESRF18 = Undulator(K=1.68, period_length=0.018, length=2.0)
 
 
-    print('create simulation for a given sreen')
+    print('create simulation for a given screen')
     X=np.linspace(-0.02,0.02,100)
     Y=np.linspace(-0.02,0.02,100)
     simulation_test = create_simulation(magnetic_structure=ESRF18,electron_beam=beam_ESRF,
                                         traj_method=TRAJECTORY_METHOD_ANALYTIC,rad_method=RADIATION_METHOD_FARFIELD,
-                                        distance= 100,X=X,Y=Y)
+                                        distance= 100,X=X,Y=Y,photon_energy=7876.0)
 
     simulation_test.trajectory.plot_3D()
     simulation_test.radiation.plot()
@@ -540,32 +562,38 @@ def Exemple_meshgrid():
 
     simulation_test.radiation.plot()
 
-    simulation_test.plot_spectre()
+    simulation_test.plot_spectre_on_axis()
 
     simulation_test.plot_spectre_central_cone()
 
-    simulation_test.plot_spectre_on_axis()
+    simulation_test.plot_spectre()
 
 
 
-#
+
+
+
+# TODO ne marche plus  qd on rentre a la main l'energy du photon?
 def Exemple_list():
     from pySRU.ElectronBeam import ElectronBeam
 
     beam_ESRF = ElectronBeam(Electron_energy=6.0, I_current=0.2)
     ESRF18 = Undulator(K=1.68, period_length=0.018, length=2.0)
 
+    #photon_energy = 7876.0,
 
     X = np.linspace(0.0,0.02,1001)
     Y = np.linspace(0.0, 0.02, 1001)
-    simulation_test = create_simulation(magnetic_structure=ESRF18,electron_beam=beam_ESRF, photon_energy=7876.0,
+    simulation_test = create_simulation(magnetic_structure=ESRF18,electron_beam=beam_ESRF,
                                         X=X,Y=Y,XY_are_list=True)
 
+    simulation_test.print_parameters()
     simulation_test.trajectory.plot_3D()
 
     simulation_test.radiation.plot()
 
     simulation_test.calculate_until_wave_number(2)
+
 
     simulation_test.radiation.plot()
 
@@ -583,5 +611,5 @@ if __name__ == "__main__" :
 
 
     #Exemple_minimum()
-    #Exemple_meshgrid()
-    Exemple_list()
+    Exemple_meshgrid()
+    #@Exemple_list()
