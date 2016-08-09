@@ -12,10 +12,10 @@ from SourceBendingmagnet import SourceBendingMagnet
 from pySRU.MagneticStructureUndulatorPlane import MagneticStructureUndulatorPlane as Undulator
 from pySRU.MagneticStructureBendingMagnet import MagneticStructureBendingMagnet as BM
 
-from pySRU.TrajectoryFactory import TrajectoryFactory, TRAJECTORY_METHOD_ANALYTIC,TRAJECTORY_METHOD_ODE,\
-                                       TRAJECTORY_METHOD_INTEGRATION
+from pySRU.TrajectoryFactory import TrajectoryFactory, TRAJECTORY_METHOD_ANALYTIC,TRAJECTORY_METHOD_ODE
+
 from pySRU.RadiationFactory import RadiationFactory,RADIATION_METHOD_NEAR_FIELD, \
-                                RADIATION_METHOD_FARFIELD, RADIATION_METHOD_APPROX_FARFIELD
+                                 RADIATION_METHOD_APPROX_FARFIELD
 
 
 eV_to_J=1.602176487e-19
@@ -98,11 +98,6 @@ class Simulation(object):
         omega = E * eV_to_J / codata.hbar
         self.change_omega(omega)
 
-    # only the trajectory change, not the radiation
-    # must be use in special case like method "time_radiation"
-    def change_Nb_pts_trajectory_only(self, Nb_pts):
-        self.trajectory_fact.Nb_pts = Nb_pts
-        self.trajectory = self.trajectory_fact.create_from_source(source=self.source)
 
     def change_Nb_pts_trajectory(self, Nb_pts):
         self.trajectory_fact.Nb_pts = Nb_pts
@@ -347,84 +342,6 @@ class Simulation(object):
         self.plot_spectre_on_axis()
 
 
-    # error
-
-    def error_radiation_method_nb_period(self, method, nb_period):
-        sim2=self.copy()
-        sim2.change_radiation_method(method)
-        error=np.zeros_like(nb_period)
-        print(len(nb_period))
-        for i in range(len(nb_period)) :
-            print(i)
-            self.change_nb_period(nb_period[i])
-            print(self.trajectory_fact.Nb_pts)
-            sim2.change_nb_period(nb_period[i])
-            error[i]=self.radiation.error_max(sim2.radiation)
-        return error
-
-    def error_radiation_method_nb_pts_traj(self,method,nb_pts):
-        sim2=self.copy()
-        sim2.change_radiation_method(method)
-        error=np.zeros_like(nb_pts)
-        print(len(nb_pts))
-        for i in range(len(nb_pts)) :
-            print(i)
-            self.change_Nb_pts_trajectory(nb_pts[i])
-            sim2.change_Nb_pts_trajectory(nb_pts[i])
-            error[i]=self.radiation.error_max(sim2.radiation)
-        return error
-
-    def error_radiation_method_distance(self,method,D):
-        sim2=self.copy()
-        sim2.change_radiation_method(method)
-        error=np.zeros_like(D)
-        print(len(D))
-        for i in range(len(D)) :
-            print(i)
-            self.change_distance(D[i])
-            sim2.change_distance(D[i])
-            error[i]=self.radiation.error_max(sim2.radiation)
-        return error
-
-    def error_trajectory_method(self,method,nb_pts):
-        sim2=self.copy()
-        sim2.change_trajectory_method(method)
-        error_rad=np.zeros_like(nb_pts)
-        error_traj=np.zeros((10,len(nb_pts)))
-        for i in range(len(nb_pts)) :
-            self.change_Nb_pts_trajectory(nb_pts[i])
-            sim2.change_Nb_pts_trajectory(nb_pts[i])
-            error_traj[:,i]=self.trajectory.error_max(sim2.trajectory)
-            error_rad[i]=self.radiation.error_max(sim2.radiation)
-        traj_error_traj=self.trajectory_fact.create_from_array(error_traj)
-        return error_rad, traj_error_traj
-
-    def relativ_error_radiation_method_distance(self,method,D):
-        sim2=self.copy()
-        sim2.change_radiation_method(method)
-        error_relativ=np.array(len(D))
-        for i in range(len(D)) :
-            self.change_distance(D[i])
-            sim2.change_distance(D[i])
-            error_relativ[i]=self.radiation.relativ(sim2.radiation)
-        return error_relativ
-
-    #def error_
-
-    # time
-
-    def time_radiation(self,Nb_pts_trajectory,Nb_pts_radiation):
-        N=len(Nb_pts_trajectory)
-        M=len(Nb_pts_radiation)
-        calc_time=np.zeros((N,M))
-        for i in range(N) :
-            print(i)
-            self.change_Nb_pts_trajectory_only(Nb_pts_trajectory[i])
-            for j in range(M) :
-                start_time=time.time()
-                self.change_Nb_pts_radiation(Nb_pts_radiation[j])
-                calc_time[i,j]=time.time()-start_time
-        return  calc_time
 
 
 

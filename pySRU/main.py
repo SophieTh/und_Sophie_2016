@@ -10,10 +10,8 @@ from pySRU.MagneticStructureBendingMagnet import MagneticStructureBendingMagnet 
 from pySRU.ElectronBeam import ElectronBeam
 from pySRU.Source import Source
 from pySRU.Simulation import Simulation ,create_simulation
-from pySRU.TrajectoryFactory import TRAJECTORY_METHOD_ANALYTIC,TRAJECTORY_METHOD_ODE,\
-                                        TRAJECTORY_METHOD_INTEGRATION
-from pySRU.RadiationFactory import RADIATION_METHOD_NEAR_FIELD, RADIATION_METHOD_APPROX,\
-                                RADIATION_METHOD_FARFIELD, RADIATION_METHOD_APPROX_FARFIELD
+from pySRU.TrajectoryFactory import TRAJECTORY_METHOD_ANALYTIC,TRAJECTORY_METHOD_ODE
+from pySRU.RadiationFactory import RADIATION_METHOD_NEAR_FIELD, RADIATION_METHOD_APPROX_FARFIELD
 
 
 eV_to_J=1.602176487e-19

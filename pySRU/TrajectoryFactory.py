@@ -1,6 +1,5 @@
 import numpy as np
 import scipy.constants as codata
-import scipy.integrate as integrate
 from scipy.integrate import odeint
 from pySRU.Trajectory import Trajectory
 from pySRU.Source import Source,PLANE_UNDULATOR,BENDING_MAGNET
@@ -10,19 +9,10 @@ from pySRU.ElectronBeam import ElectronBeam
 
 TRAJECTORY_METHOD_ANALYTIC=0
 TRAJECTORY_METHOD_ODE=1
-TRAJECTORY_METHOD_INTEGRATION=2
 
 
-# def fct_ODE_magnetic_field(y, t, cst, Bx,By,Bz):
-#     return [cst * (Bz(z=y[5]*codata.c,y=y[4]*codata.c,x=y[3]*codata.c) * y[1]
-#                    - By(z=y[5]*codata.c,y=y[4]*codata.c,x=y[3]*codata.c) * y[2]),
-#             cst * (Bx(z=y[5]*codata.c,y=y[4]*codata.c,x=y[3]*codata.c) * y[2]
-#                    - Bz(z=y[5]*codata.c,y=y[4]*codata.c,x=y[3]*codata.c) * y[0]),
-#             cst * (By(z=y[5]*codata.c,y=y[4]*codata.c,x=y[3]*codata.c) * y[0]
-#                    - Bx(z=y[5]*codata.c,y=y[4]*codata.c,x=y[3]*codata.c) * y[1]),
-#             y[0],
-#             y[1],
-#             y[2]]
+
+
 
 
 def fct_ODE_magnetic_field(y, t, cst, Bx,By,Bz):
@@ -104,77 +94,8 @@ class TrajectoryFactory(object):
 
         return Trajectory(t=t,x=x,y=y,z=z,v_x=vx,v_y=vy,v_z=vz,a_x=ax,a_y=ay,a_z=az)
 
-    # # a change !!
 
 
-    # ### cree speciale ment pour un test
-    # def analytical_trajectory_cst_magnf(self,Bo,gamma,t,vz_0,x_0):
-    #     T=self.copy()
-    #     f=Bo*codata.e/(gamma*codata.m_e)
-    #     T.x = (lambda t:-vz_0 * (1.0 / f) * np.cos(f * t) +vz_0/f + x_0)
-    #     T.y = (lambda t: vz_0 * (0.0) * t)
-    #     T.z = (lambda t: vz_0 * (1.0 / f) * np.sin(f * t))
-    #     T.v_x = (lambda t: vz_0 * np.sin(f * t))
-    #     T.v_y = (lambda t: vz_0 * 0.0 * t)
-    #     T.v_z = (lambda t: vz_0 * np.cos(f * t))
-    #     T.a_x = (lambda t:vz_0 * f * np.cos(f * t))
-    #     T.a_y = (lambda t:vz_0 * 0.0 * t)
-    #     T.a_z = (lambda t:-vz_0* f * np.sin(f * t))
-    #     return T
-
-
-    # electron's trajectory in a PLANE undulator that mean :  B=(0,By,0)
-    # other hypothesis norm(v)=constant
-    #TODO a supprimer car ne marche que pour un undulator ou changer Beta_et en Beta
-    def trajectory_from_magnetic_field_method_INT(self,source):
-        gamma=source.Lorentz_factor()
-        Beta = source.electron_speed()
-        Beta_et=source.average_z_speed_in_undulator()
-        N=self.Nb_pts
-        B=source.magnetic_field
-        # faire un truc create Z or t pour INT et ODE
-
-        # trajectory =
-        #   [t........]
-        # 	[ X/c......]
-        # 	[ Y/c ......]
-        #	[ Z/c ......]
-        # 	[ Vx/c .....]
-        # 	[ Vy/c .....]
-        # 	[ Vz/c .....]
-        # 	[ Ax/c .....]
-        # 	[ Ay/c .....]
-        # 	[ Az/c .....]
-        trajectory = np.zeros((10, N))
-        # t
-        trajectory[0] = source.construct_times_vector(initial_contition=self.initial_condition,Nb_pts=self.Nb_pts)
-        Z=trajectory[0]*Beta_et*codata.c
-        Y=0.0
-        X=0.0
-        # Ax
-        Xm = codata.e *Beta_et/ (gamma * codata.m_e )
-        trajectory[7] = Xm * B.By(Z,Y,X)
-        # Vx et Vz
-        for i in range(N):
-            #np.trapz
-            # trajectory[4][i] = integrate.simps(trajectory[7][0:(i + 1)], trajectory[0][0:(i + 1)]) \
-            trajectory[4][i] = integrate.simps(trajectory[7][0:(i + 1)], trajectory[0][0:(i + 1)],even='first') \
-                                       + self.initial_condition[0]/ codata.c
-        trajectory[6] = np.sqrt((Beta) ** 2 - trajectory[4] ** 2)
-        # X et Z
-        for i in range(N):
-            #trajectory[1][i] = integrate.simps(trajectory[4][0:(i + 1)], trajectory[0][0:(i + 1)]) \
-            trajectory[1][i] =  integrate.simps(trajectory[4][0:(i + 1)], trajectory[0][0:(i + 1)],even='first') \
-                               + self.initial_condition[3]/ codata.c
-            #trajectory[3][i] = integrate.simps(trajectory[6][0:(i + 1)], trajectory[0][0:(i + 1)]) \
-            trajectory[3][i] = integrate.simps(trajectory[6][0:(i + 1)], trajectory[0][0:(i + 1)],even='first') \
-                               +  self.initial_condition[5]/ codata.c
-
-            # Az
-        trajectory[9] = -(trajectory[7] * trajectory[4]) / trajectory[6]
-
-        T=self.create_from_array(trajectory)
-        return T
 
     def trajectory_from_magnetic_field_method_ODE(self, source):
         gamma = source.Lorentz_factor()
@@ -216,12 +137,9 @@ class TrajectoryFactory(object):
         return T
 
     def create_from_source(self, source):
-        if (self.method == TRAJECTORY_METHOD_INTEGRATION or self.method == TRAJECTORY_METHOD_ODE):
+        if (self.method == TRAJECTORY_METHOD_ODE):
             if (self.initial_condition == None):
                 self.choise_initial_condition(source=source)
-            if self.method == TRAJECTORY_METHOD_INTEGRATION:
-                trajectory = self.trajectory_from_magnetic_field_method_INT(source=source)
-            else:  # method=TRAJECTORY_METHOD_ODE
                 trajectory = self.trajectory_from_magnetic_field_method_ODE(source=source)
         else:
             if source.magnet_type()==PLANE_UNDULATOR:
