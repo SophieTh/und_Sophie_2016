@@ -2,14 +2,10 @@ import numpy as np
 import scipy.integrate as integrate
 from abc import abstractmethod
 
-RADIATION_GRID=0
-RADIATION_LIST=1
-
 
 class Radiation(object):
 
-    def __init__(self, intensity, X, Y, distance,radiation_type=None):
-        self.radiation_type=radiation_type
+    def __init__(self, intensity, X, Y, distance):
         self.intensity=intensity
         self.X=X
         self.Y=Y

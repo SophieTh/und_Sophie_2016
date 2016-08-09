@@ -6,10 +6,8 @@ import matplotlib.pyplot as plt
 from pySRU.MagneticStructureUndulatorPlane import MagneticStructureUndulatorPlane as Undulator
 from pySRU.ElectronBeam import ElectronBeam
 from pySRU.SourceBendingmagnet import BENDING_MAGNET as BM
-from pySRU.TrajectoryFactory import TrajectoryFactory,TRAJECTORY_METHOD_ANALYTIC,TRAJECTORY_METHOD_INTEGRATION,\
-                                                        TRAJECTORY_METHOD_ODE
-from pySRU.RadiationFactory import RadiationFactory , RADIATION_METHOD_APPROX_FARFIELD,RADIATION_METHOD_NEAR_FIELD ,\
-                                RADIATION_METHOD_FARFIELD
+from pySRU.TrajectoryFactory import TrajectoryFactory,TRAJECTORY_METHOD_ANALYTIC, TRAJECTORY_METHOD_ODE
+from pySRU.RadiationFactory import RadiationFactory , RADIATION_METHOD_APPROX_FARFIELD,RADIATION_METHOD_NEAR_FIELD
 from pySRU.Simulation import Simulation,create_simulation
 
 class MagneticFieldTest(unittest.TestCase):

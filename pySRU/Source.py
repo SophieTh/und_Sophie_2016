@@ -103,13 +103,15 @@ class Source(object):
 
 
 if __name__ == "__main__" :
+    from SourceUndulatorPlane import SourceUndulatorPlane
+    from MagneticStructureUndulatorPlane import MagneticStructureUndulatorPlane as Undulator
     electron_beam_test=ElectronBeam(Electron_energy=1.3e9, I_current=1.0)
-    undulator_test = Source(electron_beam=electron_beam_test,magnet_type=PLANE_UNDULATOR,
-                            magnetic_field=None)
-    undulator_test.magnetic_field=undulator_test.create_magnetic_field()
-    print(type(undulator_test.magnetic_field))
-    print(type(undulator_test.magnetic_field.Bx))
-    print(type(undulator_test.magnetic_field.By))
-    print(undulator_test.magnetic_field.Bx(0.0,0.0,0.0))
+    undulator_test=Undulator(K=1.87,period_length=0.035,length=0.49)
+    source_test = SourceUndulatorPlane(undulator=undulator_test, electron_beam=electron_beam_test,
+                                       magnetic_field=None)
+    print(type(source_test.magnetic_field))
+    print(type(source_test.magnetic_field.Bx))
+    print(type(source_test.magnetic_field.By))
+    print(source_test.magnetic_field.Bx(0.0, 0.0, 0.0))
 
     #Exemple1_undulator()

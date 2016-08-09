@@ -5,7 +5,7 @@ from mpl_toolkits.mplot3d import Axes3D
 import scipy.constants as codata
 import time
 from scipy.interpolate import interp1d
-from pySRU.Radiation import Radiation,RADIATION_LIST,RADIATION_GRID
+from pySRU.Radiation import Radiation
 from pySRU.MagneticField import MagneticField
 from SourceUndulatorPlane import SourceUndulatorPlane
 from SourceBendingmagnet import SourceBendingMagnet
@@ -143,13 +143,13 @@ class Simulation(object):
 
 
     #TODO possible que pour Undulator, a revoir , a tester
-    def calculate_on_wave_number(self,wave_number):
+    def calculate_on_wave_number(self, wave_number_max):
         harmonic_number=np.floor(self.radiation_fact.omega/self.source.harmonic_frequency(1))
         self.radiation_fact.omega=self.source.harmonic_frequency(harmonic_number)
         X=np.array([])
         Y = np.array([])
         t = np.linspace(0.0, 2.0* np.pi, self.radiation_fact.Nb_pts)
-        for i in range(int(wave_number)+1) :
+        for i in range(int(wave_number_max)+1) :
             Xi,Yi= self.source.describe_wave(distance=self.radiation.distance,harmonic_number=harmonic_number,
                                               wave_number=i,t=t)
             X=np.concatenate((X,Xi))
@@ -173,15 +173,6 @@ class Simulation(object):
 
     def calculate_until_wave_number(self,wave_number,XY_are_list=True):
         harm_num=self.radiation_fact.omega/self.source.harmonic_frequency(1)
-        # if wave_number != 0.0 :
-        #     Nb_pts_par_wave=int(self.radiation_fact.Nb_pts/wave_number)
-        # wave_number_curent=1.0
-        # observation_angle=np.array([0.0])
-        # while wave_number_curent<= wave_number :
-        #     between_2_wave=np.linsace()
-        #     observation_angle=np.concatenate((observation_angle))
-        #     wave_number_curent +=1
-        #
         observation_angle = np.linspace(0.0, self.source.angle_wave_number(harmonic_number=harm_num,
                                                                            wave_number=wave_number),
                                         self.radiation_fact.Nb_pts)
@@ -412,7 +403,7 @@ def create_simulation(magnetic_structure,electron_beam, magnetic_field=None, pho
     if Nb_pts_trajectory==None :
         Nb_pts_trajectory = int(source.choose_nb_pts_trajectory(2))
 
-    if distance==None and (rad_method==RADIATION_METHOD_NEAR_FIELD or rad_method==RADIATION_METHOD_FARFIELD) :
+    if distance==None and (rad_method==RADIATION_METHOD_NEAR_FIELD) :
         distance=source.choose_distance_automatic(2)
 
     if X ==None or Y== None :
@@ -451,7 +442,7 @@ def create_simulation(magnetic_structure,electron_beam, magnetic_field=None, pho
 
 
     #print('step 2')
-    rad_fact=RadiationFactory(method=rad_method,omega=omega,Nb_pts=Nb_pts_radiation,formula=1)
+    rad_fact=RadiationFactory(method=rad_method,omega=omega,Nb_pts=Nb_pts_radiation)
 
     #print('step 3')
     trajectory=traj_fact.create_from_source(source=source)
@@ -506,7 +497,8 @@ def Exemple_meshgrid():
     X=np.linspace(-0.02,0.02,101)
     Y=np.linspace(-0.02,0.02,101)
     simulation_test = create_simulation(magnetic_structure=ESRF18,electron_beam=beam_ESRF,
-                                        traj_method=TRAJECTORY_METHOD_ANALYTIC,rad_method=RADIATION_METHOD_FARFIELD,
+                                        traj_method=TRAJECTORY_METHOD_ANALYTIC,
+                                        rad_method=RADIATION_METHOD_APPROX_FARFIELD,
                                         distance= 100,X=X,Y=Y,photon_energy=7876.0)
 
     simulation_test.trajectory.plot_3D()
@@ -517,19 +509,20 @@ def Exemple_meshgrid():
 
     print('create simulation for a maximal X and Y given')
     simulation_test = create_simulation(magnetic_structure=ESRF18, electron_beam=beam_ESRF,
-                                        traj_method=TRAJECTORY_METHOD_ANALYTIC, rad_method=RADIATION_METHOD_FARFIELD,
+                                        traj_method=TRAJECTORY_METHOD_ANALYTIC,
+                                        rad_method=RADIATION_METHOD_APPROX_FARFIELD,
                                         distance=100,X=0.01,Y=0.01)
 
     simulation_test.radiation.plot()
 
-    simulation_test.plot_spectre()
+    #simulation_test.plot_spectre()
 
     simulation_test.calculate_on_central_cone()
     simulation_test.radiation.plot()
 
     simulation_test.plot_spectre_on_axis()
 
-    simulation_test.plot_spectre_central_cone(theoretical_value=True,omega_array=None)
+    #simulation_test.plot_spectre_central_cone(theoretical_value=True,omega_array=None)
 
 
 
@@ -553,11 +546,12 @@ def Exemple_list():
                                         X=X,Y=Y,XY_are_list=True)
 
     simulation_test.print_parameters()
+
     simulation_test.trajectory.plot_3D()
 
     simulation_test.radiation.plot()
 
-    simulation_test.calculate_until_wave_number(2)
+    simulation_test.calculate_on_wave_number(wave_number_max=2)
 
 
     simulation_test.radiation.plot()
@@ -576,6 +570,6 @@ if __name__ == "__main__" :
 
 
     #Exemple_minimum()
-    Exemple_meshgrid()
-    #Exemple_list()
+    #Exemple_meshgrid()
+    Exemple_list()
 

@@ -62,8 +62,7 @@ class SourceUndulatorPlane(Source):
     ##################
 
     def average_z_speed_in_undulator(self):
-        Beta_et = 1.0 - (1.0 / (2.0 * self.Lorentz_factor() ** 2)) * (
-            1.0 + (self.magnetic_structure.K ** 2) / 2.0)
+        Beta_et = 1.0 -( 1.+(self.magnetic_structure.K ** 2) / 2.0) / (2.0 * self.Lorentz_factor() ** 2)
         return Beta_et
 
     def analytical_times_vector(self, Nb_pts):

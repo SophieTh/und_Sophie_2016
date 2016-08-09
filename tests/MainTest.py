@@ -87,9 +87,6 @@ class MainTest(unittest.TestCase):
         print("TRAJECTORY_METHOD_ANALYTIC ok")
         self.simul_undulator_near_to_farfield(magnetic_struc=und_test, electron_beam=beam_test
                                               ,method_traj=TRAJECTORY_METHOD_INTEGRATION, formule=1)
-        print("TRAJECTORY_METHOD_INTEGRATION ok")
-        self.simul_undulator_near_to_farfield(magnetic_struc=und_test, electron_beam=beam_test
-                                ,method_traj=TRAJECTORY_METHOD_ODE, formule=1)
         print("TRAJECTORY_METHOD_ODE ok")
 
         self.simul_undulator_traj_method(magnetic_struc=und_test, electron_beam=beam_test

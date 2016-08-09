@@ -2,7 +2,7 @@ import numpy as np
 import scipy.constants as codata
 from scipy.integrate import odeint
 from pySRU.Trajectory import Trajectory
-from pySRU.Source import Source,PLANE_UNDULATOR,BENDING_MAGNET
+from pySRU.SourceUndulatorPlane import SourceUndulatorPlane,PLANE_UNDULATOR,BENDING_MAGNET
 from pySRU.MagneticStructureUndulatorPlane import MagneticStructureUndulatorPlane as Undulator
 from pySRU.ElectronBeam import ElectronBeam
 
@@ -184,12 +184,12 @@ if __name__ == "__main__" :
     undulator_test = Undulator(K=1.87, period_length=0.035, length=0.035 * 14)
     electron_beam_test = ElectronBeam(Electron_energy=1.3e9, I_current=1.0)
 
-    source_test=Source(magnetic_structure=undulator_test,electron_beam=electron_beam_test)
+    source_test=SourceUndulatorPlane(undulator=undulator_test,electron_beam=electron_beam_test)
 
 
     print('Create trajectory with autamatic choise of initial condition and automatic magnetic field')
 
-    trajectory_fact_ODE = TrajectoryFactory(Nb_pts=20000, method=TRAJECTORY_METHOD_INTEGRATION)
+    trajectory_fact_ODE = TrajectoryFactory(Nb_pts=20000, method=TRAJECTORY_METHOD_ODE)
     trajectory1=trajectory_fact_ODE.create_from_source(source_test)
     print(' ')
     print('trajectory 1 create with ODE method')
