@@ -140,7 +140,7 @@ class TrajectoryFactory(object):
         if (self.method == TRAJECTORY_METHOD_ODE):
             if (self.initial_condition == None):
                 self.choise_initial_condition(source=source)
-                trajectory = self.trajectory_from_magnetic_field_method_ODE(source=source)
+            trajectory = self.trajectory_from_magnetic_field_method_ODE(source=source)
         else:
             if source.magnet_type()==PLANE_UNDULATOR:
                 trajectory = self.analytical_trajectory_plane_undulator(undulator=source)
