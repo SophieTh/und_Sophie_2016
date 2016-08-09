@@ -2,9 +2,9 @@ import numpy as np
 import scipy.constants as codata
 from scipy.special import jn,yn,jv,yv
 from pySRU.MagneticField import MagneticField
-from pySRU.ElectronBeam import ElectronBeam
-from pySRU.MagneticStructureUndulatorPlane import MagneticStructureUndulatorPlane as Undulator
-from pySRU.Source import Source,PLANE_UNDULATOR,BENDING_MAGNET
+from pySRU.classical_using.ElectronBeam import ElectronBeam
+from pySRU.classical_using.MagneticStructureUndulatorPlane import MagneticStructureUndulatorPlane as Undulator
+from pySRU.classical_using.Source import Source,PLANE_UNDULATOR,BENDING_MAGNET
 
 
 

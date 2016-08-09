@@ -5,14 +5,13 @@ from mpl_toolkits.mplot3d import Axes3D
 import scipy.integrate as integrate
 import scipy.interpolate as interpolate
 import time
-from pySRU.MagneticStructureUndulatorPlane import MagneticStructureUndulatorPlane as Undulator
-from pySRU.MagneticStructureBendingMagnet import MagneticStructureBendingMagnet  as BM
-from pySRU.ElectronBeam import ElectronBeam
-from pySRU.Source import Source
-from pySRU.Simulation import Simulation ,create_simulation
-from pySRU.TrajectoryFactory import TRAJECTORY_METHOD_ANALYTIC,TRAJECTORY_METHOD_ODE,\
-                                        TRAJECTORY_METHOD_INTEGRATION
-from pySRU.RadiationFactory import RADIATION_METHOD_NEAR_FIELD, RADIATION_METHOD_APPROX,\
+from pySRU.classical_using.MagneticStructureUndulatorPlane import MagneticStructureUndulatorPlane as Undulator
+from pySRU.classical_using.MagneticStructureBendingMagnet import MagneticStructureBendingMagnet  as BM
+from pySRU.classical_using.ElectronBeam import ElectronBeam
+from pySRU.classical_using.Source import Source
+from pySRU.classical_using.Simulation import Simulation ,create_simulation
+from pySRU.classical_using.TrajectoryFactory import TRAJECTORY_METHOD_ANALYTIC,TRAJECTORY_METHOD_ODE
+from pySRU.classical_using.RadiationFactory import RADIATION_METHOD_NEAR_FIELD, RADIATION_METHOD_APPROX,\
                                 RADIATION_METHOD_FARFIELD, RADIATION_METHOD_APPROX_FARFIELD
 
 
