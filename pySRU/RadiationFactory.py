@@ -37,10 +37,21 @@ class RadiationFactory(object):
         if X == None or Y == None:
             print('calculate X and Y array')
             if distance == None:
-                distance = source.choose_distance_automatic(2)*2.
-            xy_max = np.tan(1./ source.Lorentz_factor()) * distance
+                if self.method == RADIATION_METHOD_APPROX_FARFIELD :
+                    xy_max = np.tan(1. / source.Lorentz_factor())
+                else:
+                    distance = source.choose_distance_automatic(2)
+                    xy_max = np.tan(1. / source.Lorentz_factor()) * distance
+            else:
+                xy_max = np.tan(1. / source.Lorentz_factor()) * distance
             X = np.linspace(0.0, xy_max, self.Nb_pts)
             Y = np.linspace(0.0, xy_max, self.Nb_pts)
+        else:
+            if type(X) != np.ndarray:
+                X = np.linspace(0.0, X, self.Nb_pts)
+            if type(Y) != np.ndarray:
+                Y = np.linspace(0.0, Y, self.Nb_pts)
+                # Nb_pts=len(X)
 
         if not XY_are_list :
             X, Y = np.meshgrid(X, Y)
@@ -436,18 +447,18 @@ class RadiationFactory(object):
 def Exemple_FARFIELD():
     from MagneticStructureUndulatorPlane import MagneticStructureUndulatorPlane as Undulator
     from ElectronBeam import ElectronBeam
-    from Source import Source
+    from SourceUndulatorPlane import SourceUndulatorPlane
 
-    undulator_test = Undulator(K=1.87, lambda_u=0.035, L=0.035 * 14)
-    electron_beam_test = ElectronBeam(Electron_energy=1.3e9, I_current=1.0)
+    undulator_test = Undulator(K=1.87, period_length=0.035, length=0.035 * 14)
+    electron_beam_test = ElectronBeam(Electron_energy=1.3, I_current=1.0)
     magnetic_field_test = undulator_test.create_magnetic_field()
-    source_test = Source(magnetic_structure=undulator_test,
+    source_test = SourceUndulatorPlane(undulator=undulator_test,
                          electron_beam=electron_beam_test,
                          magnetic_field=magnetic_field_test)
 
     traj = TrajectoryFactory(Nb_pts=2000, method=TRAJECTORY_METHOD_ANALYTIC).create_from_source(source_test)
 
-    Rad = RadiationFactory(omega=source_test.omega1(), method=RADIATION_METHOD_APPROX_FARFIELD, Nb_pts=101
+    Rad = RadiationFactory(omega=source_test.harmonic_frequency(1), method=RADIATION_METHOD_APPROX_FARFIELD, Nb_pts=101
                             ).create_for_one_relativistic_electron(trajectory=traj, source=source_test)
 
     print('Screen distance :')
@@ -472,18 +483,18 @@ def Exemple_FARFIELD():
 def Exemple_NEARFIELD():
     from MagneticStructureUndulatorPlane import MagneticStructureUndulatorPlane as Undulator
     from ElectronBeam import ElectronBeam
-    from Source import Source
+    from SourceUndulatorPlane import SourceUndulatorPlane
 
-    undulator_test = Undulator(K=1.87, lambda_u=0.035, L=0.035 * 14)
-    electron_beam_test = ElectronBeam(Electron_energy=1.3e9, I_current=1.0)
+    undulator_test = Undulator(K=1.87, period_length=0.035, length=0.035 * 14)
+    electron_beam_test = ElectronBeam(Electron_energy=1.3, I_current=1.0)
     magnetic_field_test = undulator_test.create_magnetic_field()
-    source_test = Source(magnetic_structure=undulator_test,
+    source_test = SourceUndulatorPlane(undulator=undulator_test,
                          electron_beam=electron_beam_test,
                          magnetic_field=magnetic_field_test)
 
     traj = TrajectoryFactory(Nb_pts=2000, method=TRAJECTORY_METHOD_ODE).create_from_source(source_test)
 
-    Rad = RadiationFactory(omega=source_test.omega1(), method=RADIATION_METHOD_NEAR_FIELD, Nb_pts=101
+    Rad = RadiationFactory(omega=source_test.harmonic_frequency(1), method=RADIATION_METHOD_NEAR_FIELD, Nb_pts=101
                            ).create_for_one_relativistic_electron(trajectory=traj, source=source_test)
 
     print('Screen distance :')
@@ -506,6 +517,6 @@ def Exemple_NEARFIELD():
 
 if __name__ == "__main__" :
     pass
-    # Exemple_FARFIELD()
-    # #Exemple_NEARFIELD()
+    Exemple_FARFIELD()
+    #Exemple_NEARFIELD()
 

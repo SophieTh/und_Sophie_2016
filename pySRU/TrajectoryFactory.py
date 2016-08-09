@@ -263,10 +263,11 @@ class TrajectoryFactory(object):
 
 
 if __name__ == "__main__" :
+    from SourceUndulatorPlane import SourceUndulatorPlane
     undulator_test = Undulator(K=1.87, period_length=0.035, length=0.035 * 14)
     electron_beam_test = ElectronBeam(Electron_energy=1.3e9, I_current=1.0)
 
-    source_test=Source(magnetic_structure=undulator_test,electron_beam=electron_beam_test)
+    source_test=SourceUndulatorPlane(undulator=undulator_test,electron_beam=electron_beam_test)
 
 
     print('Create trajectory with autamatic choise of initial condition and automatic magnetic field')
@@ -279,7 +280,7 @@ if __name__ == "__main__" :
     print(trajectory_fact_ODE.initial_condition * (1. / codata.c))
     trajectory1.plot_3D()
 
-    trajectory_fact_ANALITIC = TrajectoryFactory(Nb_pts=2000, method=TRAJECTORY_METHOD_ANALYTIC)
+    trajectory_fact_ANALITIC = TrajectoryFactory(Nb_pts=20000, method=TRAJECTORY_METHOD_ANALYTIC)
     trajectory2=trajectory_fact_ANALITIC.create_from_source(source_test)
     print(' ')
     print('trajectory 2 create with ANALYTIC method')

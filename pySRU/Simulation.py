@@ -582,8 +582,8 @@ def Exemple_list():
 
     #photon_energy = 7876.0,
 
-    X = np.linspace(0.0,0.02,1001)
-    Y = np.linspace(0.0, 0.02, 1001)
+    X = np.linspace(0.0,0.0002,1001)
+    Y = np.linspace(0.0, 0.0002, 1001)
     simulation_test = create_simulation(magnetic_structure=ESRF18,electron_beam=beam_ESRF,
                                         X=X,Y=Y,XY_are_list=True)
 
@@ -599,7 +599,7 @@ def Exemple_list():
 
     simulation_test.radiation.plot_wave(Nb_pts=simulation_test.radiation_fact.Nb_pts)
 
-    observation_angle = np.linspace(0.0, simulation_test.source.angle_wave_number(1, 2), 101)
+    observation_angle = np.linspace(0.0, simulation_test.source.angle_wave_number(1, 2), 51)
     simulation_test.calculate_for_observation_angles(observation_angle=observation_angle)
     simulation_test.radiation.plot()
 
@@ -611,5 +611,5 @@ if __name__ == "__main__" :
 
 
     #Exemple_minimum()
-    Exemple_meshgrid()
-    #@Exemple_list()
+    #Exemple_meshgrid()
+    Exemple_list()
