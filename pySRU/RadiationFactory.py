@@ -15,6 +15,7 @@ class RadiationFactory(object):
     def __init__(self,method,omega,Nb_pts=101):
         self.omega=omega
         self.method=method
+        #TODO useful ?
         self.Nb_pts=Nb_pts
 
 
@@ -38,6 +39,13 @@ class RadiationFactory(object):
                 xy_max = np.tan(1. / source.Lorentz_factor())*distance
             X = np.linspace(0.0, xy_max, self.Nb_pts)
             Y = np.linspace(0.0, xy_max, self.Nb_pts)
+        else :
+            if type(X) != np.ndarray:
+
+                X = np.linspace(0.0, X, self.Nb_pts)
+            if type(Y) != np.ndarray:
+                Y = np.linspace(0.0, Y, self.Nb_pts)
+            #Nb_pts=len(X)
 
         if not XY_are_list :
             X, Y = np.meshgrid(X, Y)

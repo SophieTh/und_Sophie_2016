@@ -38,9 +38,7 @@ class Radiation(object):
 
 
     def difference_with(self,radiation2):
-        if self.radiation_type != radiation2.radiation_type :
-            raise Exception('difference between two different radiation type not define')
-        if not self.XY_are_like_in(radiation2):
+        if not self.XY_are_similar_to(radiation2):
             raise Exception('X and Y must be the same for each radiation')
         error=np.abs(self.intensity - radiation2.intensity)
         res=self.copy()
@@ -75,13 +73,13 @@ class Radiation(object):
         return res
 
 
-    def XY_are_like_in(self,rad2):
+    def XY_are_similar_to(self, rad2):
         if self.X.shape!= rad2.X.shape :
             return False
         elif self.Y.shape != rad2.Y.shape :
             return False
         else :
-            if len(self.X.shape)==2 and len(self.X.shape)==2 :
+            if len(self.X.shape)==2 and len(rad2.X.shape)==2 :
                 egality=np.zeros(self.X.shape[0],dtype=bool)
                 for i in range(len(egality)):
                     egality[i]=all(self.X[i]==rad2.X[i])
@@ -90,7 +88,7 @@ class Radiation(object):
             else :
                  if not all(self.X==rad2.X):
                     return False
-            if len(self.Y.shape)==2 and len(self.Y.shape)==2 :
+            if len(self.Y.shape)==2 and len(rad2.Y.shape)==2 :
                 egality=np.zeros(self.X.shape[0],dtype=bool)
                 for i in range(len(egality)):
                     egality[i]=all(self.Y[i]==rad2.Y[i])

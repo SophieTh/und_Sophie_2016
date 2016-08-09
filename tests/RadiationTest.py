@@ -24,18 +24,18 @@ class RadiationTest(unittest.TestCase):
 
         # test copy
         radGrid2=radGrid.copy()
-        self.assertTrue(radGrid.XY_are_like_in(radGrid2))
+        self.assertTrue(radGrid.XY_are_similar_to(radGrid2))
 
         err=radGrid.error_max(radGrid2)
         self.assertEqual(err.max(),0.0)
 
         # test modification of the screen
         radGrid2.X += 1
-        self.assertFalse(radGrid.XY_are_like_in(radGrid2))
+        self.assertFalse(radGrid.XY_are_similar_to(radGrid2))
 
         radGrid3=radGrid.copy()
         radGrid3.change_Nb_pts(Nb_pts=120)
-        self.assertFalse(radGrid.XY_are_like_in(radGrid3))
+        self.assertFalse(radGrid.XY_are_similar_to(radGrid3))
         self.assertTrue(len(radGrid3.X.shape)==2)
         self.assertTrue(len(radGrid3.Y.shape) == 2)
         self.assertTrue(radGrid.X.max()==radGrid3.X.max())
@@ -56,18 +56,18 @@ class RadiationTest(unittest.TestCase):
 
         # test copy
         radList2=radList.copy()
-        self.assertTrue(radList.XY_are_like_in(radList2))
+        self.assertTrue(radList.XY_are_similar_to(radList2))
 
         err = radList.error_max(radList2)
         self.assertEqual(err.max(), 0.0)
 
         # test modification of the screen
         radList2.X += 1
-        self.assertFalse(radList.XY_are_like_in(radList2))
+        self.assertFalse(radList.XY_are_similar_to(radList2))
 
         radList3=radList.copy()
         radList3.change_Nb_pts(Nb_pts=120)
-        self.assertFalse(radList.XY_are_like_in(radList3))
+        self.assertFalse(radList.XY_are_similar_to(radList3))
         self.assertTrue(len(radList3.X.shape)==1)
         self.assertTrue(len(radList3.Y.shape) == 1 )
         self.assertTrue(radList.X.max()==radList3.X.max())
