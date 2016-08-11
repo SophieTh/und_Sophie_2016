@@ -6,8 +6,10 @@ from pySRU.TrajectoryFactory import TrajectoryFactory, TRAJECTORY_METHOD_ANALYTI
 
 
 
-RADIATION_METHOD_NEAR_FIELD=1
-RADIATION_METHOD_APPROX_FARFIELD=4
+
+RADIATION_METHOD_NEAR_FIELD=0
+RADIATION_METHOD_APPROX=1
+RADIATION_METHOD_APPROX_FARFIELD=2
 eV_to_J=1.602176487e-19
 
 
@@ -77,17 +79,21 @@ class RadiationFactory(object):
         res = res.flatten()
         gamma = source.Lorentz_factor()
         if self.method == RADIATION_METHOD_NEAR_FIELD:
-
             for i in range(len(X)):
                 res[i] = c6 * self.energy_radiated_near_field(trajectory=trajectory,gamma=gamma,
                                                                                   distance=distance, x=X[i], y=Y[i])
-        else : # Nearfield
+        elif self.method == RADIATION_METHOD_APPROX:
+            for i in range(len(X)):
+                res[i] = c6 * self.energy_radiated_approx(trajectory=trajectory,
+                                                                                  distance=distance, x=X[i], y=Y[i])
+        else :
             for i in range(len(X)):
                 res[i] = c6 * self.energy_radiated_approximation_and_farfield(trajectory=trajectory,
                                                             distance=distance,x=X[i], y=Y[i])
         res = res.reshape(shape1)
         return res
 
+    # on neglige le deuxieme terme et on considere n comme constant
     def energy_radiated_approximation_and_farfield(self,trajectory, x, y, distance):
         # N = trajectory.shape[1]
         N = trajectory.nb_points()
@@ -121,8 +127,8 @@ class RadiationFactory(object):
 
 
 
-    # warning !!!!!!! far field approximation
-    def energy_radiated_near_field(self,trajectory,gamma, x, y,distance):
+    # on neglige le deuxieme terme
+    def energy_radiated_approx(self,trajectory, x, y,distance):
         N = trajectory.nb_points()
         n_chap = np.array([x - trajectory.x * codata.c, y - trajectory.y * codata.c, distance - trajectory.z * codata.c])
         R = np.zeros(n_chap.shape[1])
@@ -150,6 +156,44 @@ class RadiationFactory(object):
             E[k] = np.trapz(integrand[k], trajectory.t)
             #E[k] = integrate.simps(integrand[k], trajectory.t)
         return (np.abs(E[0]) ** 2 + np.abs(E[1]) ** 2 + np.abs(E[2]) ** 2)
+
+
+    # formule general
+    def energy_radiated_near_field(self, gamma, trajectory, x, y, distance):
+        N = trajectory.nb_points()
+        n_chap = np.array(
+            [x - trajectory.x * codata.c, y - trajectory.y * codata.c, distance - trajectory.z * codata.c])
+        R = np.zeros(n_chap.shape[1])
+        for i in range(n_chap.shape[1]):
+            R[i] = np.linalg.norm(n_chap[:, i])
+            n_chap[:, i] /= R[i]
+
+        E = np.zeros((3,), dtype=np.complex)
+        integrand = np.zeros((3, N), dtype=np.complex)
+        A1 = (n_chap[0] * trajectory.a_x + n_chap[1] * trajectory.a_y + n_chap[2] * trajectory.a_z)
+        A2 = (n_chap[0] * (n_chap[0] - trajectory.v_x) + n_chap[1] * (n_chap[1] - trajectory.v_y)
+              + n_chap[2] * (n_chap[2] - trajectory.v_z))
+        Alpha2 = np.exp(
+            0. + 1j * self.omega * (trajectory.t - n_chap[0] * trajectory.x
+                                    - n_chap[1] * trajectory.y - n_chap[2] * trajectory.z))
+        Alpha1 = (1.0 / (1.0 - n_chap[0] * trajectory.v_x
+                         - n_chap[1] * trajectory.v_y - n_chap[2] * trajectory.v_z)) ** 2
+        Alpha3 = codata.c / (gamma ** 2 * R)
+        integrand[0] += ((A1 * (n_chap[0] - trajectory.v_x) - A2 * trajectory.a_x)
+                         + Alpha3 * (n_chap[0] - trajectory.v_x)
+                         ) * Alpha2 * Alpha1
+        integrand[1] += ((A1 * (n_chap[1] - trajectory.v_y) - A2 * trajectory.a_y)
+                         + Alpha3 * (n_chap[1] - trajectory.v_y)
+                         ) * Alpha2 * Alpha1
+        integrand[2] += ((A1 * (n_chap[2] - trajectory.v_z) - A2 * trajectory.a_z)
+                         + Alpha3 * (n_chap[2] - trajectory.v_z)
+                         ) * Alpha2 * Alpha1
+        for k in range(3):
+            # E[k] = np.trapz(integrand[k], trajectory[0])
+            E[k] = np.trapz(integrand[k], trajectory.t)
+        return (np.abs(E[0]) ** 2 + np.abs(E[1]) ** 2 + np.abs(E[2]) ** 2)
+
+
 
 
     def get_method(self):
@@ -185,7 +229,7 @@ def Exemple_FARFIELD():
                          electron_beam=electron_beam_test,
                          magnetic_field=magnetic_field_test)
 
-    traj = TrajectoryFactory(Nb_pts= 2000, method=TRAJECTORY_METHOD_ANALYTIC).create_from_source(source_test)
+    traj = TrajectoryFactory(Nb_pts=2000, method=TRAJECTORY_METHOD_ODE).create_from_source(source_test)
 
     Rad = RadiationFactory(omega=source_test.harmonic_frequency(1), method=RADIATION_METHOD_APPROX_FARFIELD, Nb_pts=101
                             ).create_for_one_relativistic_electron(trajectory=traj, source=source_test)
@@ -244,7 +288,44 @@ def Exemple_NEARFIELD():
     print('plot')
     Rad.plot()
 
+def Exemple_APPROX():
+    from MagneticStructureUndulatorPlane import MagneticStructureUndulatorPlane as Undulator
+    from ElectronBeam import ElectronBeam
+    from SourceUndulatorPlane import SourceUndulatorPlane
+
+    undulator_test = Undulator(K=1.87, period_length=0.035, length=0.035 * 14)
+    electron_beam_test = ElectronBeam(Electron_energy=1.3, I_current=1.0)
+    magnetic_field_test = undulator_test.create_magnetic_field()
+    source_test = SourceUndulatorPlane(undulator=undulator_test,
+                         electron_beam=electron_beam_test,
+                         magnetic_field=magnetic_field_test)
+
+    traj = TrajectoryFactory(Nb_pts=2000, method=TRAJECTORY_METHOD_ODE).create_from_source(source_test)
+
+    Rad = RadiationFactory(omega=source_test.harmonic_frequency(1), method=RADIATION_METHOD_APPROX, Nb_pts=101
+                           ).create_for_one_relativistic_electron(trajectory=traj, source=source_test,distance=100)
+
+    print('Screen distance :')
+    print(Rad.distance)
+
+    print("screen shape ")
+    print(Rad.intensity.shape)
+
+    print('X max :')
+    print(Rad.X.max())
+
+    print('Y max :')
+    print(Rad.Y.max())
+
+    print('intensity max ()')
+    print(Rad.max())
+
+    print('plot')
+    Rad.plot()
+
 if __name__ == "__main__" :
-    # Exemple_FARFIELD()
-    Exemple_NEARFIELD()
+    #pass
+    Exemple_FARFIELD()
+    #Exemple_APPROX()
+    #Exemple_NEARFIELD()
 
