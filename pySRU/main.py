@@ -99,8 +99,49 @@ def compare_interpolation(magnetic_structure, electron_beam,traj_method=TRAJECTO
 
 #
 
-compare_2_traj_method(magnetic_structure=ESRF18,electron_beam=beam_ESRF,rad_method=RADIATION_METHOD_APPROX_FARFIELD,
-                      traj_method_ref=TRAJECTORY_METHOD_ANALYTIC,traj_method_test=TRAJECTORY_METHOD_ODE,distance=100)
+#compare_2_traj_method(magnetic_structure=ESRF18,electron_beam=beam_ESRF,rad_method=RADIATION_METHOD_APPROX_FARFIELD,
+ #                     traj_method_ref=TRAJECTORY_METHOD_ANALYTIC,traj_method_test=TRAJECTORY_METHOD_ODE,distance=100)
+
+sim=create_simulation(magnetic_structure=und_test,electron_beam=beam_test,Nb_pts_trajectory=10000,traj_method=TRAJECTORY_METHOD_ODE)
+
+beta_et=sim.source.average_z_speed_in_undulator()
+print('beta et')
+print (beta_et)
+beta2=beta_et + sim.source.magnetic_structure.K**2/(4.*sim.source.Lorentz_factor()**2)
+print('beta2')
+print (beta2)
+beta3=beta_et - sim.source.magnetic_structure.K**2/(4.*sim.source.Lorentz_factor()**2)
+print('beta3')
+print (beta3)
+#sim.change_trajectory_method(TRAJECTORY_METHOD_ODE)
+t=sim.trajectory.t
+z=sim.trajectory.z
+vz=sim.trajectory.v_z
+zo=und_test.length/2
+Mv=0
+Mz=0
+compt=0
+for i in range(len(z)) :
+    if z[i] > -zo and z[i] < zo :
+        Mz += z[i]/t[i]
+        Mv += vz[i]
+        compt += 1
+
+Mv /= compt
+Mz /= compt
+print('Mv')
+print(Mv)
+print('Mz')
+print(Mz)
+
+rel=(und_test.period_length*und_test.K**2)/(8*np.pi*sim.source.Lorentz_factor()**2*beta_et)
+print(rel)
+rel2=(und_test.K**2)/(sim.source.Lorentz_factor()*beta_et)
+print(rel2)
+#sim.trajectory.plot()
+
+
+
 
 
 
