@@ -3,7 +3,7 @@ import scipy.constants as codata
 from scipy.special import jn,yn,jv,yv
 from pySRU.MagneticField import MagneticField
 from pySRU.ElectronBeam import ElectronBeam
-from pySRU.MagneticStructureUndulatorPlane import MagneticStructureUndulatorPlane as Undulator
+from pySRU.MagneticStructureUndulatorPlane import MagneticStructureUndulatorPlane
 from pySRU.Source import Source,PLANE_UNDULATOR,BENDING_MAGNET
 
 
@@ -182,11 +182,11 @@ def Exemple1_undulator(undulator):
 
     undulator.print_parameters()
 
-    print( " speed average in Z direction (m/s)/c")
+    print( " velocity average in Z direction (c units)")
     print(undulator.average_z_speed_in_undulator())
-    print(" first frequency")
+    print(" first harmonic frequency (Hz)")
     print(undulator.harmonic_frequency(1))
-    print(" angle of the first wave for the first number (radian) ")
+    print(" angle (rad) of the first ring for the first harmonic ")
     print(undulator.angle_wave_number(1,1))
 
     print(' magnetic field intensity (T)')
@@ -199,7 +199,7 @@ def Exemple1_undulator(undulator):
     B = np.array([Bx, By, Bz])
     print(B)
 
-    print('Theorical flux on axis')
+    print('On axis peak intensity Fn(K)')
     print(undulator.Fn(1))
 
 
@@ -207,7 +207,7 @@ def Exemple1_undulator(undulator):
 
 if __name__ == "__main__" :
     electron_beam_test = ElectronBeam(Electron_energy=1.3, I_current=1.0)
-    undulator_test=Undulator( K=1.87, period_length=0.035, length=0.035 * 14)
-    source=SourceUndulatorPlane(electron_beam=electron_beam_test, undulator=undulator_test)
+    undulator_test = MagneticStructureUndulatorPlane( K=1.87, period_length=0.035, length=0.035 * 14)
+    source=SourceUndulatorPlane(electron_beam = electron_beam_test, undulator=undulator_test)
 
     Exemple1_undulator(source)

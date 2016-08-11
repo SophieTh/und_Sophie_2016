@@ -178,12 +178,14 @@ def Exemple_FARFIELD():
     undulator_test = Undulator(K=1.87, period_length=0.035, length=0.035 * 14)
     electron_beam_test = ElectronBeam(Electron_energy=1.3, I_current=1.0)
     magnetic_field_test = undulator_test.create_magnetic_field()
+
+    magnetic_field_test.plot_z(0,0,np.linspace(-0.035 * (14+8) / 2,0.035 * (14+8) / 2,500))
+
     source_test = SourceUndulatorPlane(undulator=undulator_test,
                          electron_beam=electron_beam_test,
                          magnetic_field=magnetic_field_test)
 
-    traj = TrajectoryFactory(Nb_pts=2000, method=TRAJECTORY_METHOD_ANALYTIC).create_from_source(source_test)
-
+    traj = TrajectoryFactory(Nb_pts= 2000, method=TRAJECTORY_METHOD_ANALYTIC).create_from_source(source_test)
 
     Rad = RadiationFactory(omega=source_test.harmonic_frequency(1), method=RADIATION_METHOD_APPROX_FARFIELD, Nb_pts=101
                             ).create_for_one_relativistic_electron(trajectory=traj, source=source_test)
@@ -204,7 +206,7 @@ def Exemple_FARFIELD():
     print(Rad.max())
 
     print('plot')
-    Rad.plot()
+    Rad.plot(title="FAR FIELD")
 
 
 def Exemple_NEARFIELD():
@@ -243,7 +245,6 @@ def Exemple_NEARFIELD():
     Rad.plot()
 
 if __name__ == "__main__" :
-    #pass
-    Exemple_FARFIELD()
-    #Exemple_NEARFIELD()
+    # Exemple_FARFIELD()
+    Exemple_NEARFIELD()
 

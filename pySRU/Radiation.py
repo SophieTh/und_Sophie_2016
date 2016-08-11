@@ -16,7 +16,7 @@ class Radiation(object):
 
 
 
-    def plot(self):
+    def plot(self,title="",label=""):
         import matplotlib.pyplot as plt
         from mpl_toolkits.mplot3d import Axes3D
 
@@ -30,10 +30,11 @@ class Radiation(object):
             ax.plot_surface(self.X, self.Y, self.intensity, rstride=1, cstride=1,cmap='hot_r')
         else :
             ax = fig.gca(projection='3d')
-            ax.plot(self.X, self.Y, self.intensity, label='brigthness')
+            ax.plot(self.X, self.Y, self.intensity, label=label)
             ax.legend()
         plt.xlabel('X')
         plt.ylabel('Y')
+        plt.title(title)
         plt.show()
 
 
@@ -160,8 +161,8 @@ def Exemple_Grid():
     print(rad.max())
     print(' integration of the intensity on the grid X,Y')
     print(rad.integration())
-    print(' radiation intensity plot')
-    rad.plot()
+    print(' radiation intensity plot 1')
+    rad.plot(title='from grid: plot 1')
 
     print(' ')
     print('create a second radiation on the same grid')
@@ -171,8 +172,8 @@ def Exemple_Grid():
     print(rad2.max())
     print(' integration of the intensity on the grid X,Y')
     print(rad2.integration())
-    print(' radiation intensity plot')
-    rad2.plot()
+    print(' radiation intensity plot 2')
+    rad2.plot(title='from grid: plot 2')
 
     print(' ')
     print('create a third radiation which is the different between the 2 radiation before')
@@ -181,8 +182,8 @@ def Exemple_Grid():
     print(diff.max())
     print(' integration of the intensity on the grid X,Y')
     print(diff.integration())
-    print(' radiation intensity plot')
-    diff.plot()
+    print(' radiation intensity plot DIFFERENCE')
+    diff.plot(title='from grid: DIFFERENCE 1 minus 2')
 
 
 
@@ -198,7 +199,7 @@ def Exemple_List():
     print(' integration of the intensity on X,Y')
     print(rad.integration())
     print(' radiation intensity plot')
-    rad.plot()
+    rad.plot(title='from list: plot 1')
 
     print(' ')
     print('create a second radiation on the same X,Y')
@@ -209,7 +210,7 @@ def Exemple_List():
     print(' integration of the intensity on X,Y')
     print(rad2.integration())
     print(' radiation intensity plot')
-    rad2.plot()
+    rad2.plot(title= 'from list: plot 2')
 
     print(' ')
     print('create a third radiation which is the different between the 2 radiation before')
@@ -219,7 +220,7 @@ def Exemple_List():
     print(' integration of the intensity on X,Y')
     print(diff.integration())
     print(' radiation intensity plot')
-    diff.plot()
+    diff.plot(title='from list: DIFFERENCE')
 
 if __name__ == "__main__" :
 

@@ -172,7 +172,7 @@ class TrajectoryFactory(object):
 
     def print_parameters(self):
         print("Trajectory ")
-        print '    method : %s' %self.get_method()
+        print('    method : %s' %self.get_method())
         print('    number of points : %d' %self.Nb_pts)
         print('    initial position (x,y,z) : ')
         print(self.initial_condition[3:6])
@@ -187,23 +187,25 @@ if __name__ == "__main__" :
     source_test=SourceUndulatorPlane(undulator=undulator_test,electron_beam=electron_beam_test)
 
 
-    print('Create trajectory with autamatic choise of initial condition and automatic magnetic field')
+    print('Create trajectory with autamatic choice of initial condition and automatic magnetic field')
 
     trajectory_fact_ODE = TrajectoryFactory(Nb_pts=20000, method=TRAJECTORY_METHOD_ODE)
     trajectory1=trajectory_fact_ODE.create_from_source(source_test)
     print(' ')
-    print('trajectory 1 create with ODE method')
+    print('trajectory 1 created with ODE method')
+    print(trajectory_fact_ODE.print_parameters())
     print('initial condition =')
     print(trajectory_fact_ODE.initial_condition * (1. / codata.c))
-    trajectory1.plot_3D()
+    trajectory1.plot_3D(title="traj 1: autamatic initial condition and field")
 
-    trajectory_fact_ANALITIC = TrajectoryFactory(Nb_pts=2000, method=TRAJECTORY_METHOD_ANALYTIC)
+    trajectory_fact_ANALITIC = TrajectoryFactory(Nb_pts=20000, method=TRAJECTORY_METHOD_ANALYTIC)
     trajectory2=trajectory_fact_ANALITIC.create_from_source(source_test)
     print(' ')
     print('trajectory 2 create with ANALYTIC method')
+    print(trajectory_fact_ANALITIC.print_parameters())
     print('initial condition =')
     print(trajectory_fact_ANALITIC.initial_condition*(1./codata.c))
-    trajectory2.plot_3D()
+    trajectory2.plot_3D(title="traj 2: ANALYTICAL method")
 
 
     print(' ')
@@ -212,9 +214,9 @@ if __name__ == "__main__" :
     trajectory_fact_ODE.initial_condition=trajectory_fact_ANALITIC.initial_condition
     #print(all(trajectory_fact_ODE.initial_condition==trajectory_fact_ANALITIC.initial_condition))
     trajectory1=trajectory_fact_ODE.create_from_source(source_test)
-    trajectory1.plot_3D()
+    trajectory1.plot_3D("traj 1 modified with intitial conditions from traj 2")
 
     print(' ')
     print('Now trajectory 1 and 2 have the same vector time, we make the difference : ')
     diff =trajectory1.difference_with(trajectory2)
-    diff.plot()
+    diff.plot(title="Difference")
