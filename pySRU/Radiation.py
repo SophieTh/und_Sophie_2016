@@ -20,7 +20,7 @@ class Radiation(object):
         import matplotlib.pyplot as plt
         from mpl_toolkits.mplot3d import Axes3D
 
-        if self.X == None or self.Y == None:
+        if self.X is None or self.Y is None:
             raise Exception(" X and Y must be array for plotting")
         if self.X.shape != self.Y.shape:
             raise Exception(" X and Y must have the same shape")

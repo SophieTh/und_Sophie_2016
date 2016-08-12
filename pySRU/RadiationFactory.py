@@ -131,10 +131,14 @@ class RadiationFactory(object):
     def energy_radiated_approx(self,trajectory, x, y,distance):
         N = trajectory.nb_points()
         n_chap = np.array([x - trajectory.x * codata.c, y - trajectory.y * codata.c, distance - trajectory.z * codata.c])
-        R = np.zeros(n_chap.shape[1])
-        for i in range(n_chap.shape[1]):
-            R[i] = np.linalg.norm(n_chap[:, i])
-            n_chap[:, i] /= R[i]
+        # R = np.zeros(n_chap.shape[1])
+        # for i in range(n_chap.shape[1]):
+        #     R[i] = np.linalg.norm(n_chap[:, i])
+        #     n_chap[:, i] /= R[i]
+        R = np.sqrt( n_chap[0]**2 + n_chap[1]**2 + n_chap[2]**2 )
+        n_chap[0,:] /= R
+        n_chap[1,:] /= R
+        n_chap[2,:] /= R
 
         E = np.zeros((3,), dtype=np.complex)
         integrand = np.zeros((3, N), dtype=np.complex)
@@ -163,10 +167,15 @@ class RadiationFactory(object):
         N = trajectory.nb_points()
         n_chap = np.array(
             [x - trajectory.x * codata.c, y - trajectory.y * codata.c, distance - trajectory.z * codata.c])
-        R = np.zeros(n_chap.shape[1])
-        for i in range(n_chap.shape[1]):
-            R[i] = np.linalg.norm(n_chap[:, i])
-            n_chap[:, i] /= R[i]
+        # R = np.zeros(n_chap.shape[1])
+        # for i in range(n_chap.shape[1]):
+        #     R[i] = np.linalg.norm(n_chap[:, i])
+        #     n_chap[:, i] /= R[i]
+
+        R = np.sqrt( n_chap[0]**2 + n_chap[1]**2 + n_chap[2]**2 )
+        n_chap[0,:] /= R
+        n_chap[1,:] /= R
+        n_chap[2,:] /= R
 
         E = np.zeros((3,), dtype=np.complex)
         integrand = np.zeros((3, N), dtype=np.complex)
@@ -214,10 +223,11 @@ class RadiationFactory(object):
 
 
 def Exemple_FARFIELD():
-    from MagneticStructureUndulatorPlane import MagneticStructureUndulatorPlane as Undulator
-    from ElectronBeam import ElectronBeam
-    from SourceUndulatorPlane import SourceUndulatorPlane
-    from TrajectoryFactory import TrajectoryFactory,TRAJECTORY_METHOD_ODE,TRAJECTORY_METHOD_ANALYTIC
+    from pySRU.MagneticStructureUndulatorPlane import MagneticStructureUndulatorPlane as Undulator
+    from pySRU.ElectronBeam import ElectronBeam
+    from pySRU.SourceUndulatorPlane import SourceUndulatorPlane
+    from pySRU.TrajectoryFactory import TrajectoryFactory,TRAJECTORY_METHOD_ODE,TRAJECTORY_METHOD_ANALYTIC
+    import time
 
     undulator_test = Undulator(K=1.87, period_length=0.035, length=0.035 * 14)
     electron_beam_test = ElectronBeam(Electron_energy=1.3, I_current=1.0)
@@ -231,8 +241,10 @@ def Exemple_FARFIELD():
 
     traj = TrajectoryFactory(Nb_pts=2000, method=TRAJECTORY_METHOD_ODE).create_from_source(source_test)
 
+    t0 = time.time()
     Rad = RadiationFactory(omega=source_test.harmonic_frequency(1), method=RADIATION_METHOD_APPROX_FARFIELD, Nb_pts=101
                             ).create_for_one_relativistic_electron(trajectory=traj, source=source_test)
+    print("Elapsed time in RadiationFactory: ",time.time()-t0)
 
     print('Screen distance :')
     print(Rad.distance)
@@ -254,9 +266,10 @@ def Exemple_FARFIELD():
 
 
 def Exemple_NEARFIELD():
-    from MagneticStructureUndulatorPlane import MagneticStructureUndulatorPlane as Undulator
-    from ElectronBeam import ElectronBeam
-    from SourceUndulatorPlane import SourceUndulatorPlane
+    from pySRU.MagneticStructureUndulatorPlane import MagneticStructureUndulatorPlane as Undulator
+    from pySRU.ElectronBeam import ElectronBeam
+    from pySRU.SourceUndulatorPlane import SourceUndulatorPlane
+    import time
 
     undulator_test = Undulator(K=1.87, period_length=0.035, length=0.035 * 14)
     electron_beam_test = ElectronBeam(Electron_energy=1.3, I_current=1.0)
@@ -267,8 +280,10 @@ def Exemple_NEARFIELD():
 
     traj = TrajectoryFactory(Nb_pts=2000, method=TRAJECTORY_METHOD_ODE).create_from_source(source_test)
 
+    t0 = time.time()
     Rad = RadiationFactory(omega=source_test.harmonic_frequency(1), method=RADIATION_METHOD_NEAR_FIELD, Nb_pts=101
                            ).create_for_one_relativistic_electron(trajectory=traj, source=source_test,distance=100)
+    print("Elapsed time in RadiationFactory: ",time.time()-t0)
 
     print('Screen distance :')
     print(Rad.distance)
@@ -289,9 +304,10 @@ def Exemple_NEARFIELD():
     Rad.plot()
 
 def Exemple_APPROX():
-    from MagneticStructureUndulatorPlane import MagneticStructureUndulatorPlane as Undulator
-    from ElectronBeam import ElectronBeam
-    from SourceUndulatorPlane import SourceUndulatorPlane
+    from pySRU.MagneticStructureUndulatorPlane import MagneticStructureUndulatorPlane as Undulator
+    from pySRU.ElectronBeam import ElectronBeam
+    from pySRU.SourceUndulatorPlane import SourceUndulatorPlane
+    import time
 
     undulator_test = Undulator(K=1.87, period_length=0.035, length=0.035 * 14)
     electron_beam_test = ElectronBeam(Electron_energy=1.3, I_current=1.0)
@@ -302,8 +318,10 @@ def Exemple_APPROX():
 
     traj = TrajectoryFactory(Nb_pts=2000, method=TRAJECTORY_METHOD_ODE).create_from_source(source_test)
 
+    t0 = time.time()
     Rad = RadiationFactory(omega=source_test.harmonic_frequency(1), method=RADIATION_METHOD_APPROX, Nb_pts=101
                            ).create_for_one_relativistic_electron(trajectory=traj, source=source_test,distance=100)
+    print("Elapsed time in RadiationFactory: ",time.time()-t0)
 
     print('Screen distance :')
     print(Rad.distance)
@@ -324,8 +342,9 @@ def Exemple_APPROX():
     Rad.plot()
 
 if __name__ == "__main__" :
-    #pass
-    Exemple_FARFIELD()
-    #Exemple_APPROX()
-    #Exemple_NEARFIELD()
+    # Exemple_FARFIELD()
+    # Exemple_APPROX()
+    Exemple_NEARFIELD()
+
+
 
