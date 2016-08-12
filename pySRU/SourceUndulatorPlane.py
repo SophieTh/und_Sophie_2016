@@ -33,11 +33,11 @@ class SourceUndulatorPlane(Source):
     ################
 
     #TODO useful ?
-    def choose_distance_automatic(self, alpha):
+    def choose_distance_automatic(self, alpha=2):
         lim = self.magnetic_structure.length
         return lim * 10 ** alpha
 
-    def choose_nb_pts_trajectory(self, alpha):
+    def choose_nb_pts_trajectory(self, alpha=2):
         racine = (np.pi * self.magnetic_structure.period_number() * 10 ** (alpha)) / (45.)
         n_mini = (2.0 * np.pi * self.period_number()) * np.exp(0.25 * np.log(racine))
         return n_mini*2.0

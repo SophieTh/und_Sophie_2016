@@ -29,6 +29,10 @@ class Trajectory(object):
             N = 0
         return N
 
+    #TODO: compute By versus z (proportional to acceleration)
+    # def Bz_versus_z(self):
+    #     cte = 1.0
+    #     return self.a_y * cte
 
     def convert(self, T):
         if T.shape[0] == 10:
@@ -137,19 +141,30 @@ class Trajectory(object):
 
 
 
-    def plot_3D(self,title=""):
+    def plot_3D(self,title="",label='trajectory'):
         import matplotlib.pyplot as plt
+        import scipy.constants as codata
+
         from mpl_toolkits.mplot3d import Axes3D
         fig = plt.figure()
         ax = fig.gca(projection='3d')
-        ax.plot(self.z, self.x, self.y, label='trajectroy')
+        ax.plot(self.z*codata.c, self.x*codata.c, self.y*codata.c, label=label)
         ax.legend()
         plt.title(title)
-        ax.set_xlabel("Z")
-        ax.set_ylabel('X')
-        ax.set_zlabel("Y")
+        ax.set_xlabel("Z [m]")
+        ax.set_ylabel('X [m]')
+        ax.set_zlabel("Y [m]")
         plt.show()
 
+    def plot_2D(self,title=""):
+        import matplotlib.pyplot as plt
+        import scipy.constants as codata
+
+        plt.plot(self.z*codata.c, self.x*codata.c)
+        plt.title(title)
+        plt.xlabel("Z [m]")
+        plt.ylabel('X [m]')
+        plt.show()
 
     def plot(self,title=""):
         import matplotlib.pyplot as plt

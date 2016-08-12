@@ -29,7 +29,7 @@ class RadiationFactory(object):
 
     # Photon's flow all over a screen situate at distance D of an undulator
     def create_for_one_relativistic_electron(self, trajectory, source, XY_are_list=False, distance=None, X=None, Y=None):
-        if X == None or Y == None:
+        if X is None or Y is None:
             print('calculate X and Y array')
             if distance == None:
                 if self.method==RADIATION_METHOD_APPROX_FARFIELD :
@@ -66,8 +66,11 @@ class RadiationFactory(object):
         # c1 = codata.e ** 2 * omega1 ** 2 / (16 * np.pi ** 3 * codata.epsilon_0 * codata.c )
         # c2 = I / codata.e  # multiply by number of electrons in 1 A
         # c3 = 2.0*np.pi / (codata.h * omega1)  # divide by e energy (to get number of photons)
-        # c4 = 1e-3 / omega1  # to get 1% energy bandwidth  #!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+        # c4 = 1e-3 / omega1  # to get .1% energy bandwidth  #!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
         # c5 = 1e-3 * 1e-3  # from rad to .1mrad angle bandwidth
+
+
+
         c6 = codata.e * source.I_current() * 1e-9 / (8.0 * np.pi ** 2 * codata.epsilon_0 * codata.c * codata.h)
         if X_array.size != Y_array.size:
             raise Exception("X and Y dimensions must be equal.")

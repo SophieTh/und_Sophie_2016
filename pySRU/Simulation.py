@@ -37,110 +37,130 @@ class Simulation(object):
                                    radiation_fact=self.radiation_fact.copy(),
                                    trajectory=self.trajectory.copy(), radiation=self.radiation.copy())
 
+
+    def update_radiation(self):
+        self.radiation.intensity = self.radiation_fact.calculate_radiation_intensity(trajectory=self.trajectory,
+                                                                                     source=self.source,
+                                                                                     distance=self.radiation.distance,
+                                                                                     X_array=self.radiation.X,
+                                                                                     Y_array=self.radiation.Y)
     #change
 
     def change_distance(self,D):
         self.radiation.distance=D
         #update intensity
-        self.radiation.intensity = self.radiation_fact.calculate_radiation_intensity(trajectory=self.trajectory,
-                                                                                     source=self.source,
-                                                                                     distance=self.radiation.distance,
-                                                                                     X_array=self.radiation.X,
-                                                                                     Y_array=self.radiation.Y)
+        # self.radiation.intensity = self.radiation_fact.calculate_radiation_intensity(trajectory=self.trajectory,
+        #                                                                              source=self.source,
+        #                                                                              distance=self.radiation.distance,
+        #                                                                              X_array=self.radiation.X,
+        #                                                                              Y_array=self.radiation.Y)
+        self.update_radiation()
 
     def change_radiation_method(self,method):
         self.radiation_fact.method=method
         #update intensity
-        self.radiation.intensity= self.radiation_fact.calculate_radiation_intensity(trajectory=self.trajectory,
-                                                                                    source=self.source,
-                                                                                    distance=self.radiation.distance,
-                                                                                    X_array=self.radiation.X,
-                                                                                    Y_array=self.radiation.Y)
+        # self.radiation.intensity= self.radiation_fact.calculate_radiation_intensity(trajectory=self.trajectory,
+        #                                                                             source=self.source,
+        #                                                                             distance=self.radiation.distance,
+        #                                                                             X_array=self.radiation.X,
+        #                                                                             Y_array=self.radiation.Y)
+        self.update_radiation()
 
     def change_trajectory_method(self,method) :
         self.trajectory_fact.method = method
         self.trajectory =self.trajectory_fact.create_from_source(source=self.source)
-        self.radiation.intensity = self.radiation_fact.calculate_radiation_intensity(trajectory=self.trajectory,
-                                                                                     source=self.source,
-                                                                                     distance=self.radiation.distance,
-                                                                                     X_array=self.radiation.X,
-                                                                                     Y_array=self.radiation.Y)
+        # self.radiation.intensity = self.radiation_fact.calculate_radiation_intensity(trajectory=self.trajectory,
+        #                                                                              source=self.source,
+        #                                                                              distance=self.radiation.distance,
+        #                                                                              X_array=self.radiation.X,
+        #                                                                              Y_array=self.radiation.Y)
+        self.update_radiation()
 
     def change_initial_condition(self, initial_cond):
+        #TODO change this
         self.trajectory_fact.initial_condition= initial_cond
         self.magnetic_field.change_Zo(Zo=initial_cond[5])
         self.trajectory = self.trajectory_fact.create_for_parameter(parameter=self.parameter,
                                                                     B=self.magnetic_field)
 
-        self.radiation.intensity = self.radiation_fact.calculate_radiation_intensity(trajectory=self.trajectory,
-                                                                                     source=self.parameter,
-                                                                                     distance=self.radiation.distance,
-                                                                                     X_arrays=self.radiation.X,
-                                                                                     Y_arrays=self.radiation.Y)
+        # self.radiation.intensity = self.radiation_fact.calculate_radiation_intensity(trajectory=self.trajectory,
+        #                                                                              source=self.parameter,
+        #                                                                              distance=self.radiation.distance,
+        #                                                                              X_arrays=self.radiation.X,
+        #                                                                              Y_arrays=self.radiation.Y)
+        self.update_radiation()
 
     def change_omega(self, omega) :
         self.radiation_fact.omega=omega
-        self.radiation.intensity = self.radiation_fact.calculate_radiation_intensity(trajectory=self.trajectory,
-                                                                                     source=self.source,
-                                                                                     distance=self.radiation.distance,
-                                                                                     X_array=self.radiation.X,
-                                                                                     Y_array=self.radiation.Y)
+        # self.radiation.intensity = self.radiation_fact.calculate_radiation_intensity(trajectory=self.trajectory,
+        #                                                                              source=self.source,
+        #                                                                              distance=self.radiation.distance,
+        #                                                                              X_array=self.radiation.X,
+        #                                                                              Y_array=self.radiation.Y)
+        self.update_radiation()
 
     def change_harmonic_number(self, harmonic_number) :
         self.radiation_fact.omega=harmonic_number*self.source.omega1()
-        self.radiation.intensity = self.radiation_fact.calculate_radiation_intensity(trajectory=self.trajectory,
-                                                                                     source=self.source,
-                                                                                     distance=self.radiation.distance,
-                                                                                     X_arrays=self.radiation.X,
-                                                                                     Y_arrays=self.radiation.Y)
+        # self.radiation.intensity = self.radiation_fact.calculate_radiation_intensity(trajectory=self.trajectory,
+        #                                                                              source=self.source,
+        #                                                                              distance=self.radiation.distance,
+        #                                                                              X_arrays=self.radiation.X,
+        #                                                                              Y_arrays=self.radiation.Y)
+        self.update_radiation()
 
     def change_energy_eV(self, E) :
         omega = E * eV_to_J / codata.hbar
         self.change_omega(omega)
-
+        self.update_radiation()
 
     def change_Nb_pts_trajectory(self, Nb_pts):
         self.trajectory_fact.Nb_pts = Nb_pts
         self.trajectory = self.trajectory_fact.create_from_source(source=self.source)
-        self.radiation.intensity = self.radiation_fact.calculate_radiation_intensity(trajectory=self.trajectory,
-                                                                                     source=self.source,
-                                                                                     distance=self.radiation.distance,
-                                                                                     X_array=self.radiation.X,
-                                                                                     Y_array=self.radiation.Y)
+        # self.radiation.intensity = self.radiation_fact.calculate_radiation_intensity(trajectory=self.trajectory,
+        #                                                                              source=self.source,
+        #                                                                              distance=self.radiation.distance,
+        #                                                                              X_array=self.radiation.X,
+        #                                                                              Y_array=self.radiation.Y)
+        self.update_radiation()
 
     def change_nb_period(self, Nb_period):
         self.source.magnetic_structure.length=Nb_period*self.source.magnetic_structure.period_length
         self.source.magnetic_field=self.source.magnetic_structure.create_magnetic_field()
         self.trajectory_fact.Nb_pts = int(self.source.choose_nb_pts_trajectory(2))
         self.trajectory = self.trajectory_fact.create_from_source(source=self.source)
-        self.radiation.intensity = self.radiation_fact.calculate_radiation_intensity(trajectory=self.trajectory,
-                                                                                     source=self.source,
-                                                                                     distance=self.radiation.distance,
-                                                                                     X_array=self.radiation.X,
-                                                                                     Y_array=self.radiation.Y)
+        # self.radiation.intensity = self.radiation_fact.calculate_radiation_intensity(trajectory=self.trajectory,
+        #                                                                              source=self.source,
+        #                                                                              distance=self.radiation.distance,
+        #                                                                              X_array=self.radiation.X,
+        #                                                                              Y_array=self.radiation.Y)
+        self.update_radiation()
 
     def change_Nb_pts_radiation(self, Nb_pts):
         self.radiation_fact.Nb_pts = Nb_pts
         self.radiation.change_Nb_pts(Nb_pts)
-        self.radiation.intensity = self.radiation_fact.calculate_radiation_intensity(trajectory=self.trajectory,
-                                                                                     source=self.source,
-                                                                                     distance=self.radiation.distance,
-                                                                                     X_array=self.radiation.X,
-                                                                                     Y_array=self.radiation.Y)
-
+        # self.radiation.intensity = self.radiation_fact.calculate_radiation_intensity(trajectory=self.trajectory,
+        #                                                                              source=self.source,
+        #                                                                              distance=self.radiation.distance,
+        #                                                                              X_array=self.radiation.X,
+        #                                                                              Y_array=self.radiation.Y)
+        self.update_radiation()
 
     def change_XY_radiation(self,X,Y):
 
-        intensity = self.radiation_fact.calculate_radiation_intensity(trajectory=self.trajectory,
-                                                                                     source=self.source,
-                                                                                     distance=self.radiation.distance,
-                                                                                     X_array=X,
-                                                                                     Y_array=Y)
+        # intensity = self.radiation_fact.calculate_radiation_intensity(trajectory=self.trajectory,
+        #                                                                              source=self.source,
+        #                                                                              distance=self.radiation.distance,
+        #                                                                              X_array=X,
+        #
+        #
+        #TODO: check grille/list                                                                             Y_array=Y)
         self.radiation.X=X
         self.radiation.Y=Y
-        self.radiation.intensity=intensity
 
 
+        # self.radiation.intensity=intensity
+
+        self.update_radiation()
 
     #TODO possible que pour Undulator, a revoir , a tester
     def calculate_on_wave_number(self, wave_number_max):
@@ -323,6 +343,8 @@ class Simulation(object):
 
         self.radiation_fact.print_parameters()
 
+        print("Distance: ",self.radiation.distance)
+
     def plot_everything(self):
         self.trajectory.plot()
         self.trajectory.plot_3D()
@@ -378,7 +400,7 @@ class Simulation(object):
 
 def create_simulation(magnetic_structure,electron_beam, magnetic_field=None, photon_energy=None,
                       traj_method=TRAJECTORY_METHOD_ANALYTIC,Nb_pts_trajectory=None,
-                      rad_method=RADIATION_METHOD_APPROX_FARFIELD, Nb_pts_radiation=101, formule=1,
+                      rad_method=RADIATION_METHOD_APPROX_FARFIELD, Nb_pts_radiation=101,
                       initial_condition=None, distance=None,XY_are_list=False,X=None,Y=None) :
 
     if type(magnetic_structure)==Undulator :
@@ -395,7 +417,7 @@ def create_simulation(magnetic_structure,electron_beam, magnetic_field=None, pho
     if photon_energy==None :
         omega=source.choose_photon_frequency()
     else :
-        omega = photon_energy *eV_to_J / codata.hbar
+        omega = photon_energy * eV_to_J / codata.hbar
 
     # print('omega=')
     # print(omega)
@@ -406,7 +428,7 @@ def create_simulation(magnetic_structure,electron_beam, magnetic_field=None, pho
     if distance==None and (rad_method==RADIATION_METHOD_NEAR_FIELD) :
         distance=source.choose_distance_automatic(2)
 
-    if X ==None or Y== None :
+    if X is None or Y is None :
         if (X != None) :
             Y=X
         elif Y != None :
@@ -460,52 +482,78 @@ def create_simulation(magnetic_structure,electron_beam, magnetic_field=None, pho
 
 
 
-# exemple
+# exemples
 
-def Exemple_minimum():
+def Example_minimum():
 
-    from  ElectronBeam import ElectronBeam
+    from  pySRU.ElectronBeam import ElectronBeam
+
+    print("======================================================================")
+    print("======      Undulator from X-ray data booklet                  =======")
+    print("====== fig 2.5 in  http://xdb.lbl.gov/Section2/Sec_2-1.html    =======")
+    print("======================================================================")
+
+    # note that the flux in the reference fig 2.6 is a factor 10 smaller than the calculated here.
+    # This factor comes from the units:
+    #     here: phot / s  / A / 0.1%bw / (mrad)^2
+    #     ref : phot / s  / A /   1%bw / (0.1 mrad)^2
 
     undulator_test = Undulator(K=1.87, period_length=0.035, length=0.035 * 14)
     electron_beam_test = ElectronBeam(Electron_energy=1.3, I_current=1.0)
 
-    simulation_test = create_simulation(magnetic_structure=undulator_test,electron_beam=electron_beam_test)
+    simulation_test = create_simulation(magnetic_structure=undulator_test,electron_beam=electron_beam_test,
+                        magnetic_field=None, photon_energy=None,
+                        traj_method=TRAJECTORY_METHOD_ANALYTIC,Nb_pts_trajectory=None,
+                        rad_method=RADIATION_METHOD_APPROX_FARFIELD, Nb_pts_radiation=101,
+                        initial_condition=None, distance=None,XY_are_list=False,X=None,Y=None)
+
 
     simulation_test.print_parameters()
 
-    simulation_test.trajectory.plot_3D()
+    # Note that traj_method=TRAJECTORY_METHOD_ANALYTIC means that the stored magnetic field is not used,
+    # The trajectory is calculated from the analytcal formulas
+    # simulation_test.source.magnetic_field.plot_z(0,0,np.linspace(-0.5*(0.035*14),0.5*(0.035*14),2000),field_component='y')
 
-    simulation_test.radiation.plot()
+    #simulation_test.trajectory.plot_2D(title="Electron Trajectory")
+    simulation_test.trajectory.plot_3D(title="Electron Trajectory")
 
+    simulation_test.radiation.plot(title="Flux in far field vs angle")
+
+    #  second calculation, change distance and also change the grid to accept the central cone
     simulation_test.change_distance(D=100)
-    simulation_test.radiation.plot()
-
     simulation_test.calculate_on_central_cone()
-    simulation_test.radiation.plot()
+
+    simulation_test.radiation.plot(title="New distance: %3.1f m"%simulation_test.radiation.distance)
 
 
-def Exemple_meshgrid():
-    from ElectronBeam import ElectronBeam
 
-    beam_test = ElectronBeam(Electron_energy=1.3, I_current=1.0)
+def Example_meshgrid():
+    from pySRU.ElectronBeam import ElectronBeam
+
+    print("======================================================================")
+    print("======      Undulator U18 from ESRF with K=1.68                =======")
+    print("======================================================================")
+
     beam_ESRF = ElectronBeam(Electron_energy=6.0, I_current=0.2)
-    und_test = Undulator(K=1.87, period_length=0.035, length=0.035 * 14)
     ESRF18 = Undulator(K=1.68, period_length=0.018, length=2.0)
 
-
-    print('create simulation for a given screen')
+    print('create radiation a given screen (40mm x 40mm @ 100 m )')
     X=np.linspace(-0.02,0.02,101)
     Y=np.linspace(-0.02,0.02,101)
     simulation_test = create_simulation(magnetic_structure=ESRF18,electron_beam=beam_ESRF,
                                         traj_method=TRAJECTORY_METHOD_ANALYTIC,
                                         rad_method=RADIATION_METHOD_APPROX_FARFIELD,
-                                        distance= 100,X=X,Y=Y,photon_energy=7876.0)
+                                        distance= 100,X=X,Y=Y,photon_energy=None) #7876.0)
 
+    simulation_test.print_parameters()
     simulation_test.trajectory.plot_3D()
-    simulation_test.radiation.plot()
+    simulation_test.radiation.plot(title=" radiation in a defined screen (40mm x 40mm @ 100 m )")
 
+
+    print('create radiation a given screen including first ring')
     simulation_test.calculate_until_wave_number(wave_number=1, XY_are_list=False)
-    simulation_test.radiation.plot()
+    simulation_test.radiation.plot(title=" radiation in a screen containing up to fisrt ring")
+
 
     print('create simulation for a maximal X and Y given')
     simulation_test = create_simulation(magnetic_structure=ESRF18, electron_beam=beam_ESRF,
@@ -527,12 +575,8 @@ def Exemple_meshgrid():
 
 
 
-
-
-
-
 # TODO ne marche plus  qd on rentre a la main l'energy du photon?
-def Exemple_list():
+def Example_list():
     from pySRU.ElectronBeam import ElectronBeam
 
     beam_ESRF = ElectronBeam(Electron_energy=6.0, I_current=0.2)
@@ -568,8 +612,7 @@ def Exemple_list():
 
 if __name__ == "__main__" :
 
-
-    #Exemple_minimum()
-    #Exemple_meshgrid()
-    Exemple_list()
+    # Example_minimum()
+    Example_meshgrid()
+    # Example_list()
 

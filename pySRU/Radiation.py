@@ -20,6 +20,15 @@ class Radiation(object):
         import matplotlib.pyplot as plt
         from mpl_toolkits.mplot3d import Axes3D
 
+        if self.distance == None:
+            zlabel = "Flux (phot/s/0.1%bw/A/mrad2)"
+            xlabel = 'X [rad]'
+            ylabel = 'Y [rad]'
+        else:
+            zlabel = "Flux (phot/s/0.1%bw/A/mm2)"
+            xlabel = 'X [m]'
+            ylabel = 'Y [m]'
+
         if self.X is None or self.Y is None:
             raise Exception(" X and Y must be array for plotting")
         if self.X.shape != self.Y.shape:
@@ -32,8 +41,10 @@ class Radiation(object):
             ax = fig.gca(projection='3d')
             ax.plot(self.X, self.Y, self.intensity, label=label)
             ax.legend()
-        plt.xlabel('X')
-        plt.ylabel('Y')
+        ax.set_xlabel(xlabel)
+        ax.set_ylabel(ylabel)
+        ax.set_zlabel(zlabel)
+
         plt.title(title)
         plt.show()
 
