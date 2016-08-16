@@ -7,8 +7,8 @@ import time
 from scipy.interpolate import interp1d
 from pySRU.Radiation import Radiation,RADIATION_LIST,RADIATION_GRID
 from pySRU.MagneticField import MagneticField
-from SourceUndulatorPlane import SourceUndulatorPlane
-from SourceBendingmagnet import SourceBendingMagnet
+from pySRU.SourceUndulatorPlane import SourceUndulatorPlane
+from pySRU.SourceBendingmagnet import SourceBendingMagnet
 from pySRU.MagneticStructureUndulatorPlane import MagneticStructureUndulatorPlane as Undulator
 from pySRU.MagneticStructureBendingMagnet import MagneticStructureBendingMagnet as BM
 

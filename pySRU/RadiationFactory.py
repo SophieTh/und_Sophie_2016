@@ -3,6 +3,7 @@ from pySRU.Radiation import Radiation
 import scipy.constants as codata
 import scipy.integrate as integrate
 from pySRU.TrajectoryFactory import TrajectoryFactory, TRAJECTORY_METHOD_ANALYTIC , TRAJECTORY_METHOD_ODE
+from pySRU.ElectricalField import ElectricalField
 
 
 
@@ -12,7 +13,6 @@ RADIATION_METHOD_FARFIELD=2
 RADIATION_METHOD_APPROX=3
 RADIATION_METHOD_APPROX_FARFIELD=4
 eV_to_J=1.602176487e-19
-
 
 class RadiationFactory(object):
     def __init__(self,method,omega,Nb_pts,formula=None):
@@ -63,10 +63,7 @@ class RadiationFactory(object):
 
         return radiation
 
-
-
-    # Photon's flow all over a screen situate at distance D of an undulator
-    def calculate_radiation_intensity(self, trajectory, source, X_array, Y_array, distance=None):
+    def calculate_electrical_field(self, trajectory, source, X_array, Y_array, distance=None):
         # c1 = codata.e ** 2 * omega1 ** 2 / (16 * np.pi ** 3 * codata.epsilon_0 * codata.c )
         # c2 = I / codata.e  # multiply by number of electrons in 1 A
         # c3 = 2.0*np.pi / (codata.h * omega1)  # divide by e energy (to get number of photons)
@@ -76,55 +73,56 @@ class RadiationFactory(object):
         if X_array.size != Y_array.size:
             raise Exception("X and Y dimensions must be equal.")
 
-        res = np.zeros_like(X_array)
-        shape1 = res.shape
+        shape1 = X_array.shape
         X = X_array.flatten()
         Y = Y_array.flatten()
-        res = res.flatten()
+
+        res = np.zeros((X.size, 3), dtype=np.complex128)
+
         gamma = source.Lorentz_factor()
+
         if self.method == RADIATION_METHOD_APPROX_FARFIELD:
             if self.formula ==1 :
                 #print('APPROX AND FARFIELD OK')
-                for i in range(len(X)):
-                    res[i] = c6 * self.energy_radiated_approximation_and_farfield(trajectory=trajectory,
-                                                                                  distance=distance, x=X[i], y=Y[i])
+               calculation_function = self.energy_radiated_approximation_and_farfield
             else :
-                for i in range(len(X)):
-                    res[i] = c6 * self.energy_radiated_approximation_and_farfield2(trajectory=trajectory,
-                                                                                   distance=distance, x=X[i], y=Y[i])
+               calculation_function = self.energy_radiated_approximation_and_farfield2
         else:
             if self.method == RADIATION_METHOD_FARFIELD:
                 if self.formula == 1:
-                    for i in range(len(X)):
-                        res[i] = c6 * self.energy_radiated_farfield(trajectory=trajectory, gamma=gamma,
-                                                                    distance=distance, x=X[i], y=Y[i])
+                   calculation_function = self.energy_radiated_farfield
                 else:
-                    for i in range(len(X)):
-                        res[i] = c6 * self.energy_radiated_farfield2(trajectory=trajectory, distance=distance,
-                                                                     gamma=gamma, x=X[i], y=Y[i])
+                   calculation_function = self.energy_radiated_farfield2
             else:
                 if self.method == RADIATION_METHOD_APPROX:
                     if self.formula == 1:
-                        for i in range(len(X)):
-                            res[i] = c6 * self.energy_radiated_approx(trajectory=trajectory, distance=distance,
-                                                                          gamma=gamma, x=X[i], y=Y[i])
+                       calculation_function = self.energy_radiated_approx
                     else:
-                        for i in range(len(X)):
-                            res[i] = c6 * self.energy_radiated_approx2(trajectory=trajectory, distance=distance,
-                                                                           gamma=gamma, x=X[i], y=Y[i])
+                       calculation_function = self.energy_radiated_approx2
                 else : # Nearfield
                     if self.formula == 1:
-                        for i in range(len(X)):
-                            res[i] = c6 * self.energy_radiated_near_field(trajectory=trajectory, distance=distance,
-                                                                      gamma=gamma, x=X[i], y=Y[i])
+                        calculation_function = self.energy_radiated_near_field
                     else:
-                        for i in range(len(X)):
-                            res[i] = c6 * self.energy_radiated_near_field2(trajectory=trajectory, distance=distance,
-                                                                       gamma=gamma, x=X[i], y=Y[i])
-        res = res.reshape(shape1)
-        return res
+                        calculation_function = self.energy_radiated_near_field2
+        
+        for i in range(len(X)):
+            res[i] = calculation_function(trajectory=trajectory, distance=distance,
+                                          gamma=gamma, x=X[i], y=Y[i])
 
-    def energy_radiated_approximation_and_farfield(self,trajectory, x, y, distance):
+
+        res *= c6**0.5
+        res = res.reshape((shape1[0], shape1[1], 3))
+
+        electrical_field = ElectricalField(electrical_field=res, X=X, Y=Y, distance=distance)
+
+        return electrical_field
+
+    # Photon's flow all over a screen situate at distance D of an undulator
+    def calculate_radiation_intensity(self, trajectory, source, X_array, Y_array, distance=None):
+        electrical_field = self.calculate_electrical_field(trajectory, source, X_array, Y_array, distance)
+        return electrical_field.intensity()
+
+    def energy_radiated_approximation_and_farfield(self,trajectory, gamma, x, y, distance):
         # N = trajectory.shape[1]
         N = trajectory.nb_points()
         if distance == None:
@@ -152,9 +150,9 @@ class RadiationFactory(object):
         for k in range(3):
             # E[k] = np.trapz(integrand[k], self.trajectory.t)
             E[k] = np.trapz(integrand[k], trajectory.t)
-        return (np.abs(E[0]) ** 2 + np.abs(E[1]) ** 2 + np.abs(E[2]) ** 2)
+        return E
 
-    def energy_radiated_approximation_and_farfield2(self, trajectory, x, y, distance):
+    def energy_radiated_approximation_and_farfield2(self, trajectory, gamma, x, y, distance):
         # N = trajectory.shape[1]
         N = trajectory.nb_points()
         if distance == None:
@@ -193,9 +191,9 @@ class RadiationFactory(object):
         terme_bord *= Alpha3 / (1.0 - n_chap[2] * trajectory.v_z[0])
         E += terme_bord
 
-        return (np.abs(E[0]) ** 2 + np.abs(E[1]) ** 2 + np.abs(E[2]) ** 2)
+        return E
 
-    def energy_radiated_farfield(self, trajectory, x, y,gamma, distance):
+    def energy_radiated_farfield(self, trajectory, gamma, x, y, distance):
         N = trajectory.nb_points()
         if distance==None :
             distance=200
@@ -223,9 +221,9 @@ class RadiationFactory(object):
         for k in range(3):
                 # E[k] = np.trapz(integrand[k], self.trajectory.t)
             E[k] = np.trapz(integrand[k], trajectory.t)
-        return (np.abs(E[0]) ** 2 + np.abs(E[1]) ** 2 + np.abs(E[2]) ** 2)
+        return E
 
-    def energy_radiated_farfield2(self, trajectory, x, y,gamma, distance):
+    def energy_radiated_farfield2(self, trajectory, gamma, x, y, distance):
         # N = trajectory.shape[1]
         N = trajectory.nb_points()
         if distance == None:
@@ -269,11 +267,11 @@ class RadiationFactory(object):
         terme_bord *= Alpha3 / (1.0 - n_chap[2] * trajectory.v_z[0])
         E += terme_bord
 
-        return (np.abs(E[0]) ** 2 + np.abs(E[1]) ** 2 + np.abs(E[2]) ** 2)
+        return E
 
     # exact equation for the energy radiated
     # warning !!!!!!! far field approximation
-    def energy_radiated_approx(self,trajectory,gamma, x, y,distance):
+    def energy_radiated_approx(self,trajectory, gamma, x, y, distance):
         N = trajectory.nb_points()
         n_chap = np.array([x - trajectory.x * codata.c, y - trajectory.y * codata.c, distance - trajectory.z * codata.c])
         R = np.sqrt( n_chap[0]**2 + n_chap[1]**2 + n_chap[2]**2 )
@@ -300,7 +298,7 @@ class RadiationFactory(object):
         for k in range(3):
             E[k] = np.trapz(integrand[k], trajectory.t)
             #E[k] = integrate.simps(integrand[k], trajectory.t)
-        return (np.abs(E[0]) ** 2 + np.abs(E[1]) ** 2 + np.abs(E[2]) ** 2)
+        return E
 
     def energy_radiated_approx2(self, trajectory, gamma, x, y, distance):
         N = trajectory.nb_points()
@@ -337,10 +335,10 @@ class RadiationFactory(object):
                         )*Alpha3 / (1.0 - n_chap[2][0] * trajectory.v_z[0])
         E += terme_bord
 
-        return (np.abs(E[0]) ** 2 + np.abs(E[1]) ** 2 + np.abs(E[2]) ** 2)
+        return E
 
     # energy radiated without the the far filed approxiamation
-    def energy_radiated_near_field(self,gamma,trajectory, x, y,distance):
+    def energy_radiated_near_field(self, trajectory, gamma, x, y, distance):
         N = trajectory.nb_points()
         n_chap = np.array([x - trajectory.x * codata.c, y - trajectory.y * codata.c, distance - trajectory.z * codata.c])
         R = np.sqrt( n_chap[0]**2 + n_chap[1]**2 + n_chap[2]**2 )
@@ -371,9 +369,9 @@ class RadiationFactory(object):
         for k in range(3):
             # E[k] = np.trapz(integrand[k], trajectory[0])
             E[k] = np.trapz(integrand[k], trajectory.t)
-        return (np.abs(E[0]) ** 2 + np.abs(E[1]) ** 2 + np.abs(E[2]) ** 2)
+        return E
 
-    def energy_radiated_near_field2(self, trajectory, gamma,x, y, distance):
+    def energy_radiated_near_field2(self, trajectory, gamma, x, y, distance):
         # N = trajectory.shape[1]
         N = trajectory.nb_points()
         n_chap = np.array(
@@ -419,7 +417,7 @@ class RadiationFactory(object):
         terme_bord *= trajectory.v_z[0]
         E += terme_bord
 
-        return (np.abs(E[0]) ** 2 + np.abs(E[1]) ** 2 + np.abs(E[2]) ** 2)
+        return E
 
     def get_method(self):
         if self.method == RADIATION_METHOD_NEAR_FIELD:

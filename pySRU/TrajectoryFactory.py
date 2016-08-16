@@ -266,7 +266,7 @@ class TrajectoryFactory(object):
 
     def print_parameters(self):
         print("Trajectory ")
-        print '    method : %s' %self.get_method()
+        print('    method : %s' %self.get_method())
         print('    number of points : %d' %self.Nb_pts)
         print('    initial position (x,y,z) : ')
         print(self.initial_condition[3:6])
