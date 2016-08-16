@@ -406,11 +406,11 @@ def create_simulation(magnetic_structure,electron_beam, magnetic_field=None, pho
     if type(magnetic_structure)==Undulator :
         source=SourceUndulatorPlane(undulator=magnetic_structure,
                                     electron_beam=electron_beam, magnetic_field=magnetic_field)
-        print("source undulateur")
+        print("Calculating undulator source...")
     elif type(magnetic_structure)==BM:
         source = SourceBendingMagnet(magnetic_structure=magnetic_structure,
                                       electron_beam=electron_beam, magnetic_field=magnetic_field)
-        print("source BM")
+        print("Calculating bending magnet source...")
     else :
         raise Exception('magnet type unknown')
 
