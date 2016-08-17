@@ -104,9 +104,10 @@ class RadiationFactory(object):
                         calculation_function = self.energy_radiated_near_field
                     else:
                         calculation_function = self.energy_radiated_near_field2
-        
+
+        # TODO: Possible missing imaginary phase in constant?
         for i in range(len(X)):
-            res[i] = calculation_function(trajectory=trajectory, distance=distance,
+            res[i,:] = calculation_function(trajectory=trajectory, distance=distance,
                                           gamma=gamma, x=X[i], y=Y[i])
 
 
