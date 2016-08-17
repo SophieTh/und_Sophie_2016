@@ -107,8 +107,8 @@ class RadiationFactory(object):
 
         # TODO: Possible missing imaginary phase in constant?
         for i in range(len(X)):
-            res[i,:] = calculation_function(trajectory=trajectory, distance=distance,
-                                          gamma=gamma, x=X[i], y=Y[i])
+            res[i, :] = calculation_function(trajectory=trajectory, distance=distance,
+                                             gamma=gamma, x=X[i], y=Y[i])
 
 
         res *= c6**0.5
@@ -151,6 +151,9 @@ class RadiationFactory(object):
         for k in range(3):
             # E[k] = np.trapz(integrand[k], self.trajectory.t)
             E[k] = np.trapz(integrand[k], trajectory.t)
+
+        E *= np.exp(1j * self.omega/codata.c * (n_chap[0]*x + n_chap[1]*y))
+
         return E
 
     def energy_radiated_approximation_and_farfield2(self, trajectory, gamma, x, y, distance):
@@ -222,6 +225,9 @@ class RadiationFactory(object):
         for k in range(3):
                 # E[k] = np.trapz(integrand[k], self.trajectory.t)
             E[k] = np.trapz(integrand[k], trajectory.t)
+
+        E *= -1j * np.exp(1j * self.omega/codata.c * (n_chap[0]*x + n_chap[1]*y + n_chap[2]*distance))
+
         return E
 
     def energy_radiated_farfield2(self, trajectory, gamma, x, y, distance):
@@ -342,19 +348,18 @@ class RadiationFactory(object):
     def energy_radiated_near_field(self, trajectory, gamma, x, y, distance):
         N = trajectory.nb_points()
         n_chap = np.array([x - trajectory.x * codata.c, y - trajectory.y * codata.c, distance - trajectory.z * codata.c])
-        R = np.sqrt( n_chap[0]**2 + n_chap[1]**2 + n_chap[2]**2 )
-        n_chap[0,:] /= R
-        n_chap[1,:] /= R
-        n_chap[2,:] /= R
+        R = np.sqrt( n_chap[0, :]**2 + n_chap[1, :]**2 + n_chap[2, :]**2 )
+        n_chap[0, :] /= R[:]
+        n_chap[1, :] /= R[:]
+        n_chap[2, :] /= R[:]
 
         E = np.zeros((3,), dtype=np.complex)
         integrand = np.zeros((3, N), dtype=np.complex)
         A1 = (n_chap[0] * trajectory.a_x + n_chap[1] * trajectory.a_y + n_chap[2] * trajectory.a_z)
         A2 = (n_chap[0] * (n_chap[0] - trajectory.v_x) + n_chap[1] * (n_chap[1] - trajectory.v_y)
               + n_chap[2] * (n_chap[2] - trajectory.v_z))
-        Alpha2 = np.exp(
-            0. + 1j * self.omega * (trajectory.t - n_chap[0] * trajectory.x
-                                    -n_chap[1] * trajectory.y- n_chap[2] * trajectory.z))
+        Alpha2 = np.exp( 0. + 1j * self.omega * (trajectory.t + R / codata.c))
+
         Alpha1 = (1.0 / (1.0 - n_chap[0] * trajectory.v_x
                          -n_chap[1] * trajectory.v_y- n_chap[2] * trajectory.v_z)) ** 2
         Alpha3 = codata.c / (gamma ** 2 * R)
