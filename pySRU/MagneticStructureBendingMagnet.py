@@ -8,15 +8,15 @@ from pySRU.MagneticStructure import MagneticStructure, PLANE_UNDULATOR,BENDING_M
 class MagneticStructureBendingMagnet(MagneticStructure):
     def __init__(self, Bo, L):
         super(self.__class__, self).__init__(magnet_type=BENDING_MAGNET)
-        self.L=L
+        self.length=L
         self.Bo = Bo
 
 
     def copy(self):
-        return MagneticStructureBendingMagnet(L=self.L,Bo=self.Bo)
+        return MagneticStructureBendingMagnet(L=self.length, Bo=self.Bo)
 
     def fct_magnetic_field(self, z, y, x, harmonic_number, coordonnee='y'):
-        Zo = self.L * 0.5
+        Zo = self.length * 0.6
         if coordonnee == 'y' and z >= -Zo and z <= Zo:
             # codata.m_e * codata.c / codata.e= 0.00170450894933
             Bo = self.Bo
@@ -26,20 +26,20 @@ class MagneticStructureBendingMagnet(MagneticStructure):
         return Bo
 
     def fct_magnetic_field2(self, z, y, x, harmonic_number, coordonnee='y'):
-        Zo = self.L * 0.5
+        Zo = self.length * 0.5
         if coordonnee == 'y':
             # codata.m_e * codata.c / codata.e= 0.00170450894933
-            Bo = -self.Bo
+            Bo = self.Bo
         else:  # coordonnee == 'z' :
             Bo = 0.0
 
             # we enelarge the real effect of the magnetic field by 4 lambda_u
             # on each extremity of the undulator
-        L_magn_field = self.L * 1.5
+        L_magn_field = self.length * 1.5
 
         # we know considere that if -(L/2 + lambda_u/4) < Z < (L/2 + lambda_u/4)
         # the magnetic field if a classic cosinus (or sinus)
-        L_cosinus_part = -Zo()
+        L_cosinus_part = -Zo
 
         if ((z < -L_magn_field) or (z > L_magn_field)):
             dB = 0.0
@@ -65,7 +65,7 @@ class MagneticStructureBendingMagnet(MagneticStructure):
 
     def print_parameters(self):
         print("Bending Magnet :")
-        print('    length : %.5f (m)'%self.L)
+        print('    length : %.5f (m)' % self.length)
         print('    magnetic_field_strength : %.5f'%self.Bo)
 
 

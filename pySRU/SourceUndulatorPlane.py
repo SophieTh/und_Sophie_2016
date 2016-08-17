@@ -86,6 +86,12 @@ class SourceUndulatorPlane(Source):
                 time = np.linspace(to, 2. * to, Nb_pts)
         return time
 
+    def atol_for_ODE_method(self):
+        atol_vx=self.magnetic_structure.K*codata.c/(self.Lorentz_factor())*1e-11
+        atol_vz = ((self.magnetic_structure.K**2) * codata.c) / (4.*self.Lorentz_factor()**2)*1e-11
+        atol_x = (atol_vx*self.magnetic_structure.period_length)/(codata.c*self.average_z_speed_in_undulator()*2.*np.pi)*1e-11
+        atol_z = (atol_vz*self.magnetic_structure.period_length)/(codata.c*self.average_z_speed_in_undulator()*2.*np.pi)*1e-11
+        return np.array([atol_vx,1e-10,atol_vz,atol_x,1e-10,atol_z])
 
     ###########
     #property of the radiation

@@ -105,7 +105,7 @@ class Simulation(object):
         self.trajectory = self.trajectory_fact.create_from_source(source=self.source)
 
     def change_Nb_pts_trajectory(self, Nb_pts):
-        self.trajectory_fact.Nb_pts = Nb_pts
+        self.trajectory_fact.Nb_pts = int(Nb_pts)
         self.trajectory = self.trajectory_fact.create_from_source(source=self.source)
         self.radiation.intensity = self.radiation_fact.calculate_radiation_intensity(trajectory=self.trajectory,
                                                                                      source=self.source,
@@ -351,6 +351,7 @@ class Simulation(object):
         error_rad=np.zeros_like(nb_pts)
         error_traj=np.zeros((10,len(nb_pts)))
         for i in range(len(nb_pts)) :
+            print(i)
             self.change_Nb_pts_trajectory(nb_pts[i])
             sim2.change_Nb_pts_trajectory(nb_pts[i])
             error_traj[:,i]=self.trajectory.error_max(sim2.trajectory)
@@ -405,6 +406,9 @@ class Simulation(object):
                 radiation.intensity[i,j]=self.source.radiation_theoric(
                     omega=self.radiation_fact.omega,observation_angle=observation_angle)
         return radiation
+
+
+
     def create_theoric_radiation2(self):
         radiation = self.radiation.copy()
         shape1 = radiation.intensity.shape
@@ -427,7 +431,7 @@ class Simulation(object):
 
 def create_simulation(magnetic_structure,electron_beam, magnetic_field=None, photon_energy=None,
                       traj_method=TRAJECTORY_METHOD_ANALYTIC,Nb_pts_trajectory=None,
-                      rad_method=RADIATION_METHOD_APPROX_FARFIELD,  formule=1,
+                      rad_method=RADIATION_METHOD_APPROX_FARFIELD,  formula=1,
                       initial_condition=None, distance=None,XY_are_list=False,X=None,Y=None) :
 
     if type(magnetic_structure)==Undulator :
@@ -490,11 +494,13 @@ def create_simulation(magnetic_structure,electron_beam, magnetic_field=None, pho
     #print('step 1')
     traj_fact=TrajectoryFactory(Nb_pts=Nb_pts_trajectory,method=traj_method,initial_condition=initial_condition)
     if (traj_fact.initial_condition == None):
+        # print('crearte initial cond automat')
         traj_fact.initial_condition = source.choose_initial_contidion_automatic()
+        # print(traj_fact.initial_condition)
 
 
     #print('step 2')
-    rad_fact=RadiationFactory(method=rad_method,omega=omega,Nb_pts=Nb_pts_radiation,formula=1)
+    rad_fact=RadiationFactory(method=rad_method,omega=omega,Nb_pts=Nb_pts_radiation,formula=formula)
 
     #print('step 3')
     trajectory=traj_fact.create_from_source(source=source)
@@ -610,6 +616,6 @@ def Exemple_list():
 if __name__ == "__main__" :
 
 
-    #Exemple_minimum()
+    Exemple_minimum()
     #Exemple_meshgrid()
-    Exemple_list()
+    #Exemple_list()

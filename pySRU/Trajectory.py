@@ -56,12 +56,15 @@ class Trajectory(object):
         self.a_y *= cst
         self.a_z *= cst
 
+    def average_vz(self):
+        Beta_et_calculated=np.sum(self.v_z) / len(self.v_z)
+        return Beta_et_calculated
 
     def difference_with(self, trajectory_test):
-        if any(np.abs(self.t - trajectory_test.t) > np.abs(self.t).max()*1e-6):
-            raise Exception("Problem : the two trajectory have not the same vector t ??")
-        else :
-            trajec_test=trajectory_test
+        #TODO remetre ?
+        #if any(np.abs(self.t - trajectory_test.t) > np.abs(self.t).max()*1e-6):
+        #    raise Exception("Problem : the two trajectory have not the same vector t ??")
+        trajec_test=trajectory_test
         error = np.zeros((10, self.nb_points()))
         error[0] = self.t.copy()
         error[1] = np.abs(self.x - trajec_test.x)
@@ -95,8 +98,9 @@ class Trajectory(object):
 
 
     def relativ_difference_with(self, trajectory_test):
-        if any((self.t - trajectory_test.t) > np.abs(self.t).max() * 1e-6):
-            raise Exception("Problem : the two trajectory have not the same vector t ??")
+        #TODO
+       # if any((self.t - trajectory_test.t) > np.abs(self.t).max() * 1e-6):
+        #    raise Exception("Problem : the two trajectory have not the same vector t ??")
         trajectory_diff = self.difference_with(trajectory_test)
         xm=np.abs(self.x).max()
         if xm != 0.0:

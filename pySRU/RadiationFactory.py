@@ -181,7 +181,7 @@ class RadiationFactory(object):
 
         for k in range(3):
             # E[k] = np.trapz(integrand[k], self.trajectory.t)
-            E[k] = integrate.simps(integrand[k], trajectory.t)
+            E[k] = np.trapz(integrand[k], trajectory.t)
         E *= self.omega * 1j
 
         Alpha3 = (np.exp(1j*self.omega*(trajectory.t[-1] - n_chap[2] * trajectory.z[-1]))-
@@ -276,10 +276,10 @@ class RadiationFactory(object):
     def energy_radiated_approx(self,trajectory,gamma, x, y,distance):
         N = trajectory.nb_points()
         n_chap = np.array([x - trajectory.x * codata.c, y - trajectory.y * codata.c, distance - trajectory.z * codata.c])
-        R = np.zeros(n_chap.shape[1])
-        for i in range(n_chap.shape[1]):
-            R[i] = np.linalg.norm(n_chap[:, i])
-            n_chap[:, i] /= R[i]
+        R = np.sqrt( n_chap[0]**2 + n_chap[1]**2 + n_chap[2]**2 )
+        n_chap[0,:] /= R
+        n_chap[1,:] /= R
+        n_chap[2,:] /= R
 
         E = np.zeros((3,), dtype=np.complex)
         integrand = np.zeros((3, N), dtype=np.complex)
@@ -305,10 +305,10 @@ class RadiationFactory(object):
     def energy_radiated_approx2(self, trajectory, gamma, x, y, distance):
         N = trajectory.nb_points()
         n_chap = np.array([x - trajectory.x * codata.c, y - trajectory.y * codata.c, distance - trajectory.z * codata.c])
-        R = np.zeros(n_chap.shape[1])
-        for i in range(n_chap.shape[1]):
-            R[i] = np.linalg.norm(n_chap[:, i])
-            n_chap[:, i] /= R[i]
+        R = np.sqrt( n_chap[0]**2 + n_chap[1]**2 + n_chap[2]**2 )
+        n_chap[0,:] /= R
+        n_chap[1,:] /= R
+        n_chap[2,:] /= R
 
         E = np.zeros((3,), dtype=np.complex)
         integrand = np.zeros((3, N), dtype=np.complex)
@@ -343,10 +343,10 @@ class RadiationFactory(object):
     def energy_radiated_near_field(self,gamma,trajectory, x, y,distance):
         N = trajectory.nb_points()
         n_chap = np.array([x - trajectory.x * codata.c, y - trajectory.y * codata.c, distance - trajectory.z * codata.c])
-        R = np.zeros(n_chap.shape[1])
-        for i in range(n_chap.shape[1]):
-            R[i] = np.linalg.norm(n_chap[:, i])
-            n_chap[:, i] /= R[i]
+        R = np.sqrt( n_chap[0]**2 + n_chap[1]**2 + n_chap[2]**2 )
+        n_chap[0,:] /= R
+        n_chap[1,:] /= R
+        n_chap[2,:] /= R
 
         E = np.zeros((3,), dtype=np.complex)
         integrand = np.zeros((3, N), dtype=np.complex)
@@ -378,10 +378,10 @@ class RadiationFactory(object):
         N = trajectory.nb_points()
         n_chap = np.array(
             [x - trajectory.x * codata.c, y - trajectory.y * codata.c, distance - trajectory.z * codata.c])
-        R = np.zeros(n_chap.shape[1])
-        for i in range(n_chap.shape[1]):
-            R[i] = np.linalg.norm(n_chap[:, i])
-            n_chap[:, i] /= R[i]
+        R = np.sqrt( n_chap[0]**2 + n_chap[1]**2 + n_chap[2]**2 )
+        n_chap[0,:] /= R
+        n_chap[1,:] /= R
+        n_chap[2,:] /= R
 
         E = np.zeros((3,), dtype=np.complex)
         integrand = np.zeros((3, N), dtype=np.complex)

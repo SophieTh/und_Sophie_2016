@@ -82,15 +82,15 @@ class SourceBendingMagnet(Source):
 
 
     def choose_distance_automatic(self, alpha):
-        return self.L*10**(alpha)
+        return self.magnetic_structure.L*10**(alpha)
 
 
     def choose_nb_pts_trajectory(self, alpha):
         return self.magnetic_structure.L*4.*10**(alpha)
 
 
-    def choose_initial_contidion(self):
-        Zo=-self.L*1.5
+    def choose_initial_contidion_automatic(self):
+        Zo=-self.magnetic_structure.L*1.5
         ic=np.array([0.0,0.0,self.electron_speed()*codata.c,0.0,0.0,Zo])
         return ic
 
@@ -98,7 +98,7 @@ class SourceBendingMagnet(Source):
         return self.critical_frequency()
 
 
-    def angle_deflection_max(self):
+    def choose_angle_deflection_max(self):
         theta=5.0/self.Lorentz_factor()
         return theta
 
@@ -115,8 +115,9 @@ class SourceBendingMagnet(Source):
 
 
     def construct_times_vector(self, initial_contition, Nb_pts):
+    #TODO a changer ne marche pas ???
         electron_speed=(self.electron_speed() * codata.c)
-        to = -self.L * 0.5 / electron_speed
+        to = -self.magnetic_structure.L * 0.5 / electron_speed
         t1 = to + self.arc_length() / electron_speed
         time_start=initial_contition[5]/ electron_speed
         if time_start <to :
@@ -128,6 +129,13 @@ class SourceBendingMagnet(Source):
             else :#TODO a tester
                 time=np.linspace(time_start,2.*time_start,Nb_pts)
         return time
+
+    def atol_for_ODE_method(self):
+        atol_vx= self.electron_speed()*codata.c*1e-11
+        atol_vz = self.electron_speed()*codata.c*1e-11
+        atol_x = self.radius_curvature()*1e-11
+        atol_z = self.radius_curvature()*1e-11
+        return np.array([atol_vx,1e-10,atol_vz,atol_x,1e-10,atol_z])
 
 
 # source parameter

@@ -33,6 +33,8 @@ def fct_ODE_magnetic_field(y, t, cst, Bx,By,Bz):
             y[1],
             y[2]]
 
+
+
 '''
 initial condition : [Vx,Vy,Vz,x,y,z]
 '''
@@ -176,7 +178,7 @@ class TrajectoryFactory(object):
         T=self.create_from_array(trajectory)
         return T
 
-    def trajectory_from_magnetic_field_method_ODE(self, source):
+    def trajectory_from_magnetic_field_method_ODE(self, source,t=None):
         gamma = source.Lorentz_factor()
 
         B=source.magnetic_field
@@ -191,13 +193,23 @@ class TrajectoryFactory(object):
         # 	[ Ax/c .....]
         # 	[ Ay/c .....]
         # 	[ Az/c .....]
-        trajectory = np.zeros((10,self.Nb_pts))
-        trajectory[0] = source.construct_times_vector(initial_contition=self.initial_condition,Nb_pts=self.Nb_pts)
+
+        if t is None :
+            time_calc = source.construct_times_vector(initial_contition=self.initial_condition,Nb_pts=self.Nb_pts)
+        else :
+            self.Nb_pts=len(t)
+            time_calc =t
+        trajectory = np.zeros((10, self.Nb_pts))
+        trajectory[0]=time_calc
 
         cst = -codata.e / (codata.m_e * gamma)
         initial_condition_for_ODE=self.initial_condition
+
+        #TODO rtol et a tol modifiable
+        #atol=np.array([1e-10,1e-10,1e-10,1e-10,1e-10,1e-10])
+        atol=source.atol_for_ODE_method()
         res = odeint(fct_ODE_magnetic_field,initial_condition_for_ODE, trajectory[0],
-                     args=(cst,B.Bx,B.By,B.Bz), full_output=True)
+                     args=(cst,B.Bx,B.By,B.Bz),rtol=1e-11,atol=atol,mxstep=5000,full_output=True)
         traj = res[0]
         info = res[1]
         # print("1 : nonstiff problems, Adams . 2: stiff problem, BDF")
@@ -215,14 +227,14 @@ class TrajectoryFactory(object):
         T.multiply_by((1.0/codata.c))
         return T
 
-    def create_from_source(self, source):
+    def create_from_source(self, source,t=None):
         if (self.method == TRAJECTORY_METHOD_INTEGRATION or self.method == TRAJECTORY_METHOD_ODE):
             if (self.initial_condition == None):
                 self.choise_initial_condition(source=source)
             if self.method == TRAJECTORY_METHOD_INTEGRATION:
                 trajectory = self.trajectory_from_magnetic_field_method_INT(source=source)
             else:  # method=TRAJECTORY_METHOD_ODE
-                trajectory = self.trajectory_from_magnetic_field_method_ODE(source=source)
+                trajectory = self.trajectory_from_magnetic_field_method_ODE(source=source,t=t)
         else:
             if source.magnet_type()==PLANE_UNDULATOR:
                 trajectory = self.analytical_trajectory_plane_undulator(undulator=source)
