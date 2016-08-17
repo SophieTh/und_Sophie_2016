@@ -21,11 +21,11 @@ class Radiation(object):
         from mpl_toolkits.mplot3d import Axes3D
 
         if self.distance == None:
-            zlabel = "Flux (phot/s/0.1%bw/A/mrad2)"
+            zlabel = "Flux (phot/s/0.1%bw/mrad2)"
             xlabel = 'X [rad]'
             ylabel = 'Y [rad]'
         else:
-            zlabel = "Flux (phot/s/0.1%bw/A/mm2)"
+            zlabel = "Flux (phot/s/0.1%bw/mm2)"
             xlabel = 'X [m]'
             ylabel = 'Y [m]'
 
@@ -63,8 +63,8 @@ class Radiation(object):
         diff.intensity *= 1./rad_max_ref
         return diff
 
-    def integration(self):
-        if (self.X == None or self.Y == None):
+    def integration(self,is_quadrant=0,use_flux_per_mrad2_or_mm2=1):
+        if (self.X is None or self.Y is None):
             raise Exception(" X and Y must be array for integration")
         if self.X.shape != self.Y.shape:
             raise Exception(" X and Y must have the same shape")
@@ -82,6 +82,15 @@ class Radiation(object):
                 for i in range(1, len(self.X)):
                     XY[i] = XY[i-1]+np.sqrt((self.X[i] - self.X[i-1]) * 2 + (self.Y[i] - self.Y[i-1]) ** 2)
                 res = np.trapz(self.intensity, XY)
+
+        # Note that the value of flux is in phot/s/0.1%bw/mrad2 (or .../mm2) and
+        # our grid is in rad (or m), therefore we must account for this:
+        if use_flux_per_mrad2_or_mm2:
+            res *= 1e6
+
+        # in case the calculation is for a quadrant, the integral is four times the calculated value
+        if is_quadrant:
+            res *= 4
         return res
 
 
@@ -137,24 +146,24 @@ class Radiation(object):
 
 
 #TODO possible que pour l'undulateur
-    def plot_wave(self, Nb_pts):
+    def plot_ring(self, Nb_pts):
         import matplotlib.pyplot as plt
         from mpl_toolkits.mplot3d import Axes3D
-        if self.X == None or self.Y == None:
+        if self.X is None or self.Y is None:
             raise Exception(" X and Y must be grid or a list for plotting")
         fig = plt.figure()
         ax = fig.gca(projection='3d')
         X = np.array([self.X[0]])
         Y = np.array([self.Y[0]])
         intensity = np.array([self.intensity[0]])
-        ax.plot(X, Y, intensity, '^', label='wave number 0')
-        wave_number = 1
-        while (wave_number * Nb_pts < len(self.X)):
-            X = self.X[(wave_number - 1) * Nb_pts + 1:wave_number * Nb_pts + 1]
-            Y = self.Y[(wave_number - 1) * Nb_pts + 1:wave_number * Nb_pts + 1]
-            intensity = self.intensity[(wave_number - 1) * Nb_pts + 1:wave_number * Nb_pts + 1]
-            ax.plot(X, Y, intensity, label='wave number %d' % wave_number)
-            wave_number += 1
+        ax.plot(X, Y, intensity, '^', label='ring number 0')
+        ring_number = 1
+        while (ring_number * Nb_pts < len(self.X)):
+            X = self.X[(ring_number - 1) * Nb_pts + 1:ring_number * Nb_pts + 1]
+            Y = self.Y[(ring_number - 1) * Nb_pts + 1:ring_number * Nb_pts + 1]
+            intensity = self.intensity[(ring_number - 1) * Nb_pts + 1:ring_number * Nb_pts + 1]
+            ax.plot(X, Y, intensity, label='ring number %d' % ring_number)
+            ring_number += 1
         ax.set_xlabel("X")
         ax.set_ylabel('Y')
         ax.set_zlabel("itensity")

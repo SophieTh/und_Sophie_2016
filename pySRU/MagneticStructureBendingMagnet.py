@@ -64,7 +64,7 @@ class MagneticStructureBendingMagnet(MagneticStructure):
 
 
     def print_parameters(self):
-        print("Bending Magnet :")
+        print(" Magnetic Structure (Bending Magnet):")
         print('    length : %.5f (m)'%self.L)
         print('    magnetic_field_strength : %.5f'%self.Bo)
 

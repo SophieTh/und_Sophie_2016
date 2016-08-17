@@ -28,7 +28,7 @@ class TrajectoryFactoryTest(unittest.TestCase):
         fact_test = TrajectoryFactory(Nb_pts=201,method=TRAJECTORY_METHOD_ODE)
         traj_test = fact_test.create_from_source(source=source)
 
-        self.assertFalse(fact_test.initial_condition==None)
+        self.assertFalse(fact_test.initial_condition is None)
 
         self.assertTrue(all(fact_test.initial_condition==source.choose_initial_contidion_automatic()))
         self.assertTrue(fact_test.method==TRAJECTORY_METHOD_ODE)

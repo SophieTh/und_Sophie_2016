@@ -27,7 +27,6 @@ class SourceUndulatorPlane(Source):
     def magnetic_field_strength(self):
         return self.magnetic_structure.magnetic_field_strength()
 
-
     ###############
     # choix automatic lors de la construction d'une simulation
     ################
@@ -47,8 +46,8 @@ class SourceUndulatorPlane(Source):
         ic=np.array([0.0,0.0,self.electron_speed()*codata.c,0.0,0.0,Zo])
         return ic
 
-    def choose_photon_frequency(self):
-        first_harm=self.harmonic_frequency(harmonic_number=1)
+    def choose_photon_frequency(self,harmonic_number=1):
+        first_harm=self.harmonic_frequency(harmonic_number=harmonic_number)
         return first_harm
 
     #se demander quel angles choisir automatiquement
@@ -94,15 +93,22 @@ class SourceUndulatorPlane(Source):
         gamma=self.Lorentz_factor()
         return self.magnetic_structure.K/gamma
 
-    def angle_deflection_central_cone(self):
-        # wave1=self.angle_wave_number(harmonic_number=1,wave_number=1)
-        # return wave1/4.
+    # def angle_deflection_central_cone(self):
+    #     # ring1=self.angle_ring_number(harmonic_number=1,ring_number=1)
+    #     # return ring1/4.
+    #     N=self.magnetic_structure.period_number()
+    #     gamma=self.Lorentz_factor()
+    #     return 1.5/(gamma*np.sqrt(N))
+
+    def angle_deflection_central_cone(self,harmonic_number=1):
+        # this is the angle of central cone sigma
         N=self.magnetic_structure.period_number()
         gamma=self.Lorentz_factor()
-        return 1.5/(gamma*np.sqrt(N))
+        return (1 / gamma) * np.sqrt( (1 + 0.5 * self.magnetic_structure.K**2) / N / harmonic_number)
 
-    def angle_wave_number(self,harmonic_number,wave_number):
-        racine=(wave_number/harmonic_number)*(1.+(self.magnetic_structure.K**2)/2.)
+
+    def angle_ring_number(self,harmonic_number,ring_number):
+        racine=(ring_number/harmonic_number)*(1.+(self.magnetic_structure.K**2)/2.)
         theta = np.sqrt(racine)/self.Lorentz_factor()
         return theta
 
@@ -142,15 +148,15 @@ class SourceUndulatorPlane(Source):
     #TODO TALMAN
 
     #TODO a changer , faire des exemples
-    def describe_wave(self,distance,harmonic_number,wave_number,t=None):
-        if wave_number==0 :
+    def describe_ring(self,distance,harmonic_number,ring_number,t=None):
+        if ring_number==0 :
             X=np.array([0.0])
             Y=X
         else :
-            if t==None :
+            if t is None :
                 t=np.linspace(0.0,0.5*np.pi,101)
             n=harmonic_number
-            theta=self.angle_wave_number(harmonic_number=n, wave_number=wave_number)
+            theta=self.angle_ring_number(harmonic_number=n, ring_number=ring_number)
             if distance==None :
                 R=theta
             else :
@@ -160,25 +166,39 @@ class SourceUndulatorPlane(Source):
         return X,Y
 
     # in photon /sec /1% /mrad*mrad
-    def theorical_flux_on_axis(self,n):
+    def theoretical_flux_on_axis(self,n):
         if n%2==1 :
+            # see X-ray data booklet pag 2.7
             cst=1.744e14*((self.period_number()*self.Electron_energy())**2)*self.I_current()
             result=cst*self.Fn(n)
         else :
             result=0.0
         return  result
 
-    def theorical_flux_integrated_central_cone(self,n):
+    def theoretical_flux_on_axis_omega_scan(self,n,omega_array):
+        if isinstance(n,(int,float)):
+            n = [n]
+
+        result = np.zeros_like(omega_array)
+        for i in range(len(n)):
+            cte = self.theoretical_flux_on_axis(n[i])
+            arg = np.pi * self.period_number() * (omega_array / self.harmonic_frequency(1) - n[i])
+            sinc = np.sin(arg) / arg
+            result += cte*sinc**2
+        return  result
+
+    def theoretical_flux_integrated_central_cone(self,n):
+        # see X-ray data booklet pag 2.8
         N=self.magnetic_structure.period_number()
         I=self.I_current()
-        res=1.431e12*N*I*self.Qn(n)
+        res=1.431e14*N*I*self.Qn(n)
         return res
 
 
 
 
 
-def Exemple1_undulator(undulator):
+def Example1_undulator(undulator):
 
     undulator.print_parameters()
 
@@ -187,7 +207,7 @@ def Exemple1_undulator(undulator):
     print(" first harmonic frequency (Hz)")
     print(undulator.harmonic_frequency(1))
     print(" angle (rad) of the first ring for the first harmonic ")
-    print(undulator.angle_wave_number(1,1))
+    print(undulator.angle_ring_number(1,1))
 
     print(' magnetic field intensity (T)')
     print(undulator.magnetic_field_strength())
@@ -210,4 +230,4 @@ if __name__ == "__main__" :
     undulator_test = MagneticStructureUndulatorPlane( K=1.87, period_length=0.035, length=0.035 * 14)
     source=SourceUndulatorPlane(electron_beam = electron_beam_test, undulator=undulator_test)
 
-    Exemple1_undulator(source)
+    Example1_undulator(source)

@@ -88,7 +88,7 @@ class Source(object):
 
     def print_parameters(self) :
         self.electron_beam.print_parameters()
-
+        self.magnetic_structure.print_parameters()
 
     # theory
     @abstractmethod

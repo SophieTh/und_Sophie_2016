@@ -33,7 +33,7 @@ class TrajectoryFactory(object):
         self.initial_condition=initial_condition
 
     def copy(self):
-        if self.initial_condition==None :
+        if self.initial_condition is None :
             cond=None
         else :
             cond= self.initial_condition.copy()
@@ -138,7 +138,7 @@ class TrajectoryFactory(object):
 
     def create_from_source(self, source):
         if (self.method == TRAJECTORY_METHOD_ODE):
-            if (self.initial_condition == None):
+            if (self.initial_condition is None):
                 self.choise_initial_condition(source=source)
             trajectory = self.trajectory_from_magnetic_field_method_ODE(source=source)
         else:

@@ -72,6 +72,11 @@ class RadiationFactory(object):
 
 
         c6 = codata.e * source.I_current() * 1e-9 / (8.0 * np.pi ** 2 * codata.epsilon_0 * codata.c * codata.h)
+
+        # to guarantee the flux in phot/mm2 reduces with 1/r2
+        if distance != None:
+            c6 /= distance**2
+
         if X_array.size != Y_array.size:
             raise Exception("X and Y dimensions must be equal.")
 
@@ -220,9 +225,9 @@ class RadiationFactory(object):
 
     def print_parameters(self):
         print('Radiation ')
-        print('    method : %s' %self.get_method())
-        print('    number of point in each direction : %d' %self.Nb_pts)
-        print('    energy of the emission  (eV): %f' %self.energy_eV())
+        print('    method: %s' %self.get_method())
+        print('    number of points in each direction  %d' %self.Nb_pts)
+        print('    energy of the emission: %f eV, omega: %f Hz' %(self.energy_eV(),self.omega))
 
 
 def Exemple_FARFIELD():
