@@ -1,7 +1,7 @@
 from setuptools import setup
 
 setup(name='pySRU',
-      version='0.5',
+      version='0.5.2',
       description='Python synchrotron undulator calcution',
       author='Sophie Thery',
       author_email='sophie.thery@esrf.fr',
