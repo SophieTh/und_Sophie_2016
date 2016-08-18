@@ -6,7 +6,7 @@ WARNING: PROJECT UNDER DEVELOPMENT!!
 
 Synchrotron Radiation Undulator emission in python
 
-Main development website: https://github.com/vasole/fisx
+Main development website: https://github.com/SophieTh/und_Sophie_2016
 
 A toolbox to calculate the emission of radiation by undulators in storage rings. 
 
@@ -44,36 +44,37 @@ This piece of Python code shows how the library can be used via its python bindi
 
 .. code-block:: python
 
-    from  pySRU.ElectronBeam import ElectronBeam
-
+    from pySRU.ElectronBeam import ElectronBeam
+    from pySRU.MagneticStructureUndulatorPlane import MagneticStructureUndulatorPlane as Undulator
+    from pySRU.Simulation import create_simulation
+    from pySRU.TrajectoryFactory import TRAJECTORY_METHOD_ANALYTIC,TRAJECTORY_METHOD_ODE
+    from pySRU.RadiationFactory import RADIATION_METHOD_NEAR_FIELD, RADIATION_METHOD_APPROX_FARFIELD
+    
     print("======================================================================")
     print("======      Undulator from X-ray data booklet                  =======")
     print("====== fig 2.5 in  http://xdb.lbl.gov/Section2/Sec_2-1.html    =======")
     print("======================================================================")
-
+    
     # note that the flux in the reference fig 2.6 is a factor 10 smaller than the calculated here.
     # This factor comes from the units:
     #     here: phot / s  / A / 0.1%bw / (mrad)^2
     #     ref : phot / s  / A /   1%bw / (0.1 mrad)^2
-
+    
     undulator_test = Undulator(K=1.87, period_length=0.035, length=0.035 * 14)
     electron_beam_test = ElectronBeam(Electron_energy=1.3, I_current=1.0)
-
+    
     simulation_test = create_simulation(magnetic_structure=undulator_test,electron_beam=electron_beam_test,
                         magnetic_field=None, photon_energy=None,
                         traj_method=TRAJECTORY_METHOD_ANALYTIC,Nb_pts_trajectory=None,
                         rad_method=RADIATION_METHOD_APPROX_FARFIELD, Nb_pts_radiation=101,
                         initial_condition=None, distance=None,XY_are_list=False,X=None,Y=None)
-
-
+    
+    
     simulation_test.print_parameters()
-
+    
     simulation_test.trajectory.plot_3D(title="Electron Trajectory")
-
+    
     simulation_test.radiation.plot(title="Flux in far field vs angle")
+    
 
-    #  second calculation, change distance and also change the grid to accept the central cone
-    simulation_test.change_distance(D=100)
-    simulation_test.calculate_on_central_cone()
-
-    simulation_test.radiation.plot(title="New distance: %3.1f m"%simulation_test.radiation.distance)
+.. image:: https://github.com/SophieTh/und_Sophie_2016/data/radiation_xraybooklet.jpeg
