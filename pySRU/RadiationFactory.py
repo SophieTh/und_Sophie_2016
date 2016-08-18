@@ -54,7 +54,7 @@ class RadiationFactory(object):
                 # Nb_pts=len(X)
 
         if not XY_are_list :
-            X, Y = np.meshgrid(X, Y)
+            X, Y = np.meshgrid(X, Y)#TODO check x,y
 
         intensity = self.calculate_radiation_intensity(trajectory=trajectory, source=source,
                                                        distance=distance, X_array=X, Y_array=Y)
