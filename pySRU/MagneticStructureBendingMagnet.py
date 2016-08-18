@@ -25,6 +25,7 @@ class MagneticStructureBendingMagnet(MagneticStructure):
             Bo = 0.0
         return Bo
 
+
     def fct_magnetic_field2(self, z, y, x, harmonic_number, coordonnee='y'):
         Zo = self.length * 0.5
         if coordonnee == 'y':
@@ -63,6 +64,7 @@ class MagneticStructureBendingMagnet(MagneticStructure):
         return dB
 
 
+
     def print_parameters(self):
         print("Bending Magnet :")
         print('    length : %.5f (m)' % self.length)
@@ -71,5 +73,11 @@ class MagneticStructureBendingMagnet(MagneticStructure):
 
 if __name__ == "__main__" :
 
-    pass
+    BM = MagneticStructureBendingMagnet(Bo=0.85,L=1e-3*20.0)
+
+    print('bending magnet test :')
+    BM.print_parameters()
+    B = BM.create_magnetic_field()
+    Z=np.linspace(-BM.L/2.0,BM.L/2.0,10000)
+    B.plot_z(Z=Z,Y=0.0,X=0.0)
 

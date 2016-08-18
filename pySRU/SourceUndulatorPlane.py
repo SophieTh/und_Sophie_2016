@@ -3,7 +3,7 @@ import scipy.constants as codata
 from scipy.special import jn,yn,jv,yv
 from pySRU.MagneticField import MagneticField
 from pySRU.ElectronBeam import ElectronBeam
-from pySRU.MagneticStructureUndulatorPlane import MagneticStructureUndulatorPlane as Undulator
+from pySRU.MagneticStructureUndulatorPlane import MagneticStructureUndulatorPlane
 from pySRU.Source import Source,PLANE_UNDULATOR,BENDING_MAGNET
 
 
@@ -62,8 +62,7 @@ class SourceUndulatorPlane(Source):
     ##################
 
     def average_z_speed_in_undulator(self):
-        Beta_et = 1.0 - (1.0 / (2.0 * self.Lorentz_factor() ** 2)) * (
-            1.0 + (self.magnetic_structure.K ** 2) / 2.0)
+        Beta_et = 1.0 -( 1.+(self.magnetic_structure.K ** 2) / 2.0) / (2.0 * self.Lorentz_factor() ** 2)
         return Beta_et
 
     def analytical_times_vector(self, Nb_pts):
@@ -106,7 +105,7 @@ class SourceUndulatorPlane(Source):
         # return wave1/4.
         N=self.magnetic_structure.period_number()
         gamma=self.Lorentz_factor()
-        return 1./(gamma*np.sqrt(N))
+        return 1.5/(gamma*np.sqrt(N))
 
     def angle_wave_number(self,harmonic_number,wave_number):
         racine=(wave_number/harmonic_number)*(1.+(self.magnetic_structure.K**2)/2.)
@@ -126,11 +125,21 @@ class SourceUndulatorPlane(Source):
     ##############
 
     def Fn(self,n):
-        K=self.magnetic_structure.K
-        cst1=((n*K)/(1.+(K**2)/2.))**2
-        cst2 = (n * K**2) / (4. + (2.*K ** 2))
-        Fn=cst1*(jn(0.5*(n-1),cst2)-jn(0.5*(n+1),cst2))**2
+        if n%2==1 :
+            K=self.magnetic_structure.K
+            cst1=((n*K)/(1.+(K**2)/2.))**2
+            cst2 = (n * K**2) / (4. + (2.*K ** 2))
+            Fn=cst1*(jn(0.5*(n-1),cst2)-jn(0.5*(n+1),cst2))**2
+        else :
+            Fn=0.0
         return Fn
+
+    def Qn(self,n):
+        if n==0 :
+            raise Exception(' the harmonic number can not be 0')
+        K=self.magnetic_structure.K
+        res=(1.+0.5*K**2)*self.Fn(n)/n
+        return res
 
     #electron energy en Gev
     def critical_frequency(self,electron_energy):
@@ -165,6 +174,13 @@ class SourceUndulatorPlane(Source):
             result=0.0
         return  result
 
+    def theorical_flux_integrated_central_cone(self,n):
+        N=self.magnetic_structure.period_number()
+        I=self.I_current()
+        res=1.431e12*N*I*self.Qn(n)
+        return res
+
+
 
 
 
@@ -172,11 +188,11 @@ def Exemple1_undulator(undulator):
 
     undulator.print_parameters()
 
-    print( " speed average in Z direction (m/s)/c")
+    print( " velocity average in Z direction (c units)")
     print(undulator.average_z_speed_in_undulator())
-    print(" first frequency")
+    print(" first harmonic frequency (Hz)")
     print(undulator.harmonic_frequency(1))
-    print(" angle of the first wave for the first number (radian) ")
+    print(" angle (rad) of the first ring for the first harmonic ")
     print(undulator.angle_wave_number(1,1))
 
     print(' magnetic field intensity (T)')
@@ -189,7 +205,7 @@ def Exemple1_undulator(undulator):
     B = np.array([Bx, By, Bz])
     print(B)
 
-    print('Theorical flux on axis')
+    print('On axis peak intensity Fn(K)')
     print(undulator.Fn(1))
 
 
@@ -197,7 +213,7 @@ def Exemple1_undulator(undulator):
 
 if __name__ == "__main__" :
     electron_beam_test = ElectronBeam(Electron_energy=1.3, I_current=1.0)
-    undulator_test=Undulator( K=1.87, period_length=0.035, length=0.035 * 14)
-    source=SourceUndulatorPlane(electron_beam=electron_beam_test, undulator=undulator_test)
+    undulator_test = MagneticStructureUndulatorPlane( K=1.87, period_length=0.035, length=0.035 * 14)
+    source=SourceUndulatorPlane(electron_beam = electron_beam_test, undulator=undulator_test)
 
     Exemple1_undulator(source)

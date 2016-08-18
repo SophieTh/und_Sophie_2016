@@ -7,27 +7,22 @@ from pySRU.ElectricalField import ElectricalField
 
 
 
-RADIATION_METHOD_AUTOMATIC=0
-RADIATION_METHOD_NEAR_FIELD=1
-RADIATION_METHOD_FARFIELD=2
-RADIATION_METHOD_APPROX=3
-RADIATION_METHOD_APPROX_FARFIELD=4
+
+RADIATION_METHOD_NEAR_FIELD=0
+RADIATION_METHOD_APPROX=1
+RADIATION_METHOD_APPROX_FARFIELD=2
 eV_to_J=1.602176487e-19
 
 class RadiationFactory(object):
-    def __init__(self,method,omega,Nb_pts,formula=None):
+    def __init__(self,method,omega,Nb_pts=101):
         self.omega=omega
-        if formula==None :
-            formula =1
-        self.formula=formula
         self.method=method
-        if Nb_pts==None :
-            Nb_pts=101
+        #TODO useful ?
         self.Nb_pts=Nb_pts
 
 
     def copy(self):
-        return RadiationFactory( method=self.method,omega=self.omega,formula=self.formula,Nb_pts=self.Nb_pts)
+        return RadiationFactory( method=self.method,omega=self.omega,Nb_pts=self.Nb_pts)
 
     def energy_eV(self):
         return self.omega*codata.hbar/eV_to_J
@@ -37,21 +32,22 @@ class RadiationFactory(object):
         if X == None or Y == None:
             print('calculate X and Y array')
             if distance == None:
-                if self.method == RADIATION_METHOD_APPROX_FARFIELD :
-                    xy_max = np.tan(1. / source.Lorentz_factor())
-                else:
-                    distance = source.choose_distance_automatic(2)
-                    xy_max = np.tan(1. / source.Lorentz_factor()) * distance
-            else:
-                xy_max = np.tan(1. / source.Lorentz_factor()) * distance
+                if self.method==RADIATION_METHOD_APPROX_FARFIELD :
+                    xy_max = np.tan(1./ source.Lorentz_factor())
+                else :
+                    distance=source.choose_distance_automatic(2)
+                    xy_max = np.tan(1. / source.Lorentz_factor())*distance
+            else :
+                xy_max = np.tan(1. / source.Lorentz_factor())*distance
             X = np.linspace(0.0, xy_max, self.Nb_pts)
             Y = np.linspace(0.0, xy_max, self.Nb_pts)
-        else:
+        else :
             if type(X) != np.ndarray:
                 X = np.linspace(0.0, X, self.Nb_pts)
             if type(Y) != np.ndarray:
                 Y = np.linspace(0.0, Y, self.Nb_pts)
-                # Nb_pts=len(X)
+            #Nb_pts=len(X)
+
 
         if not XY_are_list :
             X, Y = np.meshgrid(X, Y)#TODO check x,y
@@ -81,35 +77,18 @@ class RadiationFactory(object):
 
         gamma = source.Lorentz_factor()
 
-        if self.method == RADIATION_METHOD_APPROX_FARFIELD:
-            if self.formula ==1 :
-                #print('APPROX AND FARFIELD OK')
-               calculation_function = self.energy_radiated_approximation_and_farfield
-            else :
-               calculation_function = self.energy_radiated_approximation_and_farfield2
+        if self.method == RADIATION_METHOD_NEAR_FIELD:
+            calculation_function = self.energy_radiated_near_field
+        elif self.method == RADIATION_METHOD_APPROX:
+            calculation_function = self.energy_radiated_approx
         else:
-            if self.method == RADIATION_METHOD_FARFIELD:
-                if self.formula == 1:
-                   calculation_function = self.energy_radiated_farfield
-                else:
-                   calculation_function = self.energy_radiated_farfield2
-            else:
-                if self.method == RADIATION_METHOD_APPROX:
-                    if self.formula == 1:
-                       calculation_function = self.energy_radiated_approx
-                    else:
-                       calculation_function = self.energy_radiated_approx2
-                else : # Nearfield
-                    if self.formula == 1:
-                        calculation_function = self.energy_radiated_near_field
-                    else:
-                        calculation_function = self.energy_radiated_near_field2
+            calculation_function = self.energy_radiated_approximation_and_farfield
+        res = res.reshape(shape1)
 
         # TODO: Possible missing imaginary phase in constant?
         for i in range(len(X)):
             res[i, :] = calculation_function(trajectory=trajectory, distance=distance,
                                              gamma=gamma, x=X[i], y=Y[i])
-
 
         res *= c6**0.5
         res = res.reshape((shape1[0], shape1[1], 3))
@@ -124,6 +103,7 @@ class RadiationFactory(object):
         return electrical_field.intensity()
 
     def energy_radiated_approximation_and_farfield(self,trajectory, gamma, x, y, distance):
+
         # N = trajectory.shape[1]
         N = trajectory.nb_points()
         if distance == None:
@@ -142,6 +122,7 @@ class RadiationFactory(object):
         Alpha2 = np.exp(
             0. + 1j * self.omega * (trajectory.t - n_chap[0] * trajectory.x
                                         - n_chap[1] * trajectory.y - n_chap[2] * trajectory.z))
+
         Alpha1 = (1.0 / (1.0 - n_chap[0] * trajectory.v_x
                              - n_chap[1] * trajectory.v_y - n_chap[2] * trajectory.v_z)) ** 2
 
@@ -361,7 +342,7 @@ class RadiationFactory(object):
         Alpha2 = np.exp( 0. + 1j * self.omega * (trajectory.t + R / codata.c))
 
         Alpha1 = (1.0 / (1.0 - n_chap[0] * trajectory.v_x
-                         -n_chap[1] * trajectory.v_y- n_chap[2] * trajectory.v_z)) ** 2
+                         - n_chap[1] * trajectory.v_y - n_chap[2] * trajectory.v_z)) ** 2
         Alpha3 = codata.c / (gamma ** 2 * R)
         integrand[0] += ((A1 * (n_chap[0] - trajectory.v_x) - A2 * trajectory.a_x)
                          + Alpha3 * (n_chap[0] - trajectory.v_x)
@@ -377,6 +358,7 @@ class RadiationFactory(object):
             E[k] = np.trapz(integrand[k], trajectory.t)
         return E
 
+
     def energy_radiated_near_field2(self, trajectory, gamma, x, y, distance):
         # N = trajectory.shape[1]
         N = trajectory.nb_points()
@@ -390,50 +372,14 @@ class RadiationFactory(object):
         E = np.zeros((3,), dtype=np.complex)
         integrand = np.zeros((3, N), dtype=np.complex)
 
-        A1 = (n_chap[1] * trajectory.v_z - n_chap[2] * trajectory.v_y)
-        A2 = (-n_chap[0] * trajectory.v_z + n_chap[2] * trajectory.v_x)
-        A3 = (n_chap[0] * trajectory.v_y - n_chap[1] * trajectory.v_x)
-        Alpha1 = np.exp(
-            0. + 1j * self.omega * (trajectory.t - n_chap[0] * trajectory.x
-                                    - n_chap[1] * trajectory.y - n_chap[2] * trajectory.z))
-        Alpha2 = codata.c / (gamma ** 2 * R)
-        integrand[0] += ((n_chap[1] * A3 - n_chap[2] * A2) * self.omega * 1j
-                         + Alpha2 * (n_chap[0] - trajectory.v_x)
-                         ) * Alpha1
-        integrand[1] += ((-n_chap[0] * A3 + n_chap[2] * A1) * self.omega * 1j
-                         + Alpha2 * (n_chap[1] - trajectory.v_y)
-                         ) * Alpha1
-        integrand[2] += ((n_chap[0] * A2 - n_chap[1] * A1) * self.omega * 1j
-                         + Alpha2 * (n_chap[2] - trajectory.v_z)
-                         ) * Alpha1
-        for k in range(3):
-            # E[k] = np.trapz(integrand[k], self.trajectory.t)
-            E[k] = integrate.simps(integrand[k], trajectory.t)
 
-        terme_bord = np.full((3), 0. + 1j * 0., dtype=np.complex)
-        unit_z = np.array([0.0, 0.0, 1.0])
-        terme_bord += ((n_chap[2][-1] * n_chap[:, -1] - unit_z) *
-                       np.exp(1j * self.omega * (trajectory.t[-1] - n_chap[2][-1] * trajectory.z[-1])) / (
-                           1.0 - n_chap[2][-1] * trajectory.v_z[-1]
-                       ))
-        terme_bord -= ((n_chap[2][0] * n_chap[:, 0] - unit_z) *
-                       np.exp(1j * self.omega * (trajectory.t[-1] - n_chap[2][0] * trajectory.z[0])) / (
-                           1.0 - n_chap[2][0] * trajectory.v_z[0]
-                       ))
-        terme_bord *= trajectory.v_z[0]
-        E += terme_bord
 
         return E
+
 
     def get_method(self):
         if self.method == RADIATION_METHOD_NEAR_FIELD:
             method = 'Near field calculation'
-
-        elif self.method == RADIATION_METHOD_APPROX:
-            method = ' Near field and approximate calculation '
-
-        elif self.method == RADIATION_METHOD_FARFIELD:
-            method = ' Far field calculation '
 
         elif self.method == RADIATION_METHOD_APPROX_FARFIELD:
             method = '  Far field and approximation calculation '
@@ -453,14 +399,22 @@ def Exemple_FARFIELD():
     from ElectronBeam import ElectronBeam
     from SourceUndulatorPlane import SourceUndulatorPlane
 
+    from TrajectoryFactory import TrajectoryFactory,TRAJECTORY_METHOD_ODE,TRAJECTORY_METHOD_ANALYTIC
+
+
     undulator_test = Undulator(K=1.87, period_length=0.035, length=0.035 * 14)
     electron_beam_test = ElectronBeam(Electron_energy=1.3, I_current=1.0)
     magnetic_field_test = undulator_test.create_magnetic_field()
+
+
+    magnetic_field_test.plot_z(0,0,np.linspace(-0.035 * (14+8) / 2,0.035 * (14+8) / 2,500))
+
+
     source_test = SourceUndulatorPlane(undulator=undulator_test,
                          electron_beam=electron_beam_test,
                          magnetic_field=magnetic_field_test)
 
-    traj = TrajectoryFactory(Nb_pts=2000, method=TRAJECTORY_METHOD_ANALYTIC).create_from_source(source_test)
+    traj = TrajectoryFactory(Nb_pts=2000, method=TRAJECTORY_METHOD_ODE).create_from_source(source_test)
 
     Rad = RadiationFactory(omega=source_test.harmonic_frequency(1), method=RADIATION_METHOD_APPROX_FARFIELD, Nb_pts=101
                             ).create_for_one_relativistic_electron(trajectory=traj, source=source_test)
@@ -481,13 +435,14 @@ def Exemple_FARFIELD():
     print(Rad.max())
 
     print('plot')
-    Rad.plot()
+    Rad.plot(title="FAR FIELD")
 
 
 def Exemple_NEARFIELD():
     from MagneticStructureUndulatorPlane import MagneticStructureUndulatorPlane as Undulator
     from ElectronBeam import ElectronBeam
     from SourceUndulatorPlane import SourceUndulatorPlane
+
 
     undulator_test = Undulator(K=1.87, period_length=0.035, length=0.035 * 14)
     electron_beam_test = ElectronBeam(Electron_energy=1.3, I_current=1.0)
@@ -499,7 +454,44 @@ def Exemple_NEARFIELD():
     traj = TrajectoryFactory(Nb_pts=2000, method=TRAJECTORY_METHOD_ODE).create_from_source(source_test)
 
     Rad = RadiationFactory(omega=source_test.harmonic_frequency(1), method=RADIATION_METHOD_NEAR_FIELD, Nb_pts=101
-                           ).create_for_one_relativistic_electron(trajectory=traj, source=source_test)
+                           ).create_for_one_relativistic_electron(trajectory=traj, source=source_test,distance=100)
+
+    print('Screen distance :')
+    print(Rad.distance)
+
+    print("screen shape ")
+    print(Rad.intensity.shape)
+
+    print('X max :')
+    print(Rad.X.max())
+
+    print('Y max :')
+    print(Rad.Y.max())
+
+    print('intensity max ()')
+    print(Rad.max())
+
+    print('plot')
+    Rad.plot()
+
+def Exemple_APPROX():
+    from MagneticStructureUndulatorPlane import MagneticStructureUndulatorPlane as Undulator
+    from ElectronBeam import ElectronBeam
+    from SourceUndulatorPlane import SourceUndulatorPlane
+
+
+    undulator_test = Undulator(K=1.87, period_length=0.035, length=0.035 * 14)
+    electron_beam_test = ElectronBeam(Electron_energy=1.3, I_current=1.0)
+    magnetic_field_test = undulator_test.create_magnetic_field()
+    source_test = SourceUndulatorPlane(undulator=undulator_test,
+                         electron_beam=electron_beam_test,
+                         magnetic_field=magnetic_field_test)
+
+    traj = TrajectoryFactory(Nb_pts=2000, method=TRAJECTORY_METHOD_ODE).create_from_source(source_test)
+
+    Rad = RadiationFactory(omega=source_test.harmonic_frequency(1), method=RADIATION_METHOD_APPROX, Nb_pts=101
+                           ).create_for_one_relativistic_electron(trajectory=traj, source=source_test,distance=100)
+
 
     print('Screen distance :')
     print(Rad.distance)
@@ -521,6 +513,7 @@ def Exemple_NEARFIELD():
 
 if __name__ == "__main__" :
     pass
-    Exemple_FARFIELD()
+    #Exemple_FARFIELD()
+    #Exemple_APPROX()
     #Exemple_NEARFIELD()
 

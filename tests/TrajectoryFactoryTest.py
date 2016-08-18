@@ -4,8 +4,7 @@ import scipy.constants as codata
 from pySRU.MagneticStructureUndulatorPlane import MagneticStructureUndulatorPlane as Undulator
 from pySRU.SourceUndulatorPlane import SourceUndulatorPlane
 from pySRU.ElectronBeam import ElectronBeam
-from pySRU.TrajectoryFactory import TrajectoryFactory,TRAJECTORY_METHOD_ANALYTIC,TRAJECTORY_METHOD_INTEGRATION,\
-                                                        TRAJECTORY_METHOD_ODE
+from pySRU.TrajectoryFactory import TrajectoryFactory,TRAJECTORY_METHOD_ANALYTIC,   TRAJECTORY_METHOD_ODE
 
 class TrajectoryFactoryTest(unittest.TestCase):
 
@@ -26,13 +25,13 @@ class TrajectoryFactoryTest(unittest.TestCase):
         beam=ElectronBeam(Electron_energy=E, I_current=I)
         source=SourceUndulatorPlane(undulator=undulator, electron_beam=beam)
 
-        fact_test = TrajectoryFactory(Nb_pts=201,method=TRAJECTORY_METHOD_INTEGRATION)
+        fact_test = TrajectoryFactory(Nb_pts=201,method=TRAJECTORY_METHOD_ODE)
         traj_test = fact_test.create_from_source(source=source)
 
         self.assertFalse(fact_test.initial_condition==None)
 
         self.assertTrue(all(fact_test.initial_condition==source.choose_initial_contidion_automatic()))
-        self.assertTrue(fact_test.method==TRAJECTORY_METHOD_INTEGRATION)
+        self.assertTrue(fact_test.method==TRAJECTORY_METHOD_ODE)
 
         scalar_product=traj_test.v_x*traj_test.a_x + traj_test.a_z*traj_test.v_z
 

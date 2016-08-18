@@ -5,10 +5,8 @@ import scipy.constants as codata
 from pySRU.MagneticStructureUndulatorPlane import MagneticStructureUndulatorPlane as Undulator
 from pySRU.ElectronBeam import ElectronBeam
 from pySRU.Source import Source
-from pySRU.TrajectoryFactory import TrajectoryFactory,TRAJECTORY_METHOD_ANALYTIC,TRAJECTORY_METHOD_INTEGRATION,\
-                                                        TRAJECTORY_METHOD_ODE
-from pySRU.RadiationFactory import RadiationFactory , RADIATION_METHOD_APPROX_FARFIELD,RADIATION_METHOD_NEAR_FIELD ,\
-                                RADIATION_METHOD_FARFIELD
+from pySRU.TrajectoryFactory import TrajectoryFactory,TRAJECTORY_METHOD_ANALYTIC,    TRAJECTORY_METHOD_ODE
+from pySRU.RadiationFactory import RadiationFactory , RADIATION_METHOD_APPROX_FARFIELD,RADIATION_METHOD_NEAR_FIELD
 from pySRU.Simulation import Simulation,create_simulation
 
 class UndulatorSimulationTest(unittest.TestCase):
@@ -21,7 +19,8 @@ class UndulatorSimulationTest(unittest.TestCase):
         ESRF18 = Undulator(K=1.68, period_length=0.018, length=2.0)
 
         sim_test = create_simulation(magnetic_structure=undulator_test,electron_beam=electron_beam_test,
-                                     traj_method=TRAJECTORY_METHOD_ANALYTIC)
+                                     traj_method=TRAJECTORY_METHOD_ANALYTIC,rad_method=RADIATION_METHOD_NEAR_FIELD)
+        self.assertFalse(sim_test.radiation.distance == None)
         source_test=sim_test.source
 
         self.assertFalse(all(sim_test.trajectory_fact.initial_condition==
@@ -30,14 +29,14 @@ class UndulatorSimulationTest(unittest.TestCase):
         rad_max = sim_test.radiation.max()
 
         # test change
-        sim_test.change_radiation_method(RADIATION_METHOD_FARFIELD)
-        self.assertEqual(sim_test.radiation_fact.method, RADIATION_METHOD_FARFIELD)
+        sim_test.change_radiation_method(RADIATION_METHOD_APPROX_FARFIELD)
+        self.assertEqual(sim_test.radiation_fact.method, RADIATION_METHOD_APPROX_FARFIELD)
         self.assertFalse(ref.radiation_fact.method==sim_test.radiation_fact.method)
         self.assertFalse(np.all(ref.radiation.intensity == sim_test.radiation.intensity))
         self.assertAlmostEqual(ref.radiation.intensity[0][0]/rad_max, sim_test.radiation.intensity[0][0]/rad_max, 3)
 
-        sim_test.change_trajectory_method(TRAJECTORY_METHOD_INTEGRATION)
-        self.assertEqual(sim_test.trajectory_fact.method, TRAJECTORY_METHOD_INTEGRATION)
+        sim_test.change_trajectory_method(TRAJECTORY_METHOD_ODE)
+        self.assertEqual(sim_test.trajectory_fact.method, TRAJECTORY_METHOD_ODE)
         self.assertFalse(ref.trajectory_fact.method==sim_test.trajectory_fact.method)
         time_diff=np.abs(ref.trajectory.t - sim_test.trajectory.t)
         self.assertTrue(np.all(time_diff<=1e-19))
@@ -71,42 +70,11 @@ class UndulatorSimulationTest(unittest.TestCase):
         self.assertFalse(ref.radiation_fact.omega == sim_test.radiation_fact.omega)
 
 
-        nb_pts=np.arange(500,2001,500,dtype='int')
-        err=sim_test.error_radiation_method_nb_pts_traj(RADIATION_METHOD_APPROX_FARFIELD,nb_pts=nb_pts)
-        self.assertLessEqual((err.max() / rad_max), 1e-2, 1)
+        # nb_pts=np.arange(500,2001,500,dtype='int')
+        # err=sim_test.error_radiation_method_nb_pts_traj(RADIATION_METHOD_APPROX_FARFIELD,nb_pts=nb_pts)
+        # self.assertLessEqual((err.max() / rad_max), 1e-2, 1)
+        #
+        # distance=np.arange(20,101,20,dtype='int')
+        # err = sim_test.error_radiation_method_distance(RADIATION_METHOD_APPROX_FARFIELD, D=distance)
+        # self.assertLessEqual(err.max()/rad_max, 1e-2, 1)
 
-        distance=np.arange(20,101,20,dtype='int')
-        err = sim_test.error_radiation_method_distance(RADIATION_METHOD_APPROX_FARFIELD, D=distance)
-        self.assertLessEqual(err.max()/rad_max, 1e-2, 1)
-
-
-    #TODO
-
-
-    # def test_error_ODE_analitic(self):
-    #     und_test = Undulator(K=1.87, E=1.3e9, lambda_u=0.035, L=0.035 * 12, I=1.0)
-    #     traj_test = TrajectoryFactory(Nb_pts=1000, method=TRAJECTORY_METHOD_ANALYTIC)
-    #     rad_test = RadiationFactory(method=RADIATION_METHOD_APPROX_FARFIELD, omega=und_test.omega1(), Nb_pts=101)
-    #     distance = 100
-    #     Xmax = distance * 1e-3
-    #     Ymax = distance * 1e-3
-    #
-    #     sim_test = create_simulation(parameter=und_test, trajectory_fact=traj_test, radiation_fact=rad_test,
-    #                                  distance=distance, X_max=Xmax, Y_max=Ymax)
-    #
-    #     sim_test.change_trajectory_method(TRAJECTORY_METHOD_ANALYTIC)
-    #     self.assertTrue(all(sim_test.trajectory_fact.initial_condition==
-    #                      np.array([sim_test.trajectory.v_x[0],sim_test.trajectory.v_y[0],sim_test.trajectory.v_z[0],
-    #                                sim_test.trajectory.x[0],sim_test.trajectory.y[0],sim_test.trajectory.z[0]])*codata.c))
-    #     traj_ref = sim_test.trajectory.copy()
-    #     rad_m=sim_test.radiation.max()
-    #     nb_pts = np.arange(500, 2001, 500, dtype='int')
-    #     rad_er,traj_er = sim_test.error_trajectory_method(TRAJECTORY_METHOD_ODE, nb_pts=nb_pts)
-    #
-    #     self.assertLessEqual(rad_er.max() / rad_m, 1e-2, 2)
-    #     self.assertLessEqual(traj_er.x.max() / traj_ref.x.max(), 1e-2, 2)
-    #     self.assertLessEqual(traj_er.z.max() / traj_ref.z.max(), 1e-2, 2)
-    #     self.assertLessEqual(traj_er.v_x.max() / traj_ref.v_x.max(), 1e-2, 2)
-    #     self.assertLessEqual(traj_er.v_z.max() / traj_ref.v_z.max(), 1e-2, 2)
-    #     self.assertLessEqual(traj_er.a_x.max() / traj_ref.a_x.max(), 1e-2, 2)
-    #     self.assertLessEqual(traj_er.a_z.max() / traj_ref.a_z.max(), 1e-2, 2)
