@@ -26,19 +26,11 @@ Installation
 
 To build the library for python use, just use the ``python setup.py install`` approach.
 
-Testing
--------
-
-To run the tests **after installation** run::
-
-    python -m pySRU.tests.testAll
 
 Example
 -------
 
 The file Simulations.py contains a number of simulations. For example the following code created the emission of an undulator like in fig 2.5 of the X-ray Data Booklet (http://xdb.lbl.gov/Section2/Sec_2-1.html)
-
-There is a `web application <http://fisxserver.esrf.fr>`_ using this library for calculating expected x-ray count rates.
 
 This piece of Python code shows how the library can be used via its python binding.
 
@@ -79,3 +71,4 @@ This piece of Python code shows how the library can be used via its python bindi
 
 .. image:: https://github.com/SophieTh/und_Sophie_2016/blob/classic/data/radiation_xraybooklet.jpeg
 
+Result link: https://github.com/SophieTh/und_Sophie_2016/blob/classic/data/radiation_xraybooklet.jpeg
