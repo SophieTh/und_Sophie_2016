@@ -77,4 +77,4 @@ This piece of Python code shows how the library can be used via its python bindi
     simulation_test.radiation.plot(title="Flux in far field vs angle")
     
 
-.. image:: https://github.com/SophieTh/und_Sophie_2016/data/radiation_xraybooklet.jpeg
+.. image:: https://github.com/SophieTh/und_Sophie_2016/tree/classic/data/radiation_booklet.jpeg
