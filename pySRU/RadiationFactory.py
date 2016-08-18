@@ -91,7 +91,7 @@ class RadiationFactory(object):
             calculation_function = self.energy_radiated_approx
         else:
             calculation_function = self.energy_radiated_approximation_and_farfield
-        res = res.reshape(shape1)
+
 
         # TODO: Possible missing imaginary phase in constant?
         for i in range(len(X)):
@@ -537,8 +537,8 @@ def Exemple_APPROX():
 
 if __name__ == "__main__" :
 
-    # Exemple_FARFIELD()
-    # Exemple_APPROX()
+    Exemple_FARFIELD()
+    Exemple_APPROX()
     Exemple_NEARFIELD()
 
 
