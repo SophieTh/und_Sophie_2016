@@ -82,11 +82,11 @@ class MagneticStructureUndulatorPlane(MagneticStructure):
 
 
     def print_parameters(self):
-        print'    K : %.2f'%(self.K)
-        print'    periodlenght : %.3f' % (self.period_length)
-        print'    lenght : %.2f'% (self.length)
-        print'    number of period : %.2f' % (self.period_number())
-        print'    magntic field intensity: %.2f'% (self.magnetic_field_strength())
+        print('    K : %.2f'%(self.K))
+        print('    periodlenght : %.3f' % (self.period_length))
+        print('    lenght : %.2f'% (self.length))
+        print('    number of period : %.2f' % (self.period_number()))
+        print('    magntic field intensity: %.2f'% (self.magnetic_field_strength()))
 
     def period_number(self):
         return self.length / self.period_length

@@ -71,6 +71,14 @@ class MainTest(unittest.TestCase):
         self.assertLessEqual(np.abs(sim_test.radiation.max() - rad_max) / rad_max, 5e-2)
         self.assertLessEqual(rad_err / rad_max, 5e-2)
 
+    def simul_undulator_theoric(self, magnetic_struc, electron_beam, method_rad, method_traj, formule=1):
+
+        sim_test = create_simulation(magnetic_structure=magnetic_struc, electron_beam=electron_beam,
+                                     rad_method=method_rad, traj_method=method_traj,formule=formule,distance=100)
+        rad_axis=sim_test.radiation.intensity[0,0]
+        rad_theo=sim_test.source.theorical_flux_on_axis(1)#sim_test.radiation_fact.omega)
+
+        print("rad axis %e , theo %e" % (rad_axis, rad_theo))
 
 
     def test_main(self):
@@ -80,6 +88,11 @@ class MainTest(unittest.TestCase):
         ESRF18 = Undulator(K=1.68, period_length=0.018, length=2.0)
 
         ##ESRFBM = BM(E=6.0e9, Bo=0.8, div=5e-3, R=25.0, I=0.2)
+
+        self.simul_undulator_theoric(magnetic_struc=und_test, electron_beam=beam_test,
+                                              method_rad=RADIATION_METHOD_FARFIELD,method_traj=TRAJECTORY_METHOD_INTEGRATION, formule=1)
+        print("Intensity ok")
+
 
         print(' undulator test ')
         self.simul_undulator_near_to_farfield(magnetic_struc=und_test,electron_beam=beam_test
