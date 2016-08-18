@@ -212,8 +212,8 @@ class TrajectoryFactory(object):
                      args=(cst,B.Bx,B.By,B.Bz),rtol=1e-11,atol=atol,mxstep=5000,full_output=True)
         traj = res[0]
         info = res[1]
-        # print("1 : nonstiff problems, Adams . 2: stiff problem, BDF")
-        #print(info.get('nst'))
+        print("1 : nonstiff problems, Adams . 2: stiff problem, BDF")
+        print(info.get('mused'))
         traj = np.transpose(traj)
         trajectory[4] = traj[0]
         trajectory[5] = traj[1]

@@ -284,7 +284,7 @@ def erreur_entre_ODE_ANALYTIC_sans_mm_condition_initial(und,beam):
     # plt.show()
 
 #cas B
-erreur_entre_ODE_ANALYTIC_sans_mm_condition_initial(und=und_test,beam=beam_test)
+#erreur_entre_ODE_ANALYTIC_sans_mm_condition_initial(und=und_test,beam=beam_test)
 
 def erreur_entre_ODE_ANALYTIC_sans_mm_condition_initial_suivant_nb_pts(und,beam,nb_pts):
 
@@ -437,7 +437,7 @@ def example_non_error_analitic_vs_int():
     diff_rad=sim_test_analy.radiation.difference_with(sim_test_ODE.radiation)
     diff_rad.plot()
 
-example_non_error_analitic_vs_int()
+#example_non_error_analitic_vs_int()
 
 #cas D
 def erreur_analy_int_und(und,beam):
@@ -463,7 +463,11 @@ def erreur_analy_int_ODE(und,beam):
     plt.show()
     traj_error_traj.plot()
 
-
+z=np.linspace(-0.99999997,0.99999997,10000)
+k_u=2.*np.pi/(0.035)
+f=np.sin(k_u*z)*np.sin(2.*k_u*z)-np.cos(3.*k_u*z)
+plt.plot(z,f)
+plt.show()
 #erreur_analy_int_und(und=und_test,beam=beam_test)
 
 
