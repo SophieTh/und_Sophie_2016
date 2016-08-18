@@ -95,8 +95,8 @@ class RadiationTest(unittest.TestCase):
         radGrid = Radiation(intensity=intensity_gird, X=X_grid, Y=Y_grid, distance=distance)
         radList = Radiation(intensity=intensity_list, X=X, Y=Y, distance=distance)
 
-        integartionGrid=radGrid.integration()
-        integrationList=radList.integration()
+        integartionGrid=radGrid.integration(use_flux_per_mrad2_or_mm2=0)
+        integrationList=radList.integration(use_flux_per_mrad2_or_mm2=0)
         self.assertEqual(integrationList,0.5)
         self.assertEqual(integartionGrid,0.5+integrationList)
 

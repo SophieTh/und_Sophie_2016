@@ -29,7 +29,7 @@ class RadiationFactory(object):
 
     # Photon's flow all over a screen situate at distance D of an undulator
     def create_for_one_relativistic_electron(self, trajectory, source, XY_are_list=False, distance=None, X=None, Y=None):
-        if X == None or Y == None:
+        if X is None or Y is None:
             print('calculate X and Y array')
             if distance == None:
                 if self.method==RADIATION_METHOD_APPROX_FARFIELD :
@@ -63,9 +63,17 @@ class RadiationFactory(object):
         # c1 = codata.e ** 2 * omega1 ** 2 / (16 * np.pi ** 3 * codata.epsilon_0 * codata.c )
         # c2 = I / codata.e  # multiply by number of electrons in 1 A
         # c3 = 2.0*np.pi / (codata.h * omega1)  # divide by e energy (to get number of photons)
-        # c4 = 1e-3 / omega1  # to get 1% energy bandwidth  #!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+        # c4 = 1e-3 / omega1  # to get .1% energy bandwidth  #!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
         # c5 = 1e-3 * 1e-3  # from rad to .1mrad angle bandwidth
+
+
+
         c6 = codata.e * source.I_current() * 1e-9 / (8.0 * np.pi ** 2 * codata.epsilon_0 * codata.c * codata.h)
+
+        # to guarantee the flux in phot/mm2 reduces with 1/r2
+        if distance != None:
+            c6 /= distance**2
+
         if X_array.size != Y_array.size:
             raise Exception("X and Y dimensions must be equal.")
 
@@ -262,6 +270,11 @@ class RadiationFactory(object):
     def energy_radiated_approx(self,trajectory, gamma, x, y, distance):
         N = trajectory.nb_points()
         n_chap = np.array([x - trajectory.x * codata.c, y - trajectory.y * codata.c, distance - trajectory.z * codata.c])
+        # R = np.zeros(n_chap.shape[1])
+        # for i in range(n_chap.shape[1]):
+        #     R[i] = np.linalg.norm(n_chap[:, i])
+        #     n_chap[:, i] /= R[i]
+
         R = np.sqrt( n_chap[0]**2 + n_chap[1]**2 + n_chap[2]**2 )
         n_chap[0,:] /= R
         n_chap[1,:] /= R
@@ -328,6 +341,7 @@ class RadiationFactory(object):
     # energy radiated without the the far filed approxiamation
     def energy_radiated_near_field(self, trajectory, gamma, x, y, distance):
         N = trajectory.nb_points()
+        #TODO changer la phase et formule 2
         n_chap = np.array([x - trajectory.x * codata.c, y - trajectory.y * codata.c, distance - trajectory.z * codata.c])
         R = np.sqrt( n_chap[0, :]**2 + n_chap[1, :]**2 + n_chap[2, :]**2 )
         n_chap[0, :] /= R[:]
@@ -389,17 +403,19 @@ class RadiationFactory(object):
 
     def print_parameters(self):
         print('Radiation ')
-        print('    method : %s' %self.get_method())
-        print('    number of point in each direction : %d' %self.Nb_pts)
-        print('    energy of the emission  (eV): %f' %self.energy_eV())
+        print('    method: %s' %self.get_method())
+        print('    number of points in each direction  %d' %self.Nb_pts)
+        print('    energy of the emission: %f eV, omega: %f Hz' %(self.energy_eV(),self.omega))
 
 
 def Exemple_FARFIELD():
-    from MagneticStructureUndulatorPlane import MagneticStructureUndulatorPlane as Undulator
-    from ElectronBeam import ElectronBeam
-    from SourceUndulatorPlane import SourceUndulatorPlane
 
-    from TrajectoryFactory import TrajectoryFactory,TRAJECTORY_METHOD_ODE,TRAJECTORY_METHOD_ANALYTIC
+    from pySRU.MagneticStructureUndulatorPlane import MagneticStructureUndulatorPlane as Undulator
+    from pySRU.ElectronBeam import ElectronBeam
+    from pySRU.SourceUndulatorPlane import SourceUndulatorPlane
+    from pySRU.TrajectoryFactory import TrajectoryFactory,TRAJECTORY_METHOD_ODE,TRAJECTORY_METHOD_ANALYTIC
+    import time
+
 
 
     undulator_test = Undulator(K=1.87, period_length=0.035, length=0.035 * 14)
@@ -416,8 +432,10 @@ def Exemple_FARFIELD():
 
     traj = TrajectoryFactory(Nb_pts=2000, method=TRAJECTORY_METHOD_ODE).create_from_source(source_test)
 
+    t0 = time.time()
     Rad = RadiationFactory(omega=source_test.harmonic_frequency(1), method=RADIATION_METHOD_APPROX_FARFIELD, Nb_pts=101
                             ).create_for_one_relativistic_electron(trajectory=traj, source=source_test)
+    print("Elapsed time in RadiationFactory: ",time.time()-t0)
 
     print('Screen distance :')
     print(Rad.distance)
@@ -439,9 +457,10 @@ def Exemple_FARFIELD():
 
 
 def Exemple_NEARFIELD():
-    from MagneticStructureUndulatorPlane import MagneticStructureUndulatorPlane as Undulator
-    from ElectronBeam import ElectronBeam
-    from SourceUndulatorPlane import SourceUndulatorPlane
+    from pySRU.MagneticStructureUndulatorPlane import MagneticStructureUndulatorPlane as Undulator
+    from pySRU.ElectronBeam import ElectronBeam
+    from pySRU.SourceUndulatorPlane import SourceUndulatorPlane
+    import time
 
 
     undulator_test = Undulator(K=1.87, period_length=0.035, length=0.035 * 14)
@@ -453,8 +472,10 @@ def Exemple_NEARFIELD():
 
     traj = TrajectoryFactory(Nb_pts=2000, method=TRAJECTORY_METHOD_ODE).create_from_source(source_test)
 
+    t0 = time.time()
     Rad = RadiationFactory(omega=source_test.harmonic_frequency(1), method=RADIATION_METHOD_NEAR_FIELD, Nb_pts=101
                            ).create_for_one_relativistic_electron(trajectory=traj, source=source_test,distance=100)
+    print("Elapsed time in RadiationFactory: ",time.time()-t0)
 
     print('Screen distance :')
     print(Rad.distance)
@@ -475,9 +496,10 @@ def Exemple_NEARFIELD():
     Rad.plot()
 
 def Exemple_APPROX():
-    from MagneticStructureUndulatorPlane import MagneticStructureUndulatorPlane as Undulator
-    from ElectronBeam import ElectronBeam
-    from SourceUndulatorPlane import SourceUndulatorPlane
+    from pySRU.MagneticStructureUndulatorPlane import MagneticStructureUndulatorPlane as Undulator
+    from pySRU.ElectronBeam import ElectronBeam
+    from pySRU.SourceUndulatorPlane import SourceUndulatorPlane
+    import time
 
 
     undulator_test = Undulator(K=1.87, period_length=0.035, length=0.035 * 14)
@@ -489,8 +511,10 @@ def Exemple_APPROX():
 
     traj = TrajectoryFactory(Nb_pts=2000, method=TRAJECTORY_METHOD_ODE).create_from_source(source_test)
 
+    t0 = time.time()
     Rad = RadiationFactory(omega=source_test.harmonic_frequency(1), method=RADIATION_METHOD_APPROX, Nb_pts=101
                            ).create_for_one_relativistic_electron(trajectory=traj, source=source_test,distance=100)
+    print("Elapsed time in RadiationFactory: ",time.time()-t0)
 
 
     print('Screen distance :')
@@ -512,8 +536,11 @@ def Exemple_APPROX():
     Rad.plot()
 
 if __name__ == "__main__" :
-    pass
-    #Exemple_FARFIELD()
-    #Exemple_APPROX()
-    #Exemple_NEARFIELD()
+
+    # Exemple_FARFIELD()
+    # Exemple_APPROX()
+    Exemple_NEARFIELD()
+
+
+
 

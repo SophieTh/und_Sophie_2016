@@ -14,11 +14,11 @@ class MagneticFieldTest(unittest.TestCase):
 
 
 
-    def create_magn_field_undulator_test(self, magnetic_structure, electron_beam,method_traj,formule=1):
+    def create_magn_field_undulator_test(self, magnetic_structure, electron_beam,method_traj):
 
 
         sim_test = create_simulation(magnetic_structure=magnetic_structure,electron_beam=electron_beam,
-                                     traj_method=method_traj,rad_method=RADIATION_METHOD_APPROX_FARFIELD,formule=formule)
+                                     traj_method=method_traj,rad_method=RADIATION_METHOD_APPROX_FARFIELD)
         print('create')
         source_test=sim_test.source
         Zo=sim_test.trajectory_fact.initial_condition[5]

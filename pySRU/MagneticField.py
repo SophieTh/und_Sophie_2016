@@ -52,27 +52,30 @@ class MagneticField(object):
 
 
 
-# rajouter un code qui qffiche la legende ??
-    def plot_z(self,X,Y,Z):
+    def plot_z(self,X,Y,Z,title="Magnetic field",field_component=None):
         import matplotlib.pyplot as plt
 
-        plt.plot(Z, self.Bx(z=Z,y=Y,x=X))
-        plt.title(" Bx = f(z) ")
-        plt.ylabel('Bx')
-        plt.xlabel('Z')
-        plt.show()
+        if ( (field_component == None) or (field_component == 0) or (field_component == 'x') ):
+            plt.plot(Z, self.Bx(z=Z,y=Y,x=X))
 
-        plt.plot(Z, self.By(z=Z,y=Y,x=X))
-        plt.title(" By = f(z) ")
-        plt.ylabel('By')
-        plt.xlabel('Z')
-        plt.show()
+            plt.ylabel('Bx [T]')
+            plt.xlabel('Z [m]')
+            plt.title(title+" Bx = f(z) ")
+            plt.show()
 
-        plt.plot(Z, self.Bz(z=Z,y=Y,x=X))
-        plt.title(" Bz = f(z) ")
-        plt.ylabel('Bz')
-        plt.xlabel('Z')
-        plt.show()
+        if ( (field_component == None) or (field_component == 1) or (field_component == 'y') ):
+            plt.plot(Z, self.By(z=Z,y=Y,x=X))
+            plt.ylabel('By [T]')
+            plt.xlabel('Z [m]')
+            plt.title(title+" By = f(z) ")
+            plt.show()
+
+        if ( (field_component == None) or (field_component == 2) or (field_component == 'z') ):
+            plt.plot(Z, self.Bz(z=Z,y=Y,x=X))
+            plt.ylabel('Bz [T]')
+            plt.xlabel('Z [m]')
+            plt.title(title+" Bz = f(z) ")
+            plt.show()
 
 # # TODO A CHANGER COMME PLOT_z
         #TODO quiver plot ?
