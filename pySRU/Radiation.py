@@ -137,8 +137,8 @@ class Radiation(object):
 
     def change_Nb_pts(self,Nb_pts):
         if len(self.X.shape)==2 or len(self.Y.shape)==2 :
-            X = np.linspace(self.X[0].min(), self.X[0].max(), Nb_pts)
-            Y = np.linspace(self.Y[:, 0].min(), self.Y[:, 0].max(), Nb_pts)
+            X = np.linspace((self.X.min()).min(), (self.X.max()).max(), Nb_pts)
+            Y = np.linspace((self.Y.min()).min(), (self.Y.max()).max(), Nb_pts)
             self.X, self.Y = np.meshgrid(X, Y)
         else :
             self.X = np.linspace(self.X.min(), self.X.max(), Nb_pts)

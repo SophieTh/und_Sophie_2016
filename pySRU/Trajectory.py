@@ -154,6 +154,7 @@ class Trajectory(object):
         ax = fig.gca(projection='3d')
         ax.plot(self.z*codata.c, self.x*codata.c, self.y*codata.c, label=label)
         ax.legend()
+        #ax.autoscale(enable=True, axis='x', tight=None)
         plt.title(title)
         ax.set_xlabel("Z [m]")
         ax.set_ylabel('X [m]')

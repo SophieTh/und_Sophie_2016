@@ -81,7 +81,7 @@ class TrajectoryFactory(object):
         vz_0 = bending_magnet.electron_speed()
 
         t=bending_magnet.analytical_times_vector(Nb_pts=self.Nb_pts)
-        Zo = bending_magnet.magnetic_structure.L / 2.
+        Zo = bending_magnet.magnetic_structure.length / 2.
         #t=np.linspace(0.0,2.*Zo/(vz_0*codata.c))
         to=t[0]
         x = (vz_0/omega_p)*(1.-np.cos(omega_p*(t-to)))
@@ -120,6 +120,7 @@ class TrajectoryFactory(object):
         else :
             self.Nb_pts=len(t)
             time_calc =t
+
         trajectory = np.zeros((10, self.Nb_pts))
         trajectory[0]=time_calc
 
@@ -129,7 +130,7 @@ class TrajectoryFactory(object):
         #TODO rtol et a tol modifiable
         #atol=np.array([1e-10,1e-10,1e-10,1e-10,1e-10,1e-10])
         atol=source.atol_for_ODE_method()
-        res = odeint(fct_ODE_magnetic_field,initial_condition_for_ODE, trajectory[0],
+        res = odeint(func=fct_ODE_magnetic_field,y0=initial_condition_for_ODE, t=trajectory[0],
                      args=(cst,B.Bx,B.By,B.Bz),rtol=1e-11,atol=atol,mxstep=5000,full_output=True)
         traj = res[0]
         info = res[1]

@@ -25,14 +25,24 @@ beam_test=ElectronBeam(Electron_energy=1.3, I_current=1.0)
 beam_ESRF=ElectronBeam(Electron_energy=6.0, I_current=0.2)
 und_test=Undulator(  K = 1.87,  period_length= 0.035, length=0.035 * 14)
 ESRF18=Undulator( K = 1.68, period_length = 0.018, length=2.0)
-ESRFBM=BM(Bo=0.8,L=0.1249994791673177)
+ESRFBM=BM(Bo=0.8,length=0.1249994791673177)
 
 
 
-#
-sim_test = create_simulation(magnetic_structure=ESRF18, electron_beam=beam_ESRF, traj_method=TRAJECTORY_METHOD_ANALYTIC,
-                             rad_method=RADIATION_METHOD_APPROX_FARFIELD, Nb_pts_trajectory=10000,distance=100)
+vx= 2e-4
+vz= np.sqrt(beam_test.electron_speed()**2-vx**2)*codata.c
+
+initial_cond=np.array([ vx*codata.c,  0.00000000e+00 ,vz , 0.0 , 0.0 ,-0.42,])
+X=np.linspace(-0.1,0.1,100)
+Y=np.linspace(-0.1,0.1,100)
+sim_test = create_simulation(magnetic_structure=und_test, electron_beam=beam_test, traj_method=TRAJECTORY_METHOD_ODE,
+                             rad_method=RADIATION_METHOD_APPROX_FARFIELD, Nb_pts_trajectory=10000,distance=100,
+                             initial_condition=initial_cond,X=X,Y=Y)
 
 
 sim_test.print_parameters()
+# sim_test.plot_everything()
+
+sim_test.trajectory.plot_3D()
+sim_test.radiation.plot()
 

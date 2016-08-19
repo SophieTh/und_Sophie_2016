@@ -62,10 +62,10 @@ class Simulation(object):
         if update_radiation:
             self.update_radiation()
 
+    # TODO change this don't work
     def change_initial_condition(self, initial_cond,update_radiation=1):
-        #TODO change this
-        self.trajectory_fact.initial_condition= initial_cond
 
+        self.trajectory_fact.initial_condition= initial_cond
         self.trajectory =self.trajectory_fact.create_from_source(source=self.source)
         if update_radiation:
             self.update_radiation()
@@ -465,7 +465,7 @@ def create_simulation(magnetic_structure,electron_beam, magnetic_field=None, pho
         raise Exception('magnet type unknown')
 
     if photon_energy==None :
-        omega=source.choose_photon_frequency(harmonic_number=1)
+        omega=source.choose_photon_frequency()
     else :
         omega = photon_energy * eV_to_J / codata.hbar
 
@@ -506,7 +506,7 @@ def create_simulation(magnetic_structure,electron_beam, magnetic_field=None, pho
     if (traj_fact.initial_condition == None):
         # print('crearte initial cond automat')
         traj_fact.initial_condition = source.choose_initial_contidion_automatic()
-        # print(traj_fact.initial_condition)
+
 
 
     #print('step 2')

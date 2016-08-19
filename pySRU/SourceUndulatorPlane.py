@@ -46,8 +46,8 @@ class SourceUndulatorPlane(Source):
         ic=np.array([0.0,0.0,self.electron_speed()*codata.c,0.0,0.0,Zo])
         return ic
 
-    def choose_photon_frequency(self,harmonic_number=1):
-        first_harm=self.harmonic_frequency(harmonic_number=harmonic_number)
+    def choose_photon_frequency(self):
+        first_harm=self.harmonic_frequency(harmonic_number=1)
         return first_harm
 
     #se demander quel angles choisir automatiquement

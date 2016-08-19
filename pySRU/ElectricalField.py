@@ -2,6 +2,7 @@ import numpy as np
 
 class ElectricalField(object):
    def __init__(self, electrical_field, X, Y, distance):
+      # TODO: maybe check constants if we just calcualte vector potential A
       self._electrical_field = electrical_field.copy()
       self._X = X.copy()
       self._Y = Y.copy()

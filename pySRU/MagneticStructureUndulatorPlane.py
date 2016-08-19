@@ -42,6 +42,7 @@ class MagneticStructureUndulatorPlane(MagneticStructure):
                 a1 = self.length / self.period_length \
                      - np.floor(self.period_number())
                 a2 = (0.25 - a1 / 2.0)
+                a2=0.25
                 L_cosinus_part = self.length / 2.0 \
                                  + self.period_length * a2
 
