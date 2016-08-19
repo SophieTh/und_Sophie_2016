@@ -107,7 +107,6 @@ class RadiationFactory(object):
 
     # Photon's flow all over a screen situate at distance D of an undulator
     def calculate_radiation_intensity(self, trajectory, source, X_array, Y_array, distance=None):
-        print(trajectory.x)
         electrical_field = self.calculate_electrical_field(trajectory, source, X_array, Y_array, distance)
         return electrical_field.intensity()
 
@@ -187,7 +186,7 @@ class RadiationFactory(object):
 
         return E
 
-    def energy_radiated_farfield(self, trajectory, gamma, x, y, distance):
+    def energy_radiated_farfield2(self, trajectory, gamma, x, y, distance):
         N = trajectory.nb_points()
         if distance == None:
             # in radian :
@@ -223,7 +222,7 @@ class RadiationFactory(object):
 
         return E
 
-    def energy_radiated_farfield2(self, trajectory, gamma, x, y, distance):
+    def energy_radiated_farfield(self, trajectory, gamma, x, y, distance):
         # N = trajectory.shape[1]
         N = trajectory.nb_points()
         if distance == None:
