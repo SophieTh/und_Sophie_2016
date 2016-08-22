@@ -66,17 +66,17 @@ class Simulation(object):
                                                                                      X_array=self.radiation.X,
                                                                                      Y_array=self.radiation.Y)
 
-    def change_initial_condition(self, initial_cond):
-        self.trajectory_fact.initial_condition= initial_cond
-        self.magnetic_field.change_Zo(Zo=initial_cond[5])
-        self.trajectory = self.trajectory_fact.create_for_parameter(parameter=self.parameter,
-                                                                    B=self.magnetic_field)
-
-        self.radiation.intensity = self.radiation_fact.calculate_radiation_intensity(trajectory=self.trajectory,
-                                                                                     source=self.parameter,
-                                                                                     distance=self.radiation.distance,
-                                                                                     X_arrays=self.radiation.X,
-                                                                                     Y_arrays=self.radiation.Y)
+    # def change_initial_condition(self, initial_cond):
+    #     self.trajectory_fact.initial_condition= initial_cond
+    #     self.magnetic_field.change_Zo(Zo=initial_cond[5])
+    #     self.trajectory = self.trajectory_fact.create_for_parameter(parameter=self.parameter,
+    #                                                                 B=self.magnetic_field)
+    #
+    #     self.radiation.intensity = self.radiation_fact.calculate_radiation_intensity(trajectory=self.trajectory,
+    #                                                                                  source=self.parameter,
+    #                                                                                  distance=self.radiation.distance,
+    #                                                                                  X_arrays=self.radiation.X,
+    #                                                                                  Y_arrays=self.radiation.Y)
 
     def change_omega(self, omega) :
         self.radiation_fact.omega=omega
@@ -335,7 +335,7 @@ class Simulation(object):
 
     def error_radiation_method_distance(self,method,D):
         sim2=self.copy()
-        sim2.change_radiation_method(method)
+        sim2.radiation_fact.method=method
         error=np.zeros_like(D)
         print(len(D))
         for i in range(len(D)) :

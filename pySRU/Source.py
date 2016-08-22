@@ -92,7 +92,7 @@ class Source(object):
 
     # theory
     @abstractmethod
-    def flux_on_axis_theoric(self,omega):
+    def theorical_flux_on_axis(self, photon_frequency):
         return
 
 

@@ -342,11 +342,12 @@ class RadiationFactory(object):
     # energy radiated without the the far filed approxiamation
     def energy_radiated_near_field(self,gamma,trajectory, x, y,distance):
         N = trajectory.nb_points()
-        n_chap = np.array([x - trajectory.x * codata.c, y - trajectory.y * codata.c, distance - trajectory.z * codata.c])
-        R = np.sqrt( n_chap[0]**2 + n_chap[1]**2 + n_chap[2]**2 )
-        n_chap[0,:] /= R
-        n_chap[1,:] /= R
-        n_chap[2,:] /= R
+        n_chap = np.array(
+            [x - trajectory.x * codata.c, y - trajectory.y * codata.c, distance - trajectory.z * codata.c])
+        R = np.sqrt(n_chap[0, :] ** 2 + n_chap[1, :] ** 2 + n_chap[2, :] ** 2)
+        n_chap[0, :] /= R[:]
+        n_chap[1, :] /= R[:]
+        n_chap[2, :] /= R[:]
 
         E = np.zeros((3,), dtype=np.complex)
         integrand = np.zeros((3, N), dtype=np.complex)

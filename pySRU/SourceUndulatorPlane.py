@@ -157,7 +157,8 @@ class SourceUndulatorPlane(Source):
         return X,Y
 
     # in photon /sec /1% /mrad*mrad
-    def theorical_flux_on_axis(self,n):
+    def theorical_flux_on_axis(self,photon_frequency):
+        n=int(photon_frequency/self.harmonic_frequency(1))
         if n%2==1 :
             cst=1.744e14*((self.period_number()*self.Electron_energy())**2)*self.I_current()
             result=cst*self.Fn(n)
