@@ -65,7 +65,7 @@ class UndulatorSimulationTest(unittest.TestCase):
         self.assertEqual(sim_test.radiation.distance,50)
         self.assertFalse(ref.radiation.distance == sim_test.radiation.distance)
 
-        sim_test.change_omega(source_test.harmonic_frequency(1)*0.8)
+        sim_test.change_photon_frequency(source_test.harmonic_frequency(1) * 0.8)
         self.assertEqual(sim_test.radiation_fact.omega,source_test.harmonic_frequency(1)*0.8)
         self.assertFalse(ref.radiation_fact.omega == sim_test.radiation_fact.omega)
 

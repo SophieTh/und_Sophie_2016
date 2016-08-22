@@ -32,17 +32,22 @@ ESRFBM=BM(Bo=0.8,length=0.1249994791673177)
 vx= 2e-4
 vz= np.sqrt(beam_test.electron_speed()**2-vx**2)*codata.c
 
-initial_cond=np.array([ vx*codata.c,  0.00000000e+00 ,vz , 0.0 , 0.0 ,-0.42,])
-X=np.linspace(-0.1,0.1,100)
-Y=np.linspace(-0.1,0.1,100)
-sim_test = create_simulation(magnetic_structure=und_test, electron_beam=beam_test, traj_method=TRAJECTORY_METHOD_ODE,
-                             rad_method=RADIATION_METHOD_APPROX_FARFIELD, Nb_pts_trajectory=10000,distance=100,
-                             initial_condition=initial_cond,X=X,Y=Y)
+# initial_cond=np.array([ vx*codata.c,  0.00000000e+00 ,vz , 0.0 , 0.0 ,-0.42,])
+#X=np.linspace(-0.02,0.02,150)
+#Y=np.linspace(-0.02,0.02,150)
+sim_test = create_simulation(magnetic_structure=ESRF18, electron_beam=beam_ESRF, traj_method=TRAJECTORY_METHOD_ODE,
+                             rad_method=RADIATION_METHOD_APPROX_FARFIELD, Nb_pts_trajectory=20000,distance=100)
 
 
-sim_test.print_parameters()
-# sim_test.plot_everything()
+#sim_test.print_parameters()
 
-sim_test.trajectory.plot_3D()
-sim_test.radiation.plot()
 
+#sim_test.trajectory.plot_3D(title="Analytical electron trajectory in undulator")
+#sim_test.trajectory.plot(title="Analytical electron trajectory in undulator")
+sim_test.calculate_on_central_cone()
+#sim_test.calculate_spectrum_on_axis()
+# omega1=sim_test.source.harmonic_frequency(1)
+# omega_array=np.arange(.9*omega1,3.06*omega1,0.01*omega1)
+# sim_test.calculate_spectrum_central_cone(abscissas_array=omega_array)
+# sim_test.change_harmonic_number(3.)
+sim_test.radiation.plot(title="radiation intensity for ESRF18 undulator")

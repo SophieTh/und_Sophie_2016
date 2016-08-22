@@ -14,18 +14,18 @@ RADIATION_METHOD_APPROX_FARFIELD=2
 eV_to_J=1.602176487e-19
 
 class RadiationFactory(object):
-    def __init__(self,method,omega,Nb_pts=101):
-        self.omega=omega
+    def __init__(self, method, photon_frequency, Nb_pts=101):
+        self.photon_frequency=photon_frequency
         self.method=method
         #TODO useful ?
         self.Nb_pts=Nb_pts
 
 
     def copy(self):
-        return RadiationFactory( method=self.method,omega=self.omega,Nb_pts=self.Nb_pts)
+        return RadiationFactory(method=self.method, photon_frequency=self.photon_frequency, Nb_pts=self.Nb_pts)
 
     def energy_eV(self):
-        return self.omega*codata.hbar/eV_to_J
+        return self.photon_frequency * codata.hbar / eV_to_J
 
     # Photon's flow all over a screen situate at distance D of an undulator
     def create_for_one_relativistic_electron(self, trajectory, source, XY_are_list=False, distance=None, X=None, Y=None):
@@ -99,7 +99,12 @@ class RadiationFactory(object):
                                              gamma=gamma, x=X[i], y=Y[i])
 
         res *= c6**0.5
-        res = res.reshape((shape1[0], shape1[1], 3))
+
+        # if len(shape1)==2 :
+        #     res = res.reshape((shape1[0], shape1[1], 3))
+        # else :
+        #     res = res.reshape(shape1, 3)
+        res = res.reshape(shape1 + (3,))
 
         electrical_field = ElectricalField(electrical_field=res, X=X, Y=Y, distance=distance)
 
@@ -110,7 +115,7 @@ class RadiationFactory(object):
         electrical_field = self.calculate_electrical_field(trajectory, source, X_array, Y_array, distance)
         return electrical_field.intensity()
 
-    def energy_radiated_approximation_and_farfield(self,trajectory, gamma, x, y, distance):
+    def energy_radiated_approximation_and_farfield2(self,trajectory, gamma, x, y, distance):
 
         # N = trajectory.shape[1]
         N = trajectory.nb_points()
@@ -129,8 +134,8 @@ class RadiationFactory(object):
         A2 = (n_chap[0] * (n_chap[0] - trajectory.v_x) + n_chap[1] * (n_chap[1] - trajectory.v_y)
                 + n_chap[2] * (n_chap[2] - trajectory.v_z))
         Alpha2 = np.exp(
-            0. + 1j * self.omega * (trajectory.t + X/codata.c -n_chap[0] * trajectory.x
-                                        - n_chap[1] * trajectory.y - n_chap[2] * trajectory.z))
+            0. + 1j * self.photon_frequency * (trajectory.t + X / codata.c - n_chap[0] * trajectory.x
+                                               - n_chap[1] * trajectory.y - n_chap[2] * trajectory.z))
 
         Alpha1 = (1.0 / (1.0 - n_chap[0] * trajectory.v_x
                              - n_chap[1] * trajectory.v_y - n_chap[2] * trajectory.v_z)) ** 2
@@ -144,7 +149,7 @@ class RadiationFactory(object):
 
         return E
 
-    def energy_radiated_approximation_and_farfield2(self, trajectory, gamma, x, y, distance):
+    def energy_radiated_approximation_and_farfield(self, trajectory, gamma, x, y, distance):
         # N = trajectory.shape[1]
         N = trajectory.nb_points()
         if distance == None:
@@ -162,8 +167,8 @@ class RadiationFactory(object):
         A2 = (-n_chap[0] * trajectory.v_z + n_chap[2] * trajectory.v_x)
         A3 = (n_chap[0] * trajectory.v_y - n_chap[1] * trajectory.v_x)
         Alpha2 = np.exp(
-            0. + 1j * self.omega * (trajectory.t +X/codata.c -n_chap[0] * trajectory.x
-                                        - n_chap[1] * trajectory.y - n_chap[2] * trajectory.z))
+            0. + 1j * self.photon_frequency * (trajectory.t + X / codata.c - n_chap[0] * trajectory.x
+                                               - n_chap[1] * trajectory.y - n_chap[2] * trajectory.z))
 
 
         integrand[0] += ( n_chap[1]*A3 - n_chap[2]*A2) * Alpha2
@@ -173,10 +178,10 @@ class RadiationFactory(object):
         for k in range(3):
             # E[k] = np.trapz(integrand[k], self.trajectory.t)
             E[k] = np.trapz(integrand[k], trajectory.t)
-        E *= self.omega * 1j
+        E *= self.photon_frequency * 1j
 
-        Alpha3 = (np.exp(1j*self.omega*(trajectory.t[-1] - n_chap[2] * trajectory.z[-1]))-
-                  np.exp(1j*self.omega*(trajectory.t[0] - n_chap[2] * trajectory.z[0])))
+        Alpha3 = (np.exp(1j * self.photon_frequency * (trajectory.t[-1] - n_chap[2] * trajectory.z[-1])) -
+                  np.exp(1j * self.photon_frequency * (trajectory.t[0] - n_chap[2] * trajectory.z[0])))
         terme_bord = np.full((3,), 0. + 1j * 0., dtype=np.complex)
         terme_bord[0] += n_chap[0] * n_chap[2] * trajectory.v_z[0]
         terme_bord[1] += n_chap[1] * n_chap[2] * trajectory.v_z[0]
@@ -204,7 +209,7 @@ class RadiationFactory(object):
         A1 = (n_chap[0] * trajectory.a_x + n_chap[1] * trajectory.a_y + n_chap[2] * trajectory.a_z)
         A2 = (n_chap[0] * (n_chap[0] - trajectory.v_x) + n_chap[1] * (n_chap[1] - trajectory.v_y)
                 + n_chap[2] * (n_chap[2] - trajectory.v_z))
-        Alpha2 = np.exp( 0. + 1j * self.omega * (trajectory.t +R))
+        Alpha2 = np.exp(0. + 1j * self.photon_frequency * (trajectory.t + R))
         Alpha1 = (1.0 / (1.0 - n_chap[0] * trajectory.v_x
                              - n_chap[1] * trajectory.v_y - n_chap[2] * trajectory.v_z)) ** 2
         cst=codata.c/(R*gamma**2)
@@ -218,7 +223,7 @@ class RadiationFactory(object):
                 # E[k] = np.trapz(integrand[k], self.trajectory.t)
             E[k] = np.trapz(integrand[k], trajectory.t)
 
-        E *= -1j * np.exp(1j * self.omega/codata.c * (n_chap[0]*x + n_chap[1]*y + n_chap[2]*distance))
+        E *= -1j * np.exp(1j * self.photon_frequency / codata.c * (n_chap[0] * x + n_chap[1] * y + n_chap[2] * distance))
 
         return E
 
@@ -244,13 +249,13 @@ class RadiationFactory(object):
         Alpha1 = (1.0 / (1.0 - n_chap[0] * trajectory.v_x
                          - n_chap[1] * trajectory.v_y - n_chap[2] * trajectory.v_z)) ** 2
         Alpha2 = np.exp(
-            0. + 1j * self.omega * (trajectory.t +R))
+            0. + 1j * self.photon_frequency * (trajectory.t + R))
         cst = codata.c / ((gamma ** 2) * R)
-        integrand[0] += ((n_chap[1] * A3 - n_chap[2] * A2)*self.omega * 1j
+        integrand[0] += ((n_chap[1] * A3 - n_chap[2] * A2) * self.photon_frequency * 1j
                          + cst * (n_chap[0] - trajectory.v_x) * Alpha1) * Alpha2
-        integrand[1] += ((- n_chap[0] * A3 + n_chap[2] * A1)*self.omega * 1j
+        integrand[1] += ((- n_chap[0] * A3 + n_chap[2] * A1) * self.photon_frequency * 1j
                          + cst * (n_chap[1] - trajectory.v_y) * Alpha1) * Alpha2
-        integrand[2] += ((n_chap[0] * A2 - n_chap[1] * A1)*self.omega * 1j
+        integrand[2] += ((n_chap[0] * A2 - n_chap[1] * A1) * self.photon_frequency * 1j
                          + cst * (n_chap[2] - trajectory.v_z) * Alpha1) * Alpha2
 
         for k in range(3):
@@ -258,8 +263,8 @@ class RadiationFactory(object):
             #E[k] = integrate.simps(integrand[k], trajectory.t)
 
 
-        Alpha3 = (np.exp(1j * self.omega * (trajectory.t[-1] - n_chap[2] * trajectory.z[-1])) -
-                  np.exp(1j * self.omega * (trajectory.t[0] - n_chap[2] * trajectory.z[0])))
+        Alpha3 = (np.exp(1j * self.photon_frequency * (trajectory.t[-1] - n_chap[2] * trajectory.z[-1])) -
+                  np.exp(1j * self.photon_frequency * (trajectory.t[0] - n_chap[2] * trajectory.z[0])))
         terme_bord = np.full((3,), 0. + 1j * 0., dtype=np.complex)
         terme_bord[0] += n_chap[0] * n_chap[2] * trajectory.v_z[0]
         terme_bord[1] += n_chap[1] * n_chap[2] * trajectory.v_z[0]
@@ -271,7 +276,7 @@ class RadiationFactory(object):
 
     # exact equation for the energy radiated
     # warning !!!!!!! far field approximation
-    def energy_radiated_approx(self,trajectory, gamma, x, y, distance):
+    def energy_radiated_approx2(self,trajectory, gamma, x, y, distance):
         N = trajectory.nb_points()
         n_chap = np.array([x - trajectory.x * codata.c, y - trajectory.y * codata.c, distance - trajectory.z * codata.c])
         # R = np.zeros(n_chap.shape[1])
@@ -289,7 +294,7 @@ class RadiationFactory(object):
         A1 = (n_chap[0] * trajectory.a_x + n_chap[1] * trajectory.a_y + n_chap[2] * trajectory.a_z)
         A2 = (n_chap[0] * (n_chap[0] - trajectory.v_x) + n_chap[1] * (n_chap[1] - trajectory.v_y)
               + n_chap[2] * (n_chap[2] - trajectory.v_z))
-        Alpha2 = np.exp( 0. + 1j * self.omega * (trajectory.t +R/codata.c))
+        Alpha2 = np.exp(0. + 1j * self.photon_frequency * (trajectory.t + R / codata.c))
         Alpha1 = (1.0 / (1.0 - n_chap[0] * trajectory.v_x
                          - n_chap[1] * trajectory.v_y - n_chap[2] * trajectory.v_z)) ** 2
         integrand[0] += ((A1 * (n_chap[0] - trajectory.v_x) - A2 * trajectory.a_x)
@@ -300,10 +305,12 @@ class RadiationFactory(object):
                          ) * Alpha2 * Alpha1
         for k in range(3):
             E[k] = np.trapz(integrand[k], trajectory.t)
+        E = np.zeros((3,), dtype=np.complex)
+        integrand = np.zeros((3, N), dtype=np.complex)
             #E[k] = integrate.simps(integrand[k], trajectory.t)
         return E
 
-    def energy_radiated_approx2(self, trajectory, gamma, x, y, distance):
+    def energy_radiated_approx(self, trajectory, gamma, x, y, distance):
         N = trajectory.nb_points()
         n_chap = np.array([x - trajectory.x * codata.c, y - trajectory.y * codata.c, distance - trajectory.z * codata.c])
         R = np.sqrt( n_chap[0]**2 + n_chap[1]**2 + n_chap[2]**2 )
@@ -317,7 +324,7 @@ class RadiationFactory(object):
         A1 = (n_chap[1] * trajectory.v_z - n_chap[2] * trajectory.v_y)
         A2 = (-n_chap[0] * trajectory.v_z + n_chap[2] * trajectory.v_x)
         A3 = (n_chap[0] * trajectory.v_y - n_chap[1] * trajectory.v_x)
-        Alpha2 = np.exp( 0. + 1j * self.omega * (trajectory.t +R/codata.c))
+        Alpha2 = np.exp(0. + 1j * self.photon_frequency * (trajectory.t + R / codata.c))
 
         integrand[0] += (n_chap[1] * A3 - n_chap[2] * A2) * Alpha2
         integrand[1] += (- n_chap[0] * A3 + n_chap[2] * A1) * Alpha2
@@ -325,10 +332,10 @@ class RadiationFactory(object):
         for k in range(3):
             E[k] = np.trapz(integrand[k], trajectory.t)
             #E[k] = integrate.simps(integrand[k], trajectory.t)
-        E *= self.omega * 1j
+        E *= self.photon_frequency * 1j
 
-        Alpha3 = (np.exp(1j * self.omega * (trajectory.t[-1] - n_chap[2][-1] * trajectory.z[-1])) -
-                  np.exp(1j * self.omega * (trajectory.t[0] - n_chap[2][0] * trajectory.z[0])))
+        Alpha3 = (np.exp(1j * self.photon_frequency * (trajectory.t[-1] - n_chap[2][-1] * trajectory.z[-1])) -
+                  np.exp(1j * self.photon_frequency * (trajectory.t[0] - n_chap[2][0] * trajectory.z[0])))
         terme_bord = np.full((3,), 0. + 1j * 0., dtype=np.complex)
         terme_bord[0] += (n_chap[0][0] * n_chap[2][0] * trajectory.v_z[0]
                             )*Alpha3 / (1.0 - n_chap[2][0] * trajectory.v_z[0])
@@ -355,7 +362,7 @@ class RadiationFactory(object):
         A1 = (n_chap[0] * trajectory.a_x + n_chap[1] * trajectory.a_y + n_chap[2] * trajectory.a_z)
         A2 = (n_chap[0] * (n_chap[0] - trajectory.v_x) + n_chap[1] * (n_chap[1] - trajectory.v_y)
               + n_chap[2] * (n_chap[2] - trajectory.v_z))
-        Alpha2 = np.exp( 0. + 1j * self.omega * (trajectory.t + R / codata.c))
+        Alpha2 = np.exp(0. + 1j * self.photon_frequency * (trajectory.t + R / codata.c))
 
         Alpha1 = (1.0 / (1.0 - n_chap[0] * trajectory.v_x
                          - n_chap[1] * trajectory.v_y - n_chap[2] * trajectory.v_z)) ** 2
@@ -387,8 +394,33 @@ class RadiationFactory(object):
 
         E = np.zeros((3,), dtype=np.complex)
         integrand = np.zeros((3, N), dtype=np.complex)
+        A1 = (n_chap[1] * trajectory.v_z - n_chap[2] * trajectory.v_y)
+        A2 = (-n_chap[0] * trajectory.v_z + n_chap[2] * trajectory.v_x)
+        A3 = (n_chap[0] * trajectory.v_y - n_chap[1] * trajectory.v_x)
+        Alpha1 = (1.0 / (1.0 - n_chap[0] * trajectory.v_x
+                         - n_chap[1] * trajectory.v_y - n_chap[2] * trajectory.v_z)) ** 2
+        Alpha2 = np.exp(
+            0. + 1j * self.photon_frequency * (trajectory.t + R))
+        cst = codata.c / ((gamma ** 2) * R)
+        integrand[0] += ((n_chap[1] * A3 - n_chap[2] * A2) * self.photon_frequency * 1j
+                         + cst * (n_chap[0] - trajectory.v_x) * Alpha1) * Alpha2
+        integrand[1] += ((- n_chap[0] * A3 + n_chap[2] * A1) * self.photon_frequency * 1j
+                         + cst * (n_chap[1] - trajectory.v_y) * Alpha1) * Alpha2
+        integrand[2] += ((n_chap[0] * A2 - n_chap[1] * A1) * self.photon_frequency * 1j
+                         + cst * (n_chap[2] - trajectory.v_z) * Alpha1) * Alpha2
 
+        for k in range(3):
+            E[k] = np.trapz(integrand[k], trajectory.t)
+            # E[k] = integrate.simps(integrand[k], trajectory.t)
 
+        Alpha3 = (np.exp(1j * self.photon_frequency * (trajectory.t[-1] - n_chap[2] * trajectory.z[-1])) -
+                  np.exp(1j * self.photon_frequency * (trajectory.t[0] - n_chap[2] * trajectory.z[0])))
+        terme_bord = np.full((3,), 0. + 1j * 0., dtype=np.complex)
+        terme_bord[0] += n_chap[0] * n_chap[2] * trajectory.v_z[0]
+        terme_bord[1] += n_chap[1] * n_chap[2] * trajectory.v_z[0]
+        terme_bord[2] += trajectory.v_z[0] * (n_chap[2] ** 2 - 1.0)
+        terme_bord *= Alpha3 / (1.0 - n_chap[2] * trajectory.v_z[0])
+        E += terme_bord
 
         return E
 
@@ -407,7 +439,7 @@ class RadiationFactory(object):
         print('Radiation ')
         print('    method: %s' %self.get_method())
         print('    number of points in each direction  %d' %self.Nb_pts)
-        print('    energy of the emission: %f eV, omega: %f Hz' %(self.energy_eV(),self.omega))
+        print('    energy of the emission: %f eV, omega: %f Hz' % (self.energy_eV(),self.photon_frequency))
 
 
 def Exemple_FARFIELD():
@@ -435,8 +467,8 @@ def Exemple_FARFIELD():
     traj = TrajectoryFactory(Nb_pts=2000, method=TRAJECTORY_METHOD_ODE).create_from_source(source_test)
 
     t0 = time.time()
-    Rad = RadiationFactory(omega=source_test.harmonic_frequency(1), method=RADIATION_METHOD_APPROX_FARFIELD, Nb_pts=101
-                            ).create_for_one_relativistic_electron(trajectory=traj, source=source_test)
+    Rad = RadiationFactory(photon_frequency=source_test.harmonic_frequency(1), method=RADIATION_METHOD_APPROX_FARFIELD, Nb_pts=101
+                           ).create_for_one_relativistic_electron(trajectory=traj, source=source_test)
     print("Elapsed time in RadiationFactory: ",time.time()-t0)
 
     print('Screen distance :')
@@ -475,7 +507,7 @@ def Exemple_NEARFIELD():
     traj = TrajectoryFactory(Nb_pts=2000, method=TRAJECTORY_METHOD_ODE).create_from_source(source_test)
 
     t0 = time.time()
-    Rad = RadiationFactory(omega=source_test.harmonic_frequency(1), method=RADIATION_METHOD_NEAR_FIELD, Nb_pts=101
+    Rad = RadiationFactory(photon_frequency=source_test.harmonic_frequency(1), method=RADIATION_METHOD_NEAR_FIELD, Nb_pts=101
                            ).create_for_one_relativistic_electron(trajectory=traj, source=source_test,distance=100)
     print("Elapsed time in RadiationFactory: ",time.time()-t0)
 
@@ -514,7 +546,7 @@ def Exemple_APPROX():
     traj = TrajectoryFactory(Nb_pts=2000, method=TRAJECTORY_METHOD_ODE).create_from_source(source_test)
 
     t0 = time.time()
-    Rad = RadiationFactory(omega=source_test.harmonic_frequency(1), method=RADIATION_METHOD_APPROX, Nb_pts=101
+    Rad = RadiationFactory(photon_frequency=source_test.harmonic_frequency(1), method=RADIATION_METHOD_APPROX, Nb_pts=101
                            ).create_for_one_relativistic_electron(trajectory=traj, source=source_test,distance=100)
     print("Elapsed time in RadiationFactory: ",time.time()-t0)
 

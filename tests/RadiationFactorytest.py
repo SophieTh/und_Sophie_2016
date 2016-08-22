@@ -17,7 +17,7 @@ class RadiationFactoryTest(unittest.TestCase):
         traj_fact=TrajectoryFactory(Nb_pts=1001, method=TRAJECTORY_METHOD_ANALYTIC)
         traj=traj_fact.create_from_source(source_test)
 
-        rad_fact = RadiationFactory(omega=source_test.harmonic_frequency(1), method=RADIATION_METHOD_NEAR_FIELD, Nb_pts=51)
+        rad_fact = RadiationFactory(photon_frequency=source_test.harmonic_frequency(1), method=RADIATION_METHOD_NEAR_FIELD, Nb_pts=51)
 
         rad=rad_fact.create_for_one_relativistic_electron(trajectory=traj, source=source_test)
         self.assertFalse(rad.X is None)

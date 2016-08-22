@@ -20,5 +20,11 @@ class ElectricalField(object):
    def electrical_field(self):
       return self._electrical_field.copy()
 
+
+
    def intensity(self):
-      return np.sum(np.abs(self.electrical_field())**2,axis=2)
+         return np.sum(np.abs(self.electrical_field()) ** 2, axis=-1)
+
+
+
+

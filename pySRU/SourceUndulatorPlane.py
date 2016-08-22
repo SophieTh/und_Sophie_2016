@@ -91,6 +91,9 @@ class SourceUndulatorPlane(Source):
         atol_z = (atol_vz*self.magnetic_structure.period_length)/(codata.c*self.average_z_speed_in_undulator()*2.*np.pi)*1e-11
         return np.array([atol_vx,1e-10,atol_vz,atol_x,1e-10,atol_z])
 
+    def rtol_for_ODE_method(self):
+        return 1e-11
+
     ###########
     #property of the radiation
     ##################
@@ -110,7 +113,7 @@ class SourceUndulatorPlane(Source):
         # this is the angle of central cone sigma
         N=self.magnetic_structure.period_number()
         gamma=self.Lorentz_factor()
-        return (1 / gamma) * np.sqrt( (1 + 0.5 * self.magnetic_structure.K**2) / N / harmonic_number)
+        return (1 / gamma) * np.sqrt( (1 + 0.5 * self.magnetic_structure.K**2) / (N * harmonic_number))
 
 
     def angle_ring_number(self,harmonic_number,ring_number):
@@ -173,6 +176,7 @@ class SourceUndulatorPlane(Source):
 
     # in photon /sec /1% /mrad*mrad
     def theoretical_flux_on_axis(self,n):
+        n=int(n)
         if n%2==1 :
             # see X-ray data booklet pag 2.7
             cst=1.744e14*((self.period_number()*self.Electron_energy())**2)*self.I_current()

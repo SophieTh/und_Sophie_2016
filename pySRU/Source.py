@@ -48,6 +48,12 @@ class Source(object):
     def magnetic_field_strength(self):
         return
 
+    def atol_for_ODE_method(self):
+        return 1e-11
+
+    def rtol_for_ODE_method(self):
+        return 1e-11
+
     # constante de construction
 
     @abstractmethod
@@ -70,9 +76,6 @@ class Source(object):
     def angle_deflection_max(self):
         return
 
-    @abstractmethod
-    def angle_deflection_central_cone(self):
-        return
 
     @abstractmethod
     def analytical_times_vector(self,Nb_pts):
@@ -92,9 +95,12 @@ class Source(object):
 
     # theory
     @abstractmethod
-    def flux_on_axis_theoric(self,omega):
+    def theoretical_flux_on_axis(self,frequency):
         return
 
+    @abstractmethod
+    def theoretical_flux_on_axis_omega_scan(self, n, omega_array) :
+        return
 
 
 

@@ -62,27 +62,27 @@ class Simulation(object):
         if update_radiation:
             self.update_radiation()
 
-    # TODO change this don't work
-    def change_initial_condition(self, initial_cond,update_radiation=1):
+    # # TODO change this don't work
+    # def change_initial_condition(self, initial_cond,update_radiation=1):
+    #
+    #     self.trajectory_fact.initial_condition= initial_cond
+    #     self.trajectory =self.trajectory_fact.create_from_source(source=self.source)
+    #     if update_radiation:
+    #         self.update_radiation()
 
-        self.trajectory_fact.initial_condition= initial_cond
-        self.trajectory =self.trajectory_fact.create_from_source(source=self.source)
+    def change_photon_frequency(self, omega, update_radiation=1) :
+        self.radiation_fact.photon_frequency=omega
         if update_radiation:
             self.update_radiation()
 
-    def change_omega(self, omega,update_radiation=1) :
-        self.radiation_fact.omega=omega
-        if update_radiation:
-            self.update_radiation()
-
-    def change_harmonic_number(self,harmonic_number,update_radiation=1) :
-        self.radiation_fact.omega=harmonic_number*self.source.harmonic_frequency()
+    def change_harmonic_number(self,harmonic_number,update_radiation=True) :
+        self.radiation_fact.photon_frequency= harmonic_number * self.source.harmonic_frequency(1)
         if update_radiation:
             self.update_radiation()
 
     def change_energy_eV(self,E,update_radiation=1) :
         omega = E * eV_to_J / codata.hbar
-        self.change_omega(omega)
+        self.change_photon_frequency(omega)
         if update_radiation:
             self.update_radiation()
 
@@ -110,7 +110,6 @@ class Simulation(object):
             self.update_radiation()
 
     def change_XY_radiation(self,X,Y,update_radiation=1):
-
         self.radiation.X=X
         self.radiation.Y=Y
         if update_radiation:
@@ -118,8 +117,8 @@ class Simulation(object):
 
     #TODO possible que pour Undulator, a revoir , a tester
     def calculate_on_ring_number(self, ring_number_max,update_radiation=1):
-        harmonic_number=np.floor(self.radiation_fact.omega/self.source.harmonic_frequency(1))
-        self.radiation_fact.omega=self.source.harmonic_frequency(harmonic_number)
+        harmonic_number=np.floor(self.radiation_fact.photon_frequency / self.source.harmonic_frequency(1))
+        self.radiation_fact.photon_frequency=self.source.harmonic_frequency(harmonic_number)
         X=np.array([])
         Y = np.array([])
         t = np.linspace(0.0, 2.0* np.pi, self.radiation_fact.Nb_pts)
@@ -131,14 +130,20 @@ class Simulation(object):
         self.change_XY_radiation(X=X,Y=Y,update_radiation=update_radiation)
 
 
-    def calculate_on_central_cone(self,harmonic_number=1,npoints_x=None,npoints_y=None,update_radiation=1):
+    def calculate_on_central_cone(self,harmonic_number=None,npoints_x=None,npoints_y=None,update_radiation=1):
+        if harmonic_number == None :
+            harmonic_number=np.floor(self.radiation_fact.photon_frequency/self.source.harmonic_frequency(1))
+        else :
+            self.change_harmonic_number(harmonic_number, update_radiation=0)
         theta_max=self.source.angle_deflection_central_cone(harmonic_number)
         if self.radiation.distance==None :
             X_max=theta_max
             Y_max=theta_max
+
         else :
             X_max=self.radiation.distance*theta_max
             Y_max=self.radiation.distance*theta_max
+
 
         if npoints_x is None:
             npoints_x = self.radiation_fact.Nb_pts
@@ -147,13 +152,13 @@ class Simulation(object):
 
         X=np.linspace(0.0,X_max,npoints_x)
         Y=np.linspace(0.0,Y_max,npoints_y)
-        X,Y=np.meshgrid(X,Y)
-        self.change_harmonic_number(harmonic_number,update_radiation=0)
+        Y,X=np.meshgrid(X,Y)
         self.change_XY_radiation(X=X,Y=Y,update_radiation=update_radiation)
+
 
     def calculate_until_ring_number(self,ring_number,harmonic_number=1, XY_are_list=True,update_radiation=1,
                                     npoints=None):
-        # harm_num=self.radiation_fact.omega/self.source.harmonic_frequency(1)
+        # harm_num=self.radiation_fact.photon_frequency/self.source.harmonic_frequency(1)
         if npoints != None:
             self.radiation_fact.Nb_pts = npoints
 
@@ -209,7 +214,7 @@ class Simulation(object):
 
         for i in range(len(spectrum)):
             print("Point %d of %d..."%(1+i,spectrum.size))
-            self.change_omega(omega_array[i])
+            self.change_photon_frequency(omega_array[i])
             spectrum[i] = self.radiation.integration(is_quadrant=is_quadrant)
 
         return spectrum, omega_array
@@ -222,7 +227,7 @@ class Simulation(object):
         print(len(spectrum))
         for i in range(len(spectrum)):
             print(i)
-            self.change_omega(omega_array[i])
+            self.change_photon_frequency(omega_array[i])
             spectrum[i] = self.radiation.max()
         return spectrum, omega_array
 
@@ -237,7 +242,7 @@ class Simulation(object):
             omega_array = np.arange(omega1 * 0.9, 5.0 * omega1 * 1.1, omega1 * 0.001)
         spectrum = np.zeros_like(omega_array)
         for i in range(len(spectrum)):
-            self.change_omega(omega_array[i])
+            self.change_photon_frequency(omega_array[i])
             spectrum[i] = self.radiation.intensity.max()
         self.change_XY_radiation(X=save_X,Y=save_Y)
         return spectrum, omega_array
@@ -424,7 +429,7 @@ class Simulation(object):
                 observation_angle=(Y[i,j]/radiation.distance)
                 #TODO changer pour qu'on calcul avec des angles
                 radiation.intensity[i,j]=self.source.radiation_theoretical(
-                    omega=self.radiation_fact.omega,observation_angle=observation_angle)
+                    omega=self.radiation_fact.photon_frequency,observation_angle=observation_angle)
         return radiation
 
 
@@ -443,7 +448,7 @@ class Simulation(object):
             for j in range(Y.shape[1]):
                 observation_angle = (Y[i, j] / radiation.distance)
                 radiation.intensity[i, j] = self.source.radiation_theoretical(
-                    omega=self.radiation_fact.omega, observation_angle=observation_angle)
+                    omega=self.radiation_fact.photon_frequency, observation_angle=observation_angle)
         return radiation
 
 #
@@ -511,7 +516,7 @@ def create_simulation(magnetic_structure,electron_beam, magnetic_field=None, pho
 
     #print('step 2')
 
-    rad_fact=RadiationFactory(method=rad_method,omega=omega,Nb_pts=Nb_pts_radiation)
+    rad_fact=RadiationFactory(method=rad_method, photon_frequency=omega, Nb_pts=Nb_pts_radiation)
 
 
     #print('step 3')

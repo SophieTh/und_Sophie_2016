@@ -60,11 +60,11 @@ class SourceBendingMagnet(Source):
         return (y*K23)**2
 
 
-    def flux_on_axis_theoric(self,omega):
-        y=omega/self.critical_frequency()
-        print('y= %.3f'%y)
+    def theoretical_flux_on_axis(self,n):
+        #n=frequency/self.critical_frequency()
+        #print('y= %.3f'%y)
         result= 1.327e13*((self.Electron_energy())**2
-                          )*self.I_current()*self.H2(y)
+                          )*self.I_current()*self.H2(n)
         return result
 
     def radiation_theoric(self,omega,observation_angle):
