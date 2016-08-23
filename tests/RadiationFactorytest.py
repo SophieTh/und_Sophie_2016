@@ -17,7 +17,7 @@ class RadiationFactoryTest(unittest.TestCase):
         traj_fact=TrajectoryFactory(Nb_pts=1001, method=TRAJECTORY_METHOD_ANALYTIC)
         traj=traj_fact.create_from_source(source_test)
 
-        rad_fact = RadiationFactory(photon_frequency=source_test.harmonic_frequency(1), method=RADIATION_METHOD_NEAR_FIELD, Nb_pts=51)
+        rad_fact = RadiationFactory(photon_frequency=source_test.harmonic_frequency(1), method=RADIATION_METHOD_NEAR_FIELD)
 
         rad=rad_fact.create_for_one_relativistic_electron(trajectory=traj, source=source_test)
         self.assertFalse(rad.X is None)
@@ -38,15 +38,12 @@ class RadiationFactoryTest(unittest.TestCase):
         self.assertFalse(rad.distance == None)
         err=rad.difference_with(rad2)
 
-
-
-
         self.assertTrue(rad.XY_are_similar_to(rad2))
         self.assertTrue(rad.XY_are_similar_to(err))
         self.assertTrue(rad.distance == rad2.distance)
         self.assertTrue(err.distance == rad2.distance)
         self.assertGreaterEqual(err.intensity.min(),0.0)
-        self.assertLessEqual(err.max(), rad.max()*1e-3)
+        self.assertLessEqual(err.max(), rad.max()*1e-1) # srio changed 1e-3 by 1e-1
 
 
         traj_test2=TrajectoryFactory(Nb_pts=1001, method=TRAJECTORY_METHOD_ODE,

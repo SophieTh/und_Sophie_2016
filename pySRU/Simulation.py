@@ -116,12 +116,12 @@ class Simulation(object):
             self.update_radiation()
 
     #TODO possible que pour Undulator, a revoir , a tester
-    def calculate_on_ring_number(self, ring_number_max,update_radiation=1):
+    def calculate_on_ring_number(self, ring_number_max,update_radiation=1,Nb_pts=101):
         harmonic_number=np.floor(self.radiation_fact.photon_frequency / self.source.harmonic_frequency(1))
         self.radiation_fact.photon_frequency=self.source.harmonic_frequency(harmonic_number)
         X=np.array([])
         Y = np.array([])
-        t = np.linspace(0.0, 2.0* np.pi, self.radiation_fact.Nb_pts)
+        t = np.linspace(0.0, 2.0* np.pi, Nb_pts)
         for i in range(int(ring_number_max)+1) :
             Xi,Yi= self.source.describe_ring(distance=self.radiation.distance,harmonic_number=harmonic_number,
                                               ring_number=i,t=t)
@@ -130,7 +130,7 @@ class Simulation(object):
         self.change_XY_radiation(X=X,Y=Y,update_radiation=update_radiation)
 
 
-    def calculate_on_central_cone(self,harmonic_number=None,npoints_x=None,npoints_y=None,update_radiation=1):
+    def calculate_on_central_cone(self,harmonic_number=None,npoints_x=101,npoints_y=101,update_radiation=1):
         if harmonic_number == None :
             harmonic_number=np.floor(self.radiation_fact.photon_frequency/self.source.harmonic_frequency(1))
         else :
@@ -145,10 +145,10 @@ class Simulation(object):
             Y_max=self.radiation.distance*theta_max
 
 
-        if npoints_x is None:
-            npoints_x = self.radiation_fact.Nb_pts
-        if npoints_y is None:
-            npoints_y = self.radiation_fact.Nb_pts
+        # if npoints_x is None:
+        #     npoints_x = self.radiation_fact.Nb_pts
+        # if npoints_y is None:
+        #     npoints_y = self.radiation_fact.Nb_pts
 
         X=np.linspace(0.0,X_max,npoints_x)
         Y=np.linspace(0.0,Y_max,npoints_y)
@@ -175,14 +175,14 @@ class Simulation(object):
 
 
 
-    def calculate_for_observation_angles(self,observation_angle,XY_are_list=True,update_radiation=1):
+    def calculate_for_observation_angles(self,observation_angle,XY_are_list=True,Nb_pts=101,update_radiation=1):
         D=self.radiation.distance
         if D==None :
             D=1
         if XY_are_list :
             X = np.array([])
             Y = np.array([])
-            t = np.linspace(0.0, 2.0 * np.pi, self.radiation_fact.Nb_pts)
+            t = np.linspace(0.0, 2.0 * np.pi, Nb_pts)
             for theta in observation_angle:
                 if theta==0.0 :
                     Xi=np.array([0.0])
@@ -196,9 +196,12 @@ class Simulation(object):
             X=D*observation_angle
             Y=D*observation_angle
             # X,Y=np.meshgrid(X,Y)
-            XX = np.outer(X,np.ones_like(Y))
-            YY = np.outer(np.ones_like(X),Y)
-        self.change_XY_radiation(X=XX,Y=YY,update_radiation=update_radiation)
+            X_ones = np.ones_like(X)
+            Y_ones = np.ones_like(Y)
+            X = np.outer(X,Y_ones)
+            Y = np.outer(X_ones,Y)
+
+        self.change_XY_radiation(X=X,Y=Y,update_radiation=update_radiation)
 
 
     #######
@@ -222,7 +225,7 @@ class Simulation(object):
 
         for i in range(len(spectrum)):
             print("Point %d of %d..."%(1+i,spectrum.size))
-            self.change_photon_frequency(omega_array[i])
+            self.change_photon_frequency(omega_array[i],update_radiation=1)
             spectrum[i] = self.radiation.integration(is_quadrant=is_quadrant)
 
         return spectrum, omega_array
@@ -258,6 +261,9 @@ class Simulation(object):
 
     def calculate_spectrum_on_slit(self,abscissas_array=None,use_eV=0,is_quadrant=0,do_plot=1):
 
+        print("<><><><> Defined X in calculate_spectrum_on_slit:",self.radiation.X)
+        print("<><><><> Defined Y in calculate_spectrum_on_slit:",self.radiation.Y)
+
         if use_eV:
             conversion_factor = codata.hbar / eV_to_J
             xlabel = "Photon energy [eV]"
@@ -269,6 +275,8 @@ class Simulation(object):
             omega_array = None
         else:
             omega_array = abscissas_array / conversion_factor
+
+
 
         spectrum,omega_array=self.spectrum(omega_array=omega_array,is_quadrant=is_quadrant)
 
@@ -483,11 +491,14 @@ def create_simulation(magnetic_structure,electron_beam, magnetic_field=None, pho
     else :
         omega = photon_energy * eV_to_J / codata.hbar
 
-    if Nb_pts_trajectory==None :
-        Nb_pts_trajectory = int(source.choose_nb_pts_trajectory(2))
-
+    #
+    # XY grid
+    #
     if distance==None and (rad_method==RADIATION_METHOD_NEAR_FIELD) :
         distance=source.choose_distance_automatic(2)
+
+    if Nb_pts_trajectory==None :
+        Nb_pts_trajectory = int(source.choose_nb_pts_trajectory(2))
 
     if X is None or Y is None :
         if (X != None) :
@@ -505,18 +516,18 @@ def create_simulation(magnetic_structure,electron_beam, magnetic_field=None, pho
             X = np.linspace(0.0, X_max, Nb_pts_radiation)
             Y = np.linspace(0.0, Y_max, Nb_pts_radiation)
 
-
     if type(X) == float:
         X= np.linspace(0.0, X, Nb_pts_radiation)
     if type(Y) == float:
         Y = np.linspace(0.0, Y, Nb_pts_radiation)
 
-    if X.shape != Y.shape :
-        raise Exception('X and Y must have the same shape')
-    Nb_pts_radiation=len(X.flatten())
+    # if X.shape != Y.shape :
+    #     raise Exception('X and Y must have the same shape')
+    Nb_pts_radiation = X.size # len(X.flatten())
 
     #print('step 1')
     traj_fact=TrajectoryFactory(Nb_pts=Nb_pts_trajectory,method=traj_method,initial_condition=initial_condition)
+
     if (traj_fact.initial_condition == None):
         # print('crearte initial cond automat')
         traj_fact.initial_condition = source.choose_initial_contidion_automatic()
@@ -525,7 +536,7 @@ def create_simulation(magnetic_structure,electron_beam, magnetic_field=None, pho
 
     #print('step 2')
 
-    rad_fact=RadiationFactory(method=rad_method, photon_frequency=omega, Nb_pts=Nb_pts_radiation)
+    rad_fact=RadiationFactory(method=rad_method, photon_frequency=omega)
 
 
     #print('step 3')
@@ -725,9 +736,14 @@ def Example_spectrum_on_slit():
                         rad_method=RADIATION_METHOD_APPROX_FARFIELD, Nb_pts_radiation=101,
                         initial_condition=None, distance=distance,XY_are_list=False,X=X,Y=Y)
 
+
+
     simulation_test.print_parameters()
     simulation_test.radiation.plot(title=("radiation in a screen for first harmonic"))
     print("Integrated flux at resonance: %g photons/s/0.1bw"%(simulation_test.radiation.integration(is_quadrant=is_quadrant)))
+
+    print("<><><><> Defined X in Example_spectrum_on_slit:",simulation_test.radiation.X)
+    print("<><><><> Defined Y in Example_spectrum_on_slit:",simulation_test.radiation.Y)
 
     x,y = simulation_test.calculate_spectrum_on_slit(abscissas_array=None,use_eV=1,is_quadrant=is_quadrant)
 
@@ -795,7 +811,7 @@ def Example_list():
 
     simulation_test.radiation.plot()
 
-    simulation_test.radiation.plot_ring(Nb_pts=simulation_test.radiation_fact.Nb_pts)
+    simulation_test.radiation.plot_ring()
 
 
     observation_angle = np.linspace(0.0, simulation_test.source.angle_ring_number(1, 2), 51)
@@ -815,7 +831,7 @@ if __name__ == "__main__" :
     # Example_meshgrid_on_central_cone_and_rings()
     # Example_spectrum_on_axis()
     # Example_spectrum_on_slit()
-    Example_spectrum_on_central_cone()
+    # Example_spectrum_on_central_cone()
     # Example_list()
 
 

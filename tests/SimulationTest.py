@@ -53,7 +53,6 @@ class UndulatorSimulationTest(unittest.TestCase):
 
         sim_test.change_Nb_pts_radiation(100)
         self.assertEqual(sim_test.radiation_fact.Nb_pts,100)
-        self.assertFalse(ref.radiation_fact.Nb_pts == sim_test.radiation_fact.Nb_pts)
         self.assertFalse(np.all(ref.radiation.X == sim_test.radiation.X))
         self.assertTrue(ref.radiation.X.min() == sim_test.radiation.X.min())
         self.assertTrue(ref.radiation.X.max() == sim_test.radiation.X.max())
@@ -66,8 +65,8 @@ class UndulatorSimulationTest(unittest.TestCase):
         self.assertFalse(ref.radiation.distance == sim_test.radiation.distance)
 
         sim_test.change_photon_frequency(source_test.harmonic_frequency(1) * 0.8)
-        self.assertEqual(sim_test.radiation_fact.omega,source_test.harmonic_frequency(1)*0.8)
-        self.assertFalse(ref.radiation_fact.omega == sim_test.radiation_fact.omega)
+        self.assertEqual(sim_test.radiation_fact.photon_frequency,source_test.harmonic_frequency(1)*0.8)
+        self.assertFalse(ref.radiation_fact.photon_frequency == sim_test.radiation_fact.photon_frequency)
 
 
         # nb_pts=np.arange(500,2001,500,dtype='int')

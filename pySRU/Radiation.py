@@ -68,9 +68,14 @@ class Radiation(object):
             raise Exception(" X and Y must be array for integration")
         if self.X.shape != self.Y.shape:
             raise Exception(" X and Y must have the same shape")
+
         if len(self.X.shape)==2 :
-            X = np.linspace(self.X[0].min(), self.X[0].max(), len(self.X[0]))
-            Y = np.linspace(self.Y[:, 0].min(), self.Y[:, 0].max(),len(self.Y[:,0]))
+            # X = np.linspace((self.X.min()).min(), (self.X.max()).max(), len(self.X[0]))
+            # Y = np.linspace((self.Y.min()).min(), (self.Y.max()).max(),len(self.Y[:,0]))
+
+            X = np.linspace(self.X.min(), self.X.max(), self.X.shape[0])
+            Y = np.linspace(self.Y.min(), self.Y.max(), self.Y.shape[1])
+
             res1=integrate.trapz(self.intensity, X)
             res = integrate.trapz(res1, Y)
             #res = integrate.simps(integrate.simps(self.intensity, self.X), self.Y)
@@ -149,7 +154,7 @@ class Radiation(object):
 
 
 #TODO possible que pour l'undulateur
-    def plot_ring(self, Nb_pts):
+    def plot_ring(self, Nb_pts=201):
         import matplotlib.pyplot as plt
         from mpl_toolkits.mplot3d import Axes3D
         if self.X is None or self.Y is None:

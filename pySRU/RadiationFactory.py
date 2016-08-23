@@ -4,31 +4,29 @@ import scipy.constants as codata
 import scipy.integrate as integrate
 from pySRU.TrajectoryFactory import TrajectoryFactory, TRAJECTORY_METHOD_ANALYTIC , TRAJECTORY_METHOD_ODE
 from pySRU.ElectricalField import ElectricalField
-
+from scipy import constants as codata
 
 
 
 RADIATION_METHOD_NEAR_FIELD=0
 RADIATION_METHOD_APPROX=1
 RADIATION_METHOD_APPROX_FARFIELD=2
-eV_to_J=1.602176487e-19
+eV_to_J = codata.e
 
 class RadiationFactory(object):
-    def __init__(self, method, photon_frequency, Nb_pts=101):
+    def __init__(self, method, photon_frequency):
         self.photon_frequency=photon_frequency
         self.method=method
-        #TODO useful ?
-        self.Nb_pts=Nb_pts
 
 
     def copy(self):
-        return RadiationFactory(method=self.method, photon_frequency=self.photon_frequency, Nb_pts=self.Nb_pts)
+        return RadiationFactory(method=self.method, photon_frequency=self.photon_frequency)
 
     def energy_eV(self):
         return self.photon_frequency * codata.hbar / eV_to_J
 
     # Photon's flow all over a screen situate at distance D of an undulator
-    def create_for_one_relativistic_electron(self, trajectory, source, XY_are_list=False, distance=None, X=None, Y=None):
+    def create_for_one_relativistic_electron(self, trajectory, source, XY_are_list=False, Nb_pts=101, distance=None, X=None, Y=None):
         if X is None or Y is None:
             print('calculate X and Y array')
             if distance == None:
@@ -39,14 +37,14 @@ class RadiationFactory(object):
                     xy_max = np.tan(1. / source.Lorentz_factor())*distance
             else :
                 xy_max = np.tan(1. / source.Lorentz_factor())*distance
-            X = np.linspace(0.0, xy_max, self.Nb_pts)
-            Y = np.linspace(0.0, xy_max, self.Nb_pts)
+            X = np.linspace(0.0, xy_max, Nb_pts)
+            Y = np.linspace(0.0, xy_max, Nb_pts)
         else :
             if type(X) != np.ndarray:
-                X = np.linspace(0.0, X, self.Nb_pts)
+                X = np.linspace(0.0, X, Nb_pts)
             if type(Y) != np.ndarray:
-                Y = np.linspace(0.0, Y, self.Nb_pts)
-            #Nb_pts=len(X)#TODO
+                Y = np.linspace(0.0, Y, Nb_pts)
+
 
 
         if not XY_are_list :
@@ -442,7 +440,6 @@ class RadiationFactory(object):
     def print_parameters(self):
         print('Radiation ')
         print('    method: %s' %self.get_method())
-        print('    number of points in each direction  %d' %self.Nb_pts)
         print('    energy of the emission: %f eV, omega: %f Hz' % (self.energy_eV(),self.photon_frequency))
 
 
