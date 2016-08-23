@@ -139,7 +139,10 @@ class Radiation(object):
         if len(self.X.shape)==2 or len(self.Y.shape)==2 :
             X = np.linspace((self.X.min()).min(), (self.X.max()).max(), Nb_pts)
             Y = np.linspace((self.Y.min()).min(), (self.Y.max()).max(), Nb_pts)
-            self.X, self.Y = np.meshgrid(X, Y)
+            X_ones = np.ones_like(X)
+            Y_ones = np.ones_like(Y)
+            self.X = np.outer(X,Y_ones)
+            self.Y = np.outer(X_ones,Y)
         else :
             self.X = np.linspace(self.X.min(), self.X.max(), Nb_pts)
             self.Y= np.linspace(self.Y.min(), self.Y.max(), Nb_pts)
@@ -174,7 +177,11 @@ class Radiation(object):
 def Exemple_Grid():
     X = np.linspace(0.0, 0.005, 101)
     Y = np.linspace(0.0, 0.005, 101)
-    X_grid, Y_grid = np.meshgrid(X, Y)
+    # X_grid, Y_grid = np.meshgrid(X, Y)
+
+    X_grid = np.outer(X,np.ones_like(Y))
+    Y_grid = np.outer(np.ones_like(X),Y)
+
     intensity = (X_grid * 1e3) ** 2 * (Y_grid * 1e3) ** 2
     rad = Radiation(intensity=intensity, X=X_grid, Y=Y_grid, distance=100)
     print('maximum intensity radiation')

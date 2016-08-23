@@ -152,7 +152,13 @@ class Simulation(object):
 
         X=np.linspace(0.0,X_max,npoints_x)
         Y=np.linspace(0.0,Y_max,npoints_y)
-        Y,X=np.meshgrid(X,Y)
+        # Y,X=np.meshgrid(X,Y)
+
+        X_ones = np.ones_like(X)
+        Y_ones = np.ones_like(Y)
+        X = np.outer(X,Y_ones)
+        Y = np.outer(X_ones,Y)
+
         self.change_XY_radiation(X=X,Y=Y,update_radiation=update_radiation)
 
 
@@ -189,8 +195,10 @@ class Simulation(object):
         else :
             X=D*observation_angle
             Y=D*observation_angle
-            X,Y=np.meshgrid(X,Y)
-        self.change_XY_radiation(X=X,Y=Y,update_radiation=update_radiation)
+            # X,Y=np.meshgrid(X,Y)
+            XX = np.outer(X,np.ones_like(Y))
+            YY = np.outer(np.ones_like(X),Y)
+        self.change_XY_radiation(X=XX,Y=YY,update_radiation=update_radiation)
 
 
     #######
@@ -304,9 +312,10 @@ class Simulation(object):
 
         X = np.linspace(0.0, X_max, 21)
         Y = np.linspace(0.0, Y_max, 21)
-        XY = np.meshgrid(X,Y)
-
-        self.change_XY_radiation(XY[0],XY[1],update_radiation=0)
+        # XY = np.meshgrid(X,Y)
+        XX = np.outer(X,np.ones_like(Y))
+        YY = np.outer(np.ones_like(X),Y)
+        self.change_XY_radiation(XX,YY,update_radiation=0)
         # if do_plot:
         #     self.radiation.plot()
 

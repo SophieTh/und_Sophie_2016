@@ -50,7 +50,11 @@ class RadiationFactory(object):
 
 
         if not XY_are_list :
-            Y, X = np.meshgrid(X, Y)
+            # Y, X = np.meshgrid(X, Y)
+            X_ones = np.ones_like(X)
+            Y_ones = np.ones_like(Y)
+            X = np.outer(X,Y_ones)
+            Y = np.outer(X_ones,Y)
 
         intensity = self.calculate_radiation_intensity(trajectory=trajectory, source=source,
                                                        distance=distance, X_array=X, Y_array=Y)
