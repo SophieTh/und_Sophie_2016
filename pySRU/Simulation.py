@@ -261,9 +261,6 @@ class Simulation(object):
 
     def calculate_spectrum_on_slit(self,abscissas_array=None,use_eV=0,is_quadrant=0,do_plot=1):
 
-        print("<><><><> Defined X in calculate_spectrum_on_slit:",self.radiation.X)
-        print("<><><><> Defined Y in calculate_spectrum_on_slit:",self.radiation.Y)
-
         if use_eV:
             conversion_factor = codata.hbar / eV_to_J
             xlabel = "Photon energy [eV]"
@@ -282,7 +279,7 @@ class Simulation(object):
 
         if do_plot:
             import matplotlib.pyplot as plt
-            plt.plot(conversion_factor*omega_array, spectrum, label='calculad radiation on slit')
+            plt.plot(conversion_factor*omega_array, spectrum, label='calculated radiation on slit')
             plt.legend()
             plt.xlabel(xlabel)
             plt.ylabel("Flux [phot/s/0.1%bw]")
@@ -741,9 +738,6 @@ def Example_spectrum_on_slit():
     simulation_test.print_parameters()
     simulation_test.radiation.plot(title=("radiation in a screen for first harmonic"))
     print("Integrated flux at resonance: %g photons/s/0.1bw"%(simulation_test.radiation.integration(is_quadrant=is_quadrant)))
-
-    print("<><><><> Defined X in Example_spectrum_on_slit:",simulation_test.radiation.X)
-    print("<><><><> Defined Y in Example_spectrum_on_slit:",simulation_test.radiation.Y)
 
     x,y = simulation_test.calculate_spectrum_on_slit(abscissas_array=None,use_eV=1,is_quadrant=is_quadrant)
 

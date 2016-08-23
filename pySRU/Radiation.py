@@ -70,15 +70,15 @@ class Radiation(object):
             raise Exception(" X and Y must have the same shape")
 
         if len(self.X.shape)==2 :
-            # X = np.linspace((self.X.min()).min(), (self.X.max()).max(), len(self.X[0]))
-            # Y = np.linspace((self.Y.min()).min(), (self.Y.max()).max(),len(self.Y[:,0]))
-
             X = np.linspace(self.X.min(), self.X.max(), self.X.shape[0])
             Y = np.linspace(self.Y.min(), self.Y.max(), self.Y.shape[1])
 
             res1=integrate.trapz(self.intensity, X)
             res = integrate.trapz(res1, Y)
-            #res = integrate.simps(integrate.simps(self.intensity, self.X), self.Y)
+
+            # res = integrate.simps(integrate.simps(self.intensity, X), Y)
+
+            # res = self.intensity.sum() * (self.X[1,0] - self.X[0,0]) * (self.Y[0,1] - self.X[0,0]) # regular grid only
         else : # X and Y are 1d array
             if len(self.X) == 1:
                 res = self.intensity[0]
