@@ -87,11 +87,11 @@ class RadiationFactory(object):
 
         gamma = source.Lorentz_factor()
 
-        if self.method == RADIATION_METHOD_NEAR_FIELD:
+        if self.method == RADIATION_METHOD_NEAR_FIELD:  # 0
             calculation_function = self.energy_radiated_near_field
-        elif self.method == RADIATION_METHOD_APPROX:
+        elif self.method == RADIATION_METHOD_APPROX: # 1
             calculation_function = self.energy_radiated_approx
-        else:
+        else: # RADIATION_METHOD_APPROX_FARFIELD=2
             calculation_function = self.energy_radiated_approximation_and_farfield
 
 
@@ -117,7 +117,7 @@ class RadiationFactory(object):
         electrical_field = self.calculate_electrical_field(trajectory, source, X_array, Y_array, distance)
         return electrical_field.intensity()
 
-    def energy_radiated_approximation_and_farfield2(self,trajectory, gamma, x, y, distance):
+    def energy_radiated_approximation_and_farfield(self,trajectory, gamma, x, y, distance):
 
         # N = trajectory.shape[1]
         N = trajectory.nb_points()
@@ -151,7 +151,7 @@ class RadiationFactory(object):
 
         return E
 
-    def energy_radiated_approximation_and_farfield(self, trajectory, gamma, x, y, distance):
+    def energy_radiated_approximation_and_farfield2(self, trajectory, gamma, x, y, distance):
         # N = trajectory.shape[1]
         N = trajectory.nb_points()
         if distance == None:
