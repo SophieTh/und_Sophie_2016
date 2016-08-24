@@ -406,20 +406,22 @@ class Simulation(object):
 
         print(" Others")
         print("     Distance: ",self.radiation.distance)
-        print("     Central Cone width (urad) for  n=1: %6.3f, n=3: %6.3f, n=5: %6.3f "%
-              ( 1e6 * self.source.angle_deflection_central_cone(harmonic_number=1),
-                1e6 * self.source.angle_deflection_central_cone(harmonic_number=3),
-                1e6 * self.source.angle_deflection_central_cone(harmonic_number=5) ))
-        print("     First ring position (urad) for n=1: %6.3f, n=3: %6.3f, n=5: %6.3f "%
-              ( 1e6 * self.source.angle_ring_number(harmonic_number=1,ring_number=1),
-                1e6 * self.source.angle_ring_number(harmonic_number=3,ring_number=1),
-                1e6 * self.source.angle_ring_number(harmonic_number=5,ring_number=1) ))
+        if (type(self.source)==BM) :
+            print("     Central Cone width (urad) for  n=1: %6.3f, n=3: %6.3f, n=5: %6.3f "%
+                  ( 1e6 * self.source.angle_deflection_central_cone(harmonic_number=1),
+                    1e6 * self.source.angle_deflection_central_cone(harmonic_number=3),
+                    1e6 * self.source.angle_deflection_central_cone(harmonic_number=5) ))
+            print("     First ring position (urad) for n=1: %6.3f, n=3: %6.3f, n=5: %6.3f "%
+                  ( 1e6 * self.source.angle_ring_number(harmonic_number=1,ring_number=1),
+                    1e6 * self.source.angle_ring_number(harmonic_number=3,ring_number=1),
+                    1e6 * self.source.angle_ring_number(harmonic_number=5,ring_number=1) ))
 
     def plot_everything(self):
         self.trajectory.plot()
         self.trajectory.plot_3D()
         self.radiation.plot()
-        self.calculate_on_central_cone()
+        if (type(self.source) == BM):
+            self.calculate_on_central_cone()
         self.radiation.plot()
         self.plot_spectrum()
         self.calculate_spectrum_on_axis()
@@ -495,7 +497,7 @@ def create_simulation(magnetic_structure,electron_beam, magnetic_field=None, pho
         distance=source.choose_distance_automatic(2)
 
     if Nb_pts_trajectory==None :
-        Nb_pts_trajectory = int(source.choose_nb_pts_trajectory(2))
+        Nb_pts_trajectory = int(source.choose_nb_pts_trajectory(2),photon_frequency=omega)
 
     if X is None or Y is None :
         if (X != None) :

@@ -57,11 +57,11 @@ class Source(object):
     # constante de construction
 
     @abstractmethod
-    def choose_distance_automatic(self, alpha):
+    def choose_distance_automatic(self, alpha=2,photon_frequency=None):
         return
 
     @abstractmethod
-    def choose_nb_pts_trajectory(self, alpha):
+    def choose_nb_pts_trajectory(self, alpha,photon_frequency):
         return
 
     @abstractmethod

@@ -129,9 +129,10 @@ class TrajectoryFactory(object):
 
         #TODO rtol et a tol modifiable
         #atol=np.array([1e-10,1e-10,1e-10,1e-10,1e-10,1e-10])
+        rtol=source.rtol_for_ODE_method()
         atol=source.atol_for_ODE_method()
         res = odeint(func=fct_ODE_magnetic_field,y0=initial_condition_for_ODE, t=trajectory[0],
-                     args=(cst,B.Bx,B.By,B.Bz),rtol=1e-11,atol=atol,mxstep=5000,full_output=True)
+                     args=(cst,B.Bx,B.By,B.Bz),rtol=rtol,atol=atol,mxstep=5000,full_output=True)
         traj = res[0]
         info = res[1]
         print("1 : nonstiff problems, Adams . 2: stiff problem, BDF")

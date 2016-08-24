@@ -31,15 +31,27 @@ class SourceUndulatorPlane(Source):
     # choix automatic lors de la construction d'une simulation
     ################
 
-    #TODO useful ?
-    def choose_distance_automatic(self, alpha=2):
+    def choose_distance_automatic(self, alpha,photon_frequency=None):
         lim = self.magnetic_structure.length
         return lim * 10 ** alpha
 
-    def choose_nb_pts_trajectory(self, alpha=2):
-        racine = (np.pi * self.magnetic_structure.period_number() * 10 ** (alpha)) / (45.)
-        n_mini = (2.0 * np.pi * self.period_number()) * np.exp(0.25 * np.log(racine))
-        return n_mini*2.0
+    # def choose_distance_automatic(self, alpha=0.001,photon_frequency=None):
+    #     if photon_frequency == None:
+    #         photon_frequency = self.harmonic_frequency(1)
+    #     cste=(photon_frequency/codata.c)
+    #     cste2=(self.magnetic_structure.length**2)/(4.*alpha)
+    #     return cste*cste2
+
+    def choose_nb_pts_trajectory(self, alpha=0.01,photon_frequency=None):
+        if photon_frequency==None :
+            photon_frequency=self.harmonic_frequency(1)
+        K=self.magnetic_structure.K
+        #cste=K/(12*np.sqrt(photon_frequency)*np.sqrt(self.Fn(n=1)))
+        cste = K / (12  * np.sqrt(self.Fn(n=1)))
+        cste2=2.*np.pi*self.magnetic_structure.length*photon_frequency/(codata.c*self.Lorentz_factor())
+        cste3=np.sqrt(cste/alpha)
+        cst4=(cste2*cste3)/np.sqrt(np.sqrt(photon_frequency))
+        return cst4*2.
 
     def choose_initial_contidion_automatic(self):
         Zo=-self.magnetic_structure.length/2.-5.*self.magnetic_structure.period_length

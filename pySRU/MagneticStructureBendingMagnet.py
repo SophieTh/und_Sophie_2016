@@ -6,9 +6,11 @@ from pySRU.MagneticStructure import MagneticStructure, PLANE_UNDULATOR,BENDING_M
 
 #TODO changer et mettre la divergeance en parametre ?
 class MagneticStructureBendingMagnet(MagneticStructure):
-    def __init__(self, Bo, length):
+    def __init__(self, Bo, horizontale_divergeance,electron_energy=1e9):
         super(self.__class__, self).__init__(magnet_type=BENDING_MAGNET)
-        self.length=length
+        self.horizontal_div=horizontale_divergeance
+        self.radius_curv=electron_energy*1e9/(codata.c*Bo)
+        self.length=np.sin(horizontale_divergeance)*self.radius_curv
         self.Bo = Bo
 
 
@@ -66,9 +68,8 @@ class MagneticStructureBendingMagnet(MagneticStructure):
 
 
     def print_parameters(self):
-
         print(" Magnetic Structure (Bending Magnet):")
-        print('    length : %.5f (m)'%self.L)
+        print('    length : %.5f (m)'%self.length)
         print('    magnetic_field_strength : %.5f'%self.Bo)
 
 
@@ -79,6 +80,6 @@ if __name__ == "__main__" :
     print('bending magnet test :')
     BM.print_parameters()
     B = BM.create_magnetic_field()
-    Z=np.linspace(-BM.L/2.0,BM.L/2.0,10000)
+    Z=np.linspace(-BM.length/2.0,BM.length/2.0,10000)
     B.plot_z(Z=Z,Y=0.0,X=0.0)
 

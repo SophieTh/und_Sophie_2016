@@ -26,18 +26,14 @@ class SourceBendingMagnet(Source):
 
 
     def arc_length(self):
-        arc_L=self.horizontal_divergence()*self.radius_curvature()
-        return arc_L
+        return self.magnetic_structure.horizontal_div* self.magnetic_structure.radius_curv
 
     def horizontal_divergence(self):
-        sin_div=self.magnetic_structure.length/self.radius_curvature()
-        return np.arcsin(sin_div)
+        return self.magnetic_structure.horizontal_div
 
 
     def radius_curvature(self,):
-        Bo=self.magnetic_structure.Bo
-        cst=1e9/(codata.c)
-        return (self.Electron_energy()/Bo)*cst
+        return self.magnetic_structure.radius_curv
 
 
 
@@ -81,11 +77,11 @@ class SourceBendingMagnet(Source):
 
 
 
-    def choose_distance_automatic(self, alpha):
+    def choose_distance_automatic(self, alpha=2,photon_frequency=None):
         return self.magnetic_structure.length*10**(alpha)
 
 
-    def choose_nb_pts_trajectory(self, alpha):
+    def choose_nb_pts_trajectory(self, alpha=0.01,photon_frequency=None):
         return self.magnetic_structure.length*4.*10**(alpha)
 
 
@@ -95,7 +91,7 @@ class SourceBendingMagnet(Source):
         return ic
 
     def choose_photon_frequency(self):
-        return self.critical_frequency()
+        return self.critical_frequency()*0.1
 
 
     def choose_angle_deflection_max(self):
@@ -130,20 +126,23 @@ class SourceBendingMagnet(Source):
                 time=np.linspace(time_start,2.*time_start,Nb_pts)
         return time
 
+    def rtol_for_ODE_method(self):
+        return 1e-11
+
     def atol_for_ODE_method(self):
+        gamma=self.Lorentz_factor()
         atol_vx= self.electron_speed()*codata.c*1e-11
         atol_vz = self.electron_speed()*codata.c*1e-11
-        atol_x = self.radius_curvature()*1e-11
-        atol_z = self.radius_curvature()*1e-11
+        atol_x = (2.*self.radius_curvature())/(3.*gamma^2)*1e-2
+        atol_z = (2.*self.radius_curvature())/(3.*gamma^2)*1e-2
         return np.array([atol_vx,1e-10,atol_vz,atol_x,1e-10,atol_z])
-
 
 # source parameter
 
     def print_parameters(self):
         super(self.__class__, self).print_parameters()
         print('Bending Magnet')
-        print('    length : %.5f (m)'%self.magnetic_structure.L)
+        print('    length : %.5f (m)'%self.magnetic_structure.length)
         print('    magnetic_field_strength : %.5f (T)'%self.magnetic_structure.Bo)
         print('    horizontal divergeance : %.5f (rad ?)' % self.horizontal_divergence())
         print('    radius curvature : %.3f (m)' % self.radius_curvature())
