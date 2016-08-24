@@ -133,8 +133,8 @@ class SourceBendingMagnet(Source):
         gamma=self.Lorentz_factor()
         atol_vx= self.electron_speed()*codata.c*1e-11
         atol_vz = self.electron_speed()*codata.c*1e-11
-        atol_x = (2.*self.radius_curvature())/(3.*gamma^2)*1e-2
-        atol_z = (2.*self.radius_curvature())/(3.*gamma^2)*1e-2
+        atol_x = (2.*self.radius_curvature())/(3.*gamma**2)*1e-2
+        atol_z = (2.*self.radius_curvature())/(3.*gamma**2)*1e-2
         return np.array([atol_vx,1e-10,atol_vz,atol_x,1e-10,atol_z])
 
 # source parameter

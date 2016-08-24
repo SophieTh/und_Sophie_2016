@@ -25,7 +25,7 @@ beam_test=ElectronBeam(Electron_energy=1.3, I_current=1.0)
 beam_ESRF=ElectronBeam(Electron_energy=6.0, I_current=0.2)
 und_test=Undulator(  K = 1.87,  period_length= 0.035, length=0.035 * 14)
 ESRF18=Undulator( K = 1.68, period_length = 0.018, length=2.0)
-ESRFBM=BM(Bo=0.8,horizontale_divergeance=0.05,electron_energy=6.0)
+ESRFBM=BM(Bo=0.8,horizontale_divergeance=0.005,electron_energy=6.0)
 
 
 
@@ -35,10 +35,10 @@ vz= np.sqrt(beam_test.electron_speed()**2-vx**2)*codata.c
 # initial_cond=np.array([ vx*codata.c,  0.00000000e+00 ,vz , 0.0 , 0.0 ,-0.42,])
 #X=np.linspace(-0.02,0.02,150)
 #Y=np.linspace(-0.02,0.02,150)
-sim_test = create_simulation(magnetic_structure=ESRFBM, electron_beam=beam_ESRF, traj_method=TRAJECTORY_METHOD_ANALYTIC,
-                             rad_method=RADIATION_METHOD_NEAR_FIELD, Nb_pts_trajectory=1000,distance=50)
-#sim_test.change_photon_frequency(800)
-#sim_test.change_harmonic_number(5)
+sim_test = create_simulation(magnetic_structure=ESRF18, electron_beam=beam_ESRF, traj_method=TRAJECTORY_METHOD_ANALYTIC,
+                             rad_method=RADIATION_METHOD_APPROX_FARFIELD, Nb_pts_trajectory=5000,distance=20)
+#sim_test.change_energy_eV(E=20000)
+#sim_test.change_harmonic_number(5.5)
 #print(sim_test.source.choose_nb_pts_trajectory())
 #print(sim_test.source.choose_distance_automatic())
 sim_test.print_parameters()
@@ -53,4 +53,5 @@ sim_test.trajectory.plot_3D(title="Analytical electron trajectory in bending mag
 # sim_test.calculate_spectrum_central_cone(abscissas_array=omega_array)
 # sim_test.change_harmonic_number(3.)
 print (sim_test.radiation.max())
-sim_test.radiation.plot(title="radiation intensity bending magnet far field formula")
+# sim_test.radiation.plot(title="radiation intensity from ODE trajectory solution ")
+sim_test.radiation.plot(title="radiation intensity , far field formula")

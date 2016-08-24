@@ -62,13 +62,6 @@ class Simulation(object):
         if update_radiation:
             self.update_radiation()
 
-    # # TODO change this don't work
-    # def change_initial_condition(self, initial_cond,update_radiation=1):
-    #
-    #     self.trajectory_fact.initial_condition= initial_cond
-    #     self.trajectory =self.trajectory_fact.create_from_source(source=self.source)
-    #     if update_radiation:
-    #         self.update_radiation()
 
     def change_photon_frequency(self, omega, update_radiation=1) :
         self.radiation_fact.photon_frequency=omega
