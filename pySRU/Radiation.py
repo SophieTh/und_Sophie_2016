@@ -20,7 +20,7 @@ class Radiation(object):
 
 
 
-    def plot(self):
+    def plot(self,title=" "):
         import matplotlib.pyplot as plt
         from mpl_toolkits.mplot3d import Axes3D
 
@@ -38,6 +38,7 @@ class Radiation(object):
             ax.legend()
         plt.xlabel('X')
         plt.ylabel('Y')
+        plt.title(title)
         plt.show()
 
 

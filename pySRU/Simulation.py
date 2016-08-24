@@ -87,12 +87,12 @@ class Simulation(object):
                                                                                      Y_array=self.radiation.Y)
 
     def change_harmonic_number(self, harmonic_number) :
-        self.radiation_fact.omega=harmonic_number*self.source.omega1()
+        self.radiation_fact.omega=harmonic_number*self.source.harmonic_frequency(1)
         self.radiation.intensity = self.radiation_fact.calculate_radiation_intensity(trajectory=self.trajectory,
                                                                                      source=self.source,
                                                                                      distance=self.radiation.distance,
-                                                                                     X_arrays=self.radiation.X,
-                                                                                     Y_arrays=self.radiation.Y)
+                                                                                     X_array=self.radiation.X,
+                                                                                     Y_array=self.radiation.Y)
 
     def change_energy_eV(self, E) :
         omega = E * eV_to_J / codata.hbar
@@ -431,7 +431,7 @@ class Simulation(object):
 
 def create_simulation(magnetic_structure,electron_beam, magnetic_field=None, photon_energy=None,
                       traj_method=TRAJECTORY_METHOD_ANALYTIC,Nb_pts_trajectory=None,
-                      rad_method=RADIATION_METHOD_APPROX_FARFIELD,  formula=1,
+                      rad_method=RADIATION_METHOD_APPROX_FARFIELD,  formula=1,NB_pts_rad=101,
                       initial_condition=None, distance=None,XY_are_list=False,X=None,Y=None) :
 
     if type(magnetic_structure)==Undulator :
@@ -473,8 +473,8 @@ def create_simulation(magnetic_structure,electron_beam, magnetic_field=None, pho
                 else :
                     X_max = distance * theta_max
                     Y_max = distance * theta_max
-                X = np.linspace(0.0, X_max, 101)
-                Y = np.linspace(0.0, Y_max, 101)
+                X = np.linspace(0.0, X_max, NB_pts_rad)
+                Y = np.linspace(0.0, Y_max, NB_pts_rad)
             else :
                 X=np.array([0.0])
                 Y=np.array([0.0])

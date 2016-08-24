@@ -30,7 +30,7 @@ class SourceBendingMagnet(Source):
         return arc_L
 
     def horizontal_divergence(self):
-        sin_div=self.magnetic_structure.L/self.radius_curvature()
+        sin_div=self.magnetic_structure.length/self.radius_curvature()
         return np.arcsin(sin_div)
 
 
@@ -90,7 +90,7 @@ class SourceBendingMagnet(Source):
 
 
     def choose_initial_contidion_automatic(self):
-        Zo=-self.magnetic_structure.L*1.5
+        Zo=-self.magnetic_structure.length*1.5
         ic=np.array([0.0,0.0,self.electron_speed()*codata.c,0.0,0.0,Zo])
         return ic
 
@@ -108,7 +108,7 @@ class SourceBendingMagnet(Source):
 
 
     def analytical_times_vector(self, Nb_pts):
-        to=-self.magnetic_structure.L*0.5/(self.electron_speed()*codata.c)
+        to=-self.magnetic_structure.length*0.5/(self.electron_speed()*codata.c)
         t1=to+self.arc_length()/(self.electron_speed()*codata.c)
         time=np.linspace(to,t1,Nb_pts)
         return time

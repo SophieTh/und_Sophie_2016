@@ -91,7 +91,7 @@ class TrajectoryFactory(object):
         vz_0 = bending_magnet.electron_speed()
 
         t=bending_magnet.analytical_times_vector(Nb_pts=self.Nb_pts)
-        Zo = bending_magnet.magnetic_structure.L / 2.
+        Zo = bending_magnet.magnetic_structure.length / 2.
         #t=np.linspace(0.0,2.*Zo/(vz_0*codata.c))
         to=t[0]
         x = (vz_0/omega_p)*(1.-np.cos(omega_p*(t-to)))

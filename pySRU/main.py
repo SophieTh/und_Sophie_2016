@@ -8,7 +8,7 @@ import time
 from pySRU.MagneticStructureUndulatorPlane import MagneticStructureUndulatorPlane as Undulator
 from pySRU.MagneticStructureBendingMagnet import MagneticStructureBendingMagnet  as BM
 from pySRU.ElectronBeam import ElectronBeam
-from pySRU.Source import Source
+from pySRU.SourceUndulatorPlane import SourceUndulatorPlane
 from pySRU.Simulation import Simulation ,create_simulation
 from pySRU.TrajectoryFactory import TRAJECTORY_METHOD_ANALYTIC,TRAJECTORY_METHOD_ODE,\
                                         TRAJECTORY_METHOD_INTEGRATION
@@ -147,12 +147,17 @@ def compare_interpolation(magnetic_structure, electron_beam,traj_method=TRAJECTO
 def observation_err_formule12_analytic(und,beam):
     sim_test = create_simulation(magnetic_structure=und, electron_beam=beam,
                                  traj_method=TRAJECTORY_METHOD_ANALYTIC,formula=1,
-                                 Nb_pts_trajectory=10000)
-    print(sim_test.radiation.max())
+                                 Nb_pts_trajectory=1000,distance=100)
+
+    sim_test.change_harmonic_number(5)
+
+
+    print(sim_test.source.theorical_flux_on_axis(photon_frequency=sim_test.radiation_fact.omega))
     sim_test.radiation.plot()
     sim_test2=create_simulation(magnetic_structure=und, electron_beam=beam,
                                  traj_method=TRAJECTORY_METHOD_ANALYTIC,formula=2,
-                                 Nb_pts_trajectory=10000)
+                                 Nb_pts_trajectory=1000,distance=100)
+    sim_test2.change_omega(sim_test.radiation_fact.omega)
     print(sim_test2.radiation.max())
     sim_test2.radiation.plot()
     diff=sim_test.radiation.relativ_difference_with(sim_test2.radiation)
@@ -160,17 +165,22 @@ def observation_err_formule12_analytic(und,beam):
     diff.plot()
 
 
-
+observation_err_formule12_analytic(und_test,beam_test)
 
 def erreur_entre_ODE_ANALYTIC_sans_mm_condition_initial(und,beam,rad):
     sim_test_analy = create_simulation(magnetic_structure=und, electron_beam=beam,
                                  traj_method=TRAJECTORY_METHOD_ANALYTIC, formula=1,rad_method=rad,
-                                 Nb_pts_trajectory=20000,distance=10)
+                                 Nb_pts_trajectory=20000,distance=100, X=0.002,Y=0.002)
+
+    #sim_test_analy.radiation.plot(title='ESRF18 radiation intensity for analitycal trajectory')
     print('inital donc anali')
     print(sim_test_analy.trajectory_fact.initial_condition)
     sim_test_ODE=create_simulation(magnetic_structure=und, electron_beam=beam,
                                  traj_method=TRAJECTORY_METHOD_ODE, formula=1,rad_method=rad,
-                                 Nb_pts_trajectory=100,distance=10)
+                                 Nb_pts_trajectory=20000,distance=100,X=0.002,Y=0.002)
+
+    #sim_test_analy.radiation.plot(title='ESRF18 radiation intensity for ODE trajectory')
+
 
     t_milieu=sim_test_analy.trajectory.t
     delta_t=t_milieu[1]-t_milieu[0]
@@ -183,14 +193,55 @@ def erreur_entre_ODE_ANALYTIC_sans_mm_condition_initial(und,beam,rad):
     new_t=np.concatenate((t_avt,t_milieu,t_apr))
     sim_test_ODE.trajectory = sim_test_ODE.trajectory_fact.create_from_source(source=sim_test_ODE.source,
                                                                               t=new_t)
+    # Z_srw=np.linspace(-0.45,0.45,15000)
+    # plt.plot(Z_srw, sim_test_ODE.source.magnetic_field.By(z=Z_srw, x=0.0, y=0.0),label='SRW magnetic field')
+    # Z_anali = np.linspace(-und.length/2., und.length/2., 10000)
+    # plt.plot(Z_anali,sim_test_ODE.source.magnetic_field.By(z=Z_anali,x=0.0,y=0.0),label='analitycal magnetic field')
+    # plt.legend()
+    # plt.xlabel('z')
+    # plt.ylabel('By')
+    # plt.title('y component of the magnetiq field')
+    # plt.show()
 
-    plt.plot(new_t,sim_test_ODE.trajectory.x)
-    plt.plot(sim_test_analy.trajectory.t, sim_test_analy.trajectory.x)
-    plt.show()
+    # sim_test_ODE.trajectory.multiply_by(codata.c)
+    # sim_test_analy.trajectory.multiply_by(codata.c)
 
-    plt.plot(new_t,sim_test_ODE.trajectory.z)
-    plt.plot(sim_test_analy.trajectory.t, sim_test_analy.trajectory.z)
-    plt.show()
+    print(all(sim_test_ODE.trajectory.t==new_t))
+    # plt.plot(new_t,sim_test_ODE.trajectory.x,label='trajectory from ODE')
+    # plt.plot(sim_test_analy.trajectory.t, sim_test_analy.trajectory.x,label='analytical trajectory')
+    # plt.legend()
+    # plt.xlabel('t')
+    # plt.ylabel('X')
+    # plt.title('X component of the trajectory')
+    # plt.show()
+
+
+    # plt.plot(new_t, sim_test_ODE.trajectory.z, label='trajectory from ODE')
+    # plt.plot(sim_test_analy.trajectory.t, sim_test_analy.trajectory.z, label='analytical trajectory')
+    # plt.legend()
+    # plt.xlabel('t')
+    # plt.ylabel('Z')
+    # plt.title('Z component of the trajectory')
+    # plt.show()
+
+
+    # beta_et=sim_test_analy.source.average_z_speed_in_undulator()*codata.c
+    # plt.plot(new_t, sim_test_ODE.trajectory.v_z, label='trajectory from ODE')
+    # plt.plot(sim_test_analy.trajectory.t,
+    #          sim_test_analy.trajectory.v_z, label='analytical trajectory')
+    # plt.legend()
+    # plt.xlabel('t')
+    # plt.ylabel('Z-B*t')
+    # plt.title('z component of the velocity')
+    # plt.show()
+
+    #sim_test_analy.radiation.plot()
+    # print ('ODE')
+    # sim_test_ODE.radiation.plot()
+    #
+    diff=sim_test_analy.radiation.relativ_difference_with(sim_test_ODE.radiation)
+    diff.plot(title="relative difference between radiation from ODE and analitycal trajectory")
+
     # ## recherche des condition initial de l'ondulateur :
     # Zo= -und.length/2.
     # z=sim_test_ODE.trajectory.z*codata.c
@@ -210,6 +261,8 @@ def erreur_entre_ODE_ANALYTIC_sans_mm_condition_initial(und,beam,rad):
                                sim_test_ODE.trajectory.z[i]])*codata.c
     print('inital donc construite')
     print(initial_cond)
+
+
 
     print(sim_test_analy.trajectory_fact.initial_condition-initial_cond)
 
@@ -264,12 +317,10 @@ def erreur_entre_ODE_ANALYTIC_sans_mm_condition_initial(und,beam,rad):
     # second_terme.v_z = second_terme.v_z - beta_et
     # diff.plot_2_trajectory(second_terme)
 
-    print('rad anli max')
-    print(sim_test_analy.radiation.max())
-    sim_test_analy.radiation.plot()
-    print('rad ODE max')
-    print(sim_test_ODE.radiation.max())
-    sim_test_ODE.radiation.plot()
+
+    # print('rad ODE max')
+    # print(sim_test_ODE.radiation.max())
+    # sim_test_ODE.radiation.plot()
     diff2=sim_test_ODE.radiation.relativ_difference_with(sim_test_analy.radiation)
     diff2.plot()
 
@@ -361,11 +412,51 @@ def erreur_analy_ODE(magn,beam):
     sim_test_analy = create_simulation(magnetic_structure=magn, electron_beam=beam,
                                        traj_method=TRAJECTORY_METHOD_ANALYTIC, formula=1,
                                        Nb_pts_trajectory=20000)
-    nb_pts = np.linspace(200, 30000, 21)
-    error_rad, traj_error_traj=sim_test_analy.error_trajectory_method(method=TRAJECTORY_METHOD_ODE,nb_pts=nb_pts)
-    plt.plot(nb_pts,error_rad)
-    plt.show()
-    traj_error_traj.plot()
+    sim_test_ODE = create_simulation(magnetic_structure=magn, electron_beam=beam,
+                                       traj_method=TRAJECTORY_METHOD_ODE, formula=1,
+                                       Nb_pts_trajectory=20000)
+
+    sim_test_ODE.trajectory.plot_2_trajectory(sim_test_analy.trajectory)
+    sim_test_analy.radiation.plot()
+    sim_test_ODE.radiation.plot()
+
+    # nb_pts = np.linspace(200, 30000, 21)
+    # error_rad, traj_error_traj=sim_test_analy.error_trajectory_method(method=TRAJECTORY_METHOD_ODE,nb_pts=nb_pts)
+    # plt.plot(nb_pts,error_rad)
+    # plt.show()
+    # traj_error_traj.plot()
+    t_milieu=sim_test_analy.trajectory.t
+    delta_t=t_milieu[1]-t_milieu[0]
+    t_debut=(-magn.length*0.5-magn.period_length*5.)/(sim_test_ODE.source.average_z_speed_in_undulator()*codata.c)
+    t_fin = (magn.length * 0.5 + magn.period_length * 5.) / (
+    sim_test_ODE.source.average_z_speed_in_undulator() * codata.c)
+    t_avt = np.arange(t_debut,t_milieu[0],delta_t)
+    indice_t_milieu=len(t_avt)
+    t_apr = np.arange(t_milieu[-1]+delta_t, t_fin+delta_t, delta_t)
+    new_t=np.concatenate((t_avt,t_milieu,t_apr))
+    sim_test_ODE.trajectory = sim_test_ODE.trajectory_fact.create_from_source(source=sim_test_ODE.source,
+                                                                              t=new_t)
+
+    sim_test_ODE.trajectory.plot_2_trajectory(sim_test_analy.trajectory)
+
+    i=indice_t_milieu
+    print('t milieu')
+    print(new_t[i])
+    print(t_milieu[0])
+    initial_cond=np.array([sim_test_ODE.trajectory.v_x[i],
+                               sim_test_ODE.trajectory.v_y[i],
+                               sim_test_ODE.trajectory.v_z[i],
+                               sim_test_ODE.trajectory.x[i],
+                               sim_test_ODE.trajectory.y[i],
+                               sim_test_ODE.trajectory.z[i]])*codata.c
+    print('inital donc construite')
+    print(initial_cond)
+
+
+#erreur_analy_ODE(magn=ESRFBM,beam=beam_ESRF)
+
+
+
 
 #cas A
 #erreur_analy_ODE_BM(BM=ESRFBM,beam=beam_ESRF)
@@ -473,20 +564,28 @@ def erreur_analy_int_ODE(und,beam):
 
 def erreur_near_ff(und,beam):
     sim_test_analy = create_simulation(magnetic_structure=und, electron_beam=beam,
-                                       traj_method=TRAJECTORY_METHOD_ANALYTIC, formula=1,
-                                       Nb_pts_trajectory=20000,distance=100)
+                                       traj_method=TRAJECTORY_METHOD_ANALYTIC, formula=2,NB_pts_rad=51,
+                                       Nb_pts_trajectory=10000,distance=100)
     rad_max=sim_test_analy.radiation.max()
     print(rad_max)
     rad_max_theo=sim_test_analy.source.theorical_flux_on_axis(photon_frequency=sim_test_analy.radiation_fact.omega)
     print(rad_max_theo)
-    d = np.linspace(2,50, 21)
+    d = np.linspace(50,100, 26)
     error_rad=sim_test_analy.error_radiation_method_distance(method=RADIATION_METHOD_NEAR_FIELD,D=d)
     plt.plot(d,error_rad)
+    plt.xlabel("distance")
+    plt.ylabel("error")
+    plt.title('absolut error between two radiation method')
     plt.show()
     plt.plot(d,error_rad/rad_max)
+    plt.xlabel("distance")
+    plt.ylabel("error")
+    plt.title('relative error between two radiation method')
     plt.show()
 
-#erreur_near_ff(und=und_test,beam=beam_test)
+
+
+#erreur_near_ff(und=ESRF18,beam=beam_ESRF)
 
 def example_erreur_near_ff(und,beam):
     sim_test_analy = create_simulation(magnetic_structure=und, electron_beam=beam,
@@ -557,7 +656,7 @@ def erreur_nb_pts_trajectory(und,beam):
                                        Nb_pts_trajectory=200, distance=10,X=X,Y=Y)
     #sim_test_analy.calculate_until_wave_number()
     rad_theo=sim_test_analy.source.theorical_flux_on_axis(photon_frequency=sim_test_analy.radiation_fact.omega)
-    nb_pts=np.arange(477,501,1)
+    nb_pts=np.arange(1000,5000,100)
     res =np.zeros(len(nb_pts))
     for i in range(len(nb_pts)):
         print(i)
@@ -569,14 +668,26 @@ def erreur_nb_pts_trajectory(und,beam):
     print(sim_test_analy.radiation.max())
     print(res)
     print(res-rad_theo)
+
+    plt.show()
+
+
+    plt.show()
+
+
     dif_REL=np.abs(res-rad_theo)/rad_theo
     plt.plot(nb_pts, res)
+    plt.xlabel("nb point")
+    plt.ylabel("error")
+    plt.title('relative error between two radiation method')
     plt.show()
     plt.plot(nb_pts, dif_REL)
+    plt.ylabel("error")
+    plt.title('absolut error between two radiation method')
     plt.show()
 
 
-erreur_nb_pts_trajectory(und_test,beam_test)
+#erreur_nb_pts_trajectory(und_test,beam_test)
 # #sim_test.print_parameters()
 #
 # sim_test.change_omega(sim_test.source.critical_frequency()*0.5)
