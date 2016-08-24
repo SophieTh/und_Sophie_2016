@@ -8,9 +8,12 @@ from scipy import constants as codata
 
 
 
-RADIATION_METHOD_NEAR_FIELD=0
-RADIATION_METHOD_APPROX=1
-RADIATION_METHOD_APPROX_FARFIELD=2
+RADIATION_METHOD_NEAR_FIELD=0        # calls self.energy_radiated_near_field
+RADIATION_METHOD_APPROX=1            # calls self.energy_radiated_approx
+RADIATION_METHOD_APPROX_FARFIELD=2   # calls self.energy_radiated_approximation_and_farfield
+# calls self.energy_radiated_near_field2
+# calls self.energy_radiated_approx2
+# calls self.energy_radiated_approximation_and_farfield2
 eV_to_J = codata.e
 
 class RadiationFactory(object):
@@ -88,11 +91,11 @@ class RadiationFactory(object):
         gamma = source.Lorentz_factor()
 
         if self.method == RADIATION_METHOD_NEAR_FIELD:  # 0
-            calculation_function = self.energy_radiated_near_field
+            calculation_function = self.energy_radiated_near_field2
         elif self.method == RADIATION_METHOD_APPROX: # 1
-            calculation_function = self.energy_radiated_approx
+            calculation_function = self.energy_radiated_approx2
         else: # RADIATION_METHOD_APPROX_FARFIELD=2
-            calculation_function = self.energy_radiated_approximation_and_farfield
+            calculation_function = self.energy_radiated_approximation_and_farfield2
 
 
         # TODO: Possible missing imaginary phase in constant?

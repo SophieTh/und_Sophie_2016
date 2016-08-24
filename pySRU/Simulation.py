@@ -497,7 +497,7 @@ def create_simulation(magnetic_structure,electron_beam, magnetic_field=None, pho
         distance=source.choose_distance_automatic(2)
 
     if Nb_pts_trajectory==None :
-        Nb_pts_trajectory = int(source.choose_nb_pts_trajectory(2),photon_frequency=omega)
+        Nb_pts_trajectory = int(source.choose_nb_pts_trajectory(0.01,photon_frequency=omega))
 
     if X is None or Y is None :
         if (X != None) :
