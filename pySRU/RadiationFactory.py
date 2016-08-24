@@ -8,12 +8,12 @@ from scipy import constants as codata
 
 
 
-RADIATION_METHOD_NEAR_FIELD=0        # calls self.energy_radiated_near_field
-RADIATION_METHOD_APPROX=1            # calls self.energy_radiated_approx
-RADIATION_METHOD_APPROX_FARFIELD=2   # calls self.energy_radiated_approximation_and_farfield
-# calls self.energy_radiated_near_field2
-# calls self.energy_radiated_approx2
-# calls self.energy_radiated_approximation_and_farfield2
+RADIATION_METHOD_NEAR_FIELD = 0        # calls self.energy_radiated_near_field2
+RADIATION_METHOD_APPROX = 1            # calls self.energy_radiated_approx2
+RADIATION_METHOD_APPROX_FARFIELD = 2   # calls self.energy_radiated_approximation_and_farfield2
+# calls self.energy_radiated_near_field
+# calls self.energy_radiated_approx
+# calls self.energy_radiated_approximation_and_farfield
 eV_to_J = codata.e
 
 class RadiationFactory(object):
@@ -365,7 +365,7 @@ class RadiationFactory(object):
     # energy radiated without the the far filed approxiamation
     def energy_radiated_near_field2(self, trajectory, gamma, x, y, distance):
         N = trajectory.nb_points()
-        #TODO changer la phase et formule 2
+        # equation with denominator
         n_chap = np.array([x - trajectory.x * codata.c, y - trajectory.y * codata.c, distance - trajectory.z * codata.c])
         R = np.sqrt( n_chap[0, :]**2 + n_chap[1, :]**2 + n_chap[2, :]**2 )
         n_chap[0, :] /= R[:]
