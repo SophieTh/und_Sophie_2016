@@ -90,12 +90,25 @@ class RadiationFactory(object):
 
         gamma = source.Lorentz_factor()
 
+
+        #
+        # from more exact to less exact/precise the ranging is:
+        #   energy_radiated_near_field2   <-- RADIATION_METHOD_NEAR_FIELD
+        #   energy_radiated_approx2       <-- RADIATION_METHOD_APPROX
+        #   energy_radiated_near_field
+        #   energy_radiated_approx
+        #   energy_radiated_approximation_and_farfield  <--  RADIATION_METHOD_APPROX_FARFIELD
+        #   energy_radiated_approximation_and_farfield
+
+
         if self.method == RADIATION_METHOD_NEAR_FIELD:  # 0
             calculation_function = self.energy_radiated_near_field2
         elif self.method == RADIATION_METHOD_APPROX: # 1
-            calculation_function = self.energy_radiated_approx
-        else: # RADIATION_METHOD_APPROX_FARFIELD=2
+            calculation_function = self.energy_radiated_approx2
+        elif RADIATION_METHOD_APPROX_FARFIELD:
             calculation_function = self.energy_radiated_approximation_and_farfield
+        else:
+            raise Exception("Method code not implemented.")
 
 
         # TODO: Possible missing imaginary phase in constant?
