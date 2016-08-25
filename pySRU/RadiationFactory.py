@@ -93,9 +93,9 @@ class RadiationFactory(object):
         if self.method == RADIATION_METHOD_NEAR_FIELD:  # 0
             calculation_function = self.energy_radiated_near_field2
         elif self.method == RADIATION_METHOD_APPROX: # 1
-            calculation_function = self.energy_radiated_approx2
+            calculation_function = self.energy_radiated_approx
         else: # RADIATION_METHOD_APPROX_FARFIELD=2
-            calculation_function = self.energy_radiated_approximation_and_farfield2
+            calculation_function = self.energy_radiated_approximation_and_farfield
 
 
         # TODO: Possible missing imaginary phase in constant?
@@ -201,7 +201,7 @@ class RadiationFactory(object):
 
 
 
-    def energy_radiated_farfield(self, trajectory, gamma, x, y, distance):
+    def energy_radiated_farfield2(self, trajectory, gamma, x, y, distance):
         N = trajectory.nb_points()
         if distance == None:
             # in radian :
@@ -237,7 +237,7 @@ class RadiationFactory(object):
 
         return E
 
-    def energy_radiated_farfield2(self, trajectory, gamma, x, y, distance):
+    def energy_radiated_farfield(self, trajectory, gamma, x, y, distance):
         # N = trajectory.shape[1]
         N = trajectory.nb_points()
         if distance == None:
@@ -318,8 +318,7 @@ class RadiationFactory(object):
                          ) * Alpha2 * Alpha1
         for k in range(3):
             E[k] = np.trapz(integrand[k], trajectory.t)
-        E = np.zeros((3,), dtype=np.complex)
-        integrand = np.zeros((3, N), dtype=np.complex)
+
             #E[k] = integrate.simps(integrand[k], trajectory.t)
 
         return E

@@ -187,8 +187,10 @@ class SourceUndulatorPlane(Source):
         return X,Y
 
     # in photon /sec /1% /mrad*mrad
-    def theoretical_flux_on_axis(self,n):
-        n=int(n)
+    def theoretical_flux_on_axis(self,frequency):
+        n=int(frequency/self.harmonic_frequency(1))
+        if n==0:
+            n=1
         if n%2==1 :
             # see X-ray data booklet pag 2.7
             cst=1.744e14*((self.period_number()*self.Electron_energy())**2)*self.I_current()

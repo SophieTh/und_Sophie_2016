@@ -462,6 +462,68 @@ class Simulation(object):
 
 #
 
+
+    def error_radiation_method_nb_pts_traj(self, method, nb_pts):
+        sim2 = self.copy()
+        sim2.change_radiation_method(method)
+        error = np.zeros_like(nb_pts)
+        print(len(nb_pts))
+        for i in range(len(nb_pts)):
+            print(i)
+            self.change_Nb_pts_trajectory(nb_pts[i])
+            sim2.change_Nb_pts_trajectory(nb_pts[i])
+            error[i] = self.radiation.error_max(sim2.radiation)
+        return error
+
+    def error_radiation_nb_pts_traj(self, good_value, nb_pts):
+        error = np.zeros_like(nb_pts)
+        print(len(nb_pts))
+        for i in range(len(nb_pts)):
+            print(i)
+            self.change_Nb_pts_trajectory(nb_pts[i])
+            error[i] = (np.abs(good_value-self.radiation.intensity)).max()
+        return error
+
+
+    def error_radiation_method_distance(self, method, D):
+        sim2 = self.copy()
+        sim2.radiation_fact.method = method
+        error = np.zeros_like(D)
+        print(len(D))
+        for i in range(len(D)):
+            print(i)
+            self.change_distance(D[i])
+            sim2.change_distance(D[i])
+            error[i] = self.radiation.error_max(sim2.radiation)
+        return error
+
+
+    def error_trajectory_method(self, method, nb_pts):
+        sim2 = self.copy()
+        sim2.change_trajectory_method(method)
+        error_rad = np.zeros_like(nb_pts)
+        error_traj = np.zeros((10, len(nb_pts)))
+        for i in range(len(nb_pts)):
+            print(i)
+            self.change_Nb_pts_trajectory(nb_pts[i])
+            sim2.change_Nb_pts_trajectory(nb_pts[i])
+            error_traj[:, i] = self.trajectory.error_max(sim2.trajectory)
+            error_rad[i] = self.radiation.error_max(sim2.radiation)
+        traj_error_traj = self.trajectory_fact.create_from_array(error_traj)
+        return error_rad, traj_error_traj
+
+
+    def relativ_error_radiation_method_distance(self, method, D):
+        sim2 = self.copy()
+        sim2.change_radiation_method(method)
+        error_relativ = np.array(len(D))
+        for i in range(len(D)):
+            self.change_distance(D[i])
+            sim2.change_distance(D[i])
+            error_relativ[i] = self.radiation.relativ(sim2.radiation)
+        return error_relativ
+
+
 def create_simulation(magnetic_structure,electron_beam, magnetic_field=None, photon_energy=None,
                       traj_method=TRAJECTORY_METHOD_ANALYTIC,Nb_pts_trajectory=None,
                       rad_method=RADIATION_METHOD_APPROX_FARFIELD, Nb_pts_radiation=101,
