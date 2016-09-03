@@ -409,12 +409,11 @@ class RadiationFactory(object):
         # equation with denominator
         n_chap = np.array([x - trajectory.x * codata.c, y - trajectory.y * codata.c, distance - trajectory.z * codata.c])
         R = np.sqrt( n_chap[0, :]**2 + n_chap[1, :]**2 + n_chap[2, :]**2 )
-        n_chap[0, :] /= R[:]
-        n_chap[1, :] /= R[:]
-        n_chap[2, :] /= R[:]
+        n_chap[:, :] /= R[:]
 
-        E = np.zeros((3,), dtype=np.complex)
-        integrand = np.zeros((3, N), dtype=np.complex)
+        E = np.empty((3,), dtype=np.complex)
+        integrand = np.empty((3, N), dtype=np.complex)
+
         A1 = (n_chap[0] * trajectory.a_x + n_chap[1] * trajectory.a_y + n_chap[2] * trajectory.a_z)
         A2 = (n_chap[0] * (n_chap[0] - trajectory.v_x) + n_chap[1] * (n_chap[1] - trajectory.v_y)
               + n_chap[2] * (n_chap[2] - trajectory.v_z))
@@ -423,18 +422,21 @@ class RadiationFactory(object):
         Alpha1 = (1.0 / (1.0 - n_chap[0] * trajectory.v_x
                          - n_chap[1] * trajectory.v_y - n_chap[2] * trajectory.v_z)) ** 2
         Alpha3 = codata.c / (gamma ** 2 * R)
-        integrand[0] += ((A1 * (n_chap[0] - trajectory.v_x) - A2 * trajectory.a_x)
+        integrand[0] = ((A1 * (n_chap[0] - trajectory.v_x) - A2 * trajectory.a_x)
                          + Alpha3 * (n_chap[0] - trajectory.v_x)
-                         ) * Alpha2 * Alpha1
-        integrand[1] += ((A1 * (n_chap[1] - trajectory.v_y) - A2 * trajectory.a_y)
+                         )
+        integrand[1] = ((A1 * (n_chap[1] - trajectory.v_y) - A2 * trajectory.a_y)
                          + Alpha3 * (n_chap[1] - trajectory.v_y)
-                         ) * Alpha2 * Alpha1
-        integrand[2] += ((A1 * (n_chap[2] - trajectory.v_z) - A2 * trajectory.a_z)
+                         )
+        integrand[2] = ((A1 * (n_chap[2] - trajectory.v_z) - A2 * trajectory.a_z)
                          + Alpha3 * (n_chap[2] - trajectory.v_z)
-                         ) * Alpha2 * Alpha1
+                         )
+        integrand[:, :] *= Alpha2 * Alpha1
+          
+
+        h = (trajectory.t[-1]-trajectory.t[0]) / (trajectory.t.size-1)
         for k in range(3):
-            # E[k] = np.trapz(integrand[k], trajectory[0])
-            E[k] = np.trapz(integrand[k], trajectory.t)
+            E[k] = h*( np.sum(integrand[k, :]) - 0.5 * (integrand[k, 0] + integrand[k, -1]) ) 
         return E
 
 
