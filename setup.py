@@ -49,8 +49,8 @@ from setuptools import setup
 setup(name='pySRU',
       version='0.5.3',
       description='Python synchrotron undulator calcution',
-      author='Sophie Thery',
-      author_email='sophie.thery@esrf.fr',
+      author='Sophie Thery, Mark Glass, Manuel Sanchez del Rio',
+      author_email='srio@esrf.eu',
       url='https://github.com/SophieTh/und_Sophie_2016/',
       packages=['pySRU'],
       install_requires=[
