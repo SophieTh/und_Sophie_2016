@@ -62,13 +62,31 @@ This piece of Python code shows how the library can be used via its python bindi
                         initial_condition=None, distance=None,XY_are_list=False,X=None,Y=None)
     
     
-    simulation_test.print_parameters()
+    # simulation_test.print_parameters()
     
-    simulation_test.trajectory.plot_3D(title="Electron Trajectory")
+    # simulation_test.trajectory.plot_3D(title="Electron Trajectory")
     
     simulation_test.radiation.plot(title="Flux in far field vs angle")
     
 
 .. image:: https://github.com/SophieTh/und_Sophie_2016/blob/master/doc/radiation_xraybooklet.jpeg
-
 Result link: https://github.com/SophieTh/und_Sophie_2016/blob/master/doc/radiation_xraybooklet.jpeg
+
+Documentation
+-------------
+Code documentation will be added soon. For using pySRU, start with prepared simulations in Sumulation.py
+
+A comparison of the pySRU results with other codes can be bound at: 
+https://github.com/SophieTh/und_Sophie_2016/blob/master/doc/pySRU_comparison.pdf
+
+A document including the formulas and algorithms used is: 
+https://github.com/SophieTh/und_Sophie_2016/blob/master/doc/report_thery_m1.pdf
+
+To do
+=====
+- Implement simplified formulas for calculating intensity spectrum
+- Implement simplified formulas for calculating power density
+- Add electron emittance via convolutions
+- Implement the pi polarization
+- Extend to helical undulators
+
