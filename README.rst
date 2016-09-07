@@ -76,7 +76,7 @@ Documentation
 -------------
 Code documentation will be added soon. For using pySRU, start with prepared simulations in Sumulation.py
 
-A comparison of the pySRU results with other codes can be bound at: 
+A comparison of the pySRU results with other codes can be found at: 
 https://github.com/SophieTh/und_Sophie_2016/blob/master/doc/pySRU_comparison.pdf
 
 A document including the formulas and algorithms used is: 
@@ -84,7 +84,7 @@ https://github.com/SophieTh/und_Sophie_2016/blob/master/doc/report_thery_m1.pdf
 
 To do
 =====
-- Implement simplified formulas for calculating intensity spectrum
+- Quicker calculation of intensity spectrum
 - Implement simplified formulas for calculating power density
 - Add electron emittance via convolutions
 - Implement the pi polarization
