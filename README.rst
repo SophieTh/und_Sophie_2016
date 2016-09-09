@@ -24,7 +24,7 @@ This code is relased under the MIT license as detailed in the LICENSE file.
 Installation
 ------------
 
-To build the library for python use, just use the ``python setup.py install`` approach.
+To build the library for python use, just use the ``python setup.py install`` approach. It is also available in http://pypi.python.org/pypi/pySRU/: ``pip install pySRU``
 
 
 Example
