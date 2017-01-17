@@ -42,8 +42,7 @@ class ElectronBeam(object):
         return ElectronBeam(Electron_energy=self.Electron_energy, I_current=self.I_current)
 
     def Lorentz_factor(self):
-        return (self.Electron_energy / 0.51099890221)*1e3
-
+        return 1e9*self.Electron_energy / (codata.m_e *  codata.c**2 / codata.e)
 
     def electron_speed(self):
         gamma = self.Lorentz_factor()

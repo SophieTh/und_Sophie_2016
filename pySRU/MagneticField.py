@@ -129,7 +129,7 @@ class MagneticField(object):
 
 
 if __name__ == "__main__" :
-    Bx=lambda x,y,z : np.cos(y*z)
+    Bx = lambda x,y,z : np.cos(y*z)
     By = lambda x,y,z : np.sin(x)*np.cos(z)
     Bz = lambda x,y,z : np.sin(y*z)
 

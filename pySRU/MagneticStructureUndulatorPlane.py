@@ -52,13 +52,15 @@ class MagneticStructureUndulatorPlane(MagneticStructure):
         if coordonnee == 'x':
             dB = 0.0
         else:
+            # codata.m_e * codata.c / codata.e= 0.00170450894933
+            K_to_B = ku * codata.m_e * codata.c / codata.e
             if coordonnee == 'y':
-                # codata.m_e * codata.c / codata.e= 0.00170450894933
-                Bo = (self.K * ku * 0.00170450894933) * np.cosh(ku * y)
+
+                Bo = (self.K * K_to_B) * np.cosh(ku * y)
                 # print(Bo)
                 f_base = np.cos
             else:  # coordonnee == 'z' :
-                Bo = -(self.K * ku * 0.00170450894933) * np.sinh(ku * y)
+                Bo = -(self.K * K_to_B) * np.sinh(ku * y)
                 f_base = np.sin
 
             # we enelarge the real effect of the magnetic field by 4 lambda_u
