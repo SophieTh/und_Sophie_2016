@@ -44,7 +44,58 @@ __authors__ = ["S Thery, M Glass, M Sanchez del Rio - ESRF ISDD Advanced Analysi
 __license__ = "MIT"
 __date__ = "31/08/2016"
 
-from setuptools import setup
+from setuptools import setup, Command
+import sys
+import os
+
+cmdclass = {}
+
+
+# create doc with sphinx: python setup.py build_doc
+try:
+    import sphinx
+    import sphinx.util.console
+    sphinx.util.console.color_terminal = lambda: False
+    from sphinx.setup_command import BuildDoc
+except ImportError:
+    sphinx = None
+    class SphinxExpectedCommand(Command):
+        user_options = []
+
+        def initialize_options(self):
+            pass
+
+        def finalize_options(self):
+            pass
+
+        def run(self):
+            raise RuntimeError(
+                'Sphinx is required to build or test the documentation.\n'
+                'Please install Sphinx (http://www.sphinx-doc.org).')
+
+if sphinx is not None:
+    class BuildDocCommand(BuildDoc):
+
+        def run(self):
+            # make sure the python path is pointing to the newly built
+            # code so that the documentation is built on this and not a
+            # previously installed version
+
+            build = self.get_finalized_command('build')
+            sys.path.insert(0, os.path.abspath(build.build_lib))
+
+            # Build the Users Guide in HTML and TeX format
+            for builder in ['html', 'latex']:
+                self.builder = builder
+                self.builder_target_dir = os.path.join(self.build_dir, builder)
+                self.mkpath(self.builder_target_dir)
+                BuildDoc.run(self)
+            sys.path.pop(0)
+else:
+    BuildDocCommand = SphinxExpectedCommand
+
+cmdclass['build_doc'] = BuildDocCommand
+
 
 setup(name='pySRU',
       version='0.5.3',
@@ -57,6 +108,7 @@ setup(name='pySRU',
                         'numpy',
                         'scipy'
                        ],
+      cmdclass=cmdclass,
       test_suite='tests'
      )
 

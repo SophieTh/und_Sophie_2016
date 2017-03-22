@@ -51,9 +51,9 @@ class UndulatorParameterTest(unittest.TestCase):
         self.assertEqual(source.I_current(),1.0)
         self.assertEqual(source2.I_current() ,0.3)
 
-        self.assertAlmostEqual(source.harmonic_frequency(1)/1e17, 2.5346701615509917,10)
-        self.assertAlmostEqual(source.Lorentz_factor(), 2544.0367765521196,10 )
-        self.assertAlmostEqual(source.electron_speed(), 0.99999992274559524,15)
+        self.assertAlmostEqual(source.harmonic_frequency(1)/1e17, 2.5346701615509917,5)
+        self.assertAlmostEqual(source.Lorentz_factor(), 2544.0367765521196,2 )
+        self.assertAlmostEqual(source.electron_speed(), 0.99999992274559524,5)
         self.assertEqual(source.magnetic_structure.period_number(), 14)
         self.assertAlmostEqual(source.choose_distance_automatic(2),49.000000000000,10 )
 
